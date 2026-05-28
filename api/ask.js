@@ -1,28 +1,31 @@
-// الوسيط الآمن — نسخة محدثة فيها تشخيص دقيق للأخطاء
-// تكشف السبب الحقيقي لأي مشكلة بدل ما تطلع رسالة عامة
+// الوسيط الآمن — يجرب عدة موديلات تلقائياً حتى يلقى واحد متاح
+
+const MODELS_TO_TRY = [
+  "llama3.1-8b",
+  "llama-3.3-70b",
+  "llama-4-scout-17b-16e-instruct",
+  "gpt-oss-120b",
+  "qwen-3-32b",
+  "deepseek-r1-distill-llama-70b",
+];
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // 1) فحص المفتاح
   const rawKey = process.env.CEREBRAS_API_KEY;
   if (!rawKey) {
-    return res.status(500).json({
-      error: "المفتاح غير موجود في إعدادات الخادم",
-      hint: "أضف CEREBRAS_API_KEY في Environment Variables في Vercel",
-    });
+    return res.status(500).json({ error: "المفتاح غير موجود في إعدادات الخادم" });
   }
   const apiKey = rawKey.trim();
   if (!apiKey.startsWith("csk-")) {
     return res.status(500).json({
       error: "المفتاح غير صالح",
-      hint: `المفتاح يجب أن يبدأ بـ csk- لكنه يبدأ بـ ${apiKey.slice(0, 4)}`,
+      hint: `يبدأ بـ ${apiKey.slice(0, 4)} - يجب أن يبدأ بـ csk-`,
     });
   }
 
-  // 2) فحص السؤال
   let question;
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
@@ -34,7 +37,6 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "السؤال مفقود" });
   }
 
-  // 3) تجهيز التعليمات
   const systemPrompt = `أنت محرك إجابات ذكي اسمه "مرن" يردّ باللغة العربية فقط.
 مهمتك أن تختار أنسب شكل لعرض الإجابة ثم تنتجها كبطاقة منظّمة فيها أقسام (تبويبات).
 
@@ -60,90 +62,87 @@ export default async function handler(req, res) {
 
 اجعل البطاقة 2 إلى 3 تبويبات. أجب باللغة العربية فقط.`;
 
-  // 4) الاتصال بـ Cerebras (مع مهلة زمنية)
-  let cerebrasResponse;
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 25000);
+  let lastError = "";
+  for (const model of MODELS_TO_TRY) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 25000);
 
-    cerebrasResponse = await fetch("https://api.cerebras.ai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "llama-4-scout-17b-16e-instruct",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: question },
-        ],
-        temperature: 0.6,
-        max_tokens: 1500,
-      }),
-      signal: controller.signal,
-    });
+      const response = await fetch("https://api.cerebras.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: question },
+          ],
+          temperature: 0.6,
+          max_tokens: 1500,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
 
-    clearTimeout(timeout);
-  } catch (e) {
-    return res.status(500).json({
-      error: "فشل الاتصال بخادم الذكاء الاصطناعي",
-      detail: String(e?.message || e),
-    });
+      if (!response.ok) {
+        const errText = await response.text().catch(() => "");
+        if (errText.includes("not_found_error") || response.status === 404) {
+          lastError = model + ": not found";
+          continue;
+        }
+        return res.status(response.status).json({
+          error: "الذكاء الاصطناعي رفض الطلب (" + response.status + ")",
+          detail: errText.slice(0, 300),
+          model,
+        });
+      }
+
+      const data = await response.json();
+      let raw = data?.choices?.[0]?.message?.content || "";
+      raw = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
+
+      const start = raw.indexOf("{");
+      const end = raw.lastIndexOf("}");
+      if (start !== -1 && end !== -1 && end > start) {
+        raw = raw.slice(start, end + 1);
+      }
+
+      let card;
+      try {
+        card = JSON.parse(raw);
+      } catch {
+        card = {
+          accent: "knowledge",
+          kicker: "إجابة",
+          title: "الإجابة",
+          sub: "",
+          tabs: [{ label: "الإجابة", type: "text", data: { body: raw || "تعذّر تجهيز الإجابة." } }],
+        };
+      }
+
+      if (!card || typeof card !== "object" || !card.tabs) {
+        card = {
+          accent: "knowledge",
+          kicker: "إجابة",
+          title: "الإجابة",
+          sub: "",
+          tabs: [{ label: "الإجابة", type: "text", data: { body: String(raw || "") } }],
+        };
+      }
+
+      return res.status(200).json({ card, model_used: model });
+    } catch (e) {
+      lastError = model + ": " + String(e?.message || e);
+      continue;
+    }
   }
 
-  // 5) فحص الرد
-  if (!cerebrasResponse.ok) {
-    let errText = "";
-    try { errText = await cerebrasResponse.text(); } catch {}
-    return res.status(cerebrasResponse.status).json({
-      error: `الذكاء الاصطناعي رفض الطلب (${cerebrasResponse.status})`,
-      detail: errText.slice(0, 500),
-    });
-  }
-
-  // 6) قراءة المحتوى
-  let data;
-  try {
-    data = await cerebrasResponse.json();
-  } catch (e) {
-    return res.status(500).json({ error: "تعذّر قراءة الإجابة", detail: String(e) });
-  }
-
-  let raw = data?.choices?.[0]?.message?.content || "";
-  raw = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
-
-  // استخراج JSON من الرد
-  const start = raw.indexOf("{");
-  const end = raw.lastIndexOf("}");
-  if (start !== -1 && end !== -1 && end > start) {
-    raw = raw.slice(start, end + 1);
-  }
-
-  // 7) محاولة التحويل
-  let card;
-  try {
-    card = JSON.parse(raw);
-  } catch {
-    card = {
-      accent: "knowledge",
-      kicker: "إجابة",
-      title: "الإجابة",
-      sub: "",
-      tabs: [{ label: "الإجابة", type: "text", data: { body: raw || "تعذّر تجهيز الإجابة." } }],
-    };
-  }
-
-  // ضمان وجود الحقول المطلوبة
-  if (!card || typeof card !== "object" || !card.tabs) {
-    card = {
-      accent: "knowledge",
-      kicker: "إجابة",
-      title: "الإجابة",
-      sub: "",
-      tabs: [{ label: "الإجابة", type: "text", data: { body: String(raw || "") } }],
-    };
-  }
-
-  return res.status(200).json({ card });
+  return res.status(502).json({
+    error: "لا يوجد موديل متاح في حسابك",
+    detail: lastError,
+    hint: "تحقق من الموديلات المتاحة في cloud.cerebras.ai/playground",
+  });
 }
