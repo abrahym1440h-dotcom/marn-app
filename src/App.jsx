@@ -85,14 +85,18 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: q }),
       });
-      const data = await r.json();
-      if (data.card) {
+      let data = null;
+      try { data = await r.json(); } catch {}
+      if (r.ok && data && data.card) {
         setMessages((m) => [...m, { role:"card", card: data.card }]);
       } else {
-        setMessages((m) => [...m, { role:"error", text: data.error || "تعذّر جلب الإجابة" }]);
+        const errMsg = (data && (data.error || data.detail))
+          ? `${data.error || ""}${data.detail ? " — " + data.detail : ""}${data.hint ? " | " + data.hint : ""}`
+          : `خطأ ${r.status}: ${r.statusText || "غير معروف"}`;
+        setMessages((m) => [...m, { role:"error", text: errMsg }]);
       }
     } catch (e) {
-      setMessages((m) => [...m, { role:"error", text: "تعذّر الاتصال. تأكد من الإنترنت وحاول مرة ثانية." }]);
+      setMessages((m) => [...m, { role:"error", text: "تعذّر الاتصال بالشبكة: " + String(e?.message || e) }]);
     } finally {
       setThinking(false);
     }
