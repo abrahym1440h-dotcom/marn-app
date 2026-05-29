@@ -14,14 +14,19 @@
         min-height: 100vh;
         min-height: 100dvh;
         overscroll-behavior: none;
+        -webkit-tap-highlight-color: transparent;
       }
       @media (prefers-color-scheme: light) {
         html, body { background: #eef1f6; }
       }
+      html[data-theme="light"], html[data-theme="light"] body { background: #eef1f6 !important; }
+      html[data-theme="dark"], html[data-theme="dark"] body { background: #0a0a0c !important; }
       #root {
         min-height: 100vh;
         min-height: 100dvh;
       }
+      * { -webkit-touch-callout: none; }
+      input, textarea { -webkit-user-select: text; user-select: text; }
     </style>
   </head>
   <body>
