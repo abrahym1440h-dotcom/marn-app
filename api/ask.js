@@ -1,4 +1,5 @@
-// الوسيط الآمن — يجرب عدة موديلات تلقائياً حتى يلقى واحد متاح
+// الوسيط الآمن - النسخة المطوّرة
+// ذكاء أعمق، إجابات أكمل، بطاقات أغنى
 
 const MODELS_TO_TRY = [
   "llama3.1-8b",
@@ -6,7 +7,6 @@ const MODELS_TO_TRY = [
   "llama-4-scout-17b-16e-instruct",
   "gpt-oss-120b",
   "qwen-3-32b",
-  "deepseek-r1-distill-llama-70b",
 ];
 
 export default async function handler(req, res) {
@@ -22,14 +22,15 @@ export default async function handler(req, res) {
   if (!apiKey.startsWith("csk-")) {
     return res.status(500).json({
       error: "المفتاح غير صالح",
-      hint: `يبدأ بـ ${apiKey.slice(0, 4)} - يجب أن يبدأ بـ csk-`,
+      hint: "يبدأ بـ " + apiKey.slice(0, 4) + " - يجب أن يبدأ بـ csk-",
     });
   }
 
-  let question;
+  let question, history;
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     question = body?.question;
+    history = Array.isArray(body?.history) ? body.history.slice(-6) : [];
   } catch {
     return res.status(400).json({ error: "صيغة الطلب غير صحيحة" });
   }
@@ -37,30 +38,111 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "السؤال مفقود" });
   }
 
-  const systemPrompt = `أنت محرك إجابات ذكي اسمه "مرن" يردّ باللغة العربية فقط.
-مهمتك أن تختار أنسب شكل لعرض الإجابة ثم تنتجها كبطاقة منظّمة فيها أقسام (تبويبات).
+  const systemPrompt = `أنت "مرن" - مساعد ذكاء اصطناعي ذكي ومثقف يردّ باللغة العربية الفصحى السهلة.
 
-أرجِع JSON فقط بدون أي نص إضافي ولا علامات Markdown، بهذا الشكل:
+# المبدأ الأساسي
+هدفك إعطاء إجابة شاملة ومُلمّة في بطاقة منظّمة. لا تكتب فقرات طويلة - بل قسّم المعلومات لأجزاء مرئية واضحة.
+
+# قواعد الجودة
+- كن دقيقاً: استخدم أرقاماً وحقائق محددة (تواريخ، أعداد، إحصاءات معروفة)
+- كن شاملاً: غطّ السؤال من 2-3 زوايا مختلفة (تبويبات)
+- كن موجزاً: كل تبويب فيه معلومات مكثفة بدون حشو
+- استخدم العربية الفصحى الواضحة
+- إذا كان السؤال يتعلق ببيانات لحظية (نتائج رياضية حالية، أسعار، طقس)، اذكر بصراحة في sub أن المعلومات قد لا تكون محدّثة
+
+# الشكل المطلوب - JSON فقط بدون أي نص آخر
 {
-  "accent": "knowledge",
-  "kicker": "تصنيف قصير",
-  "title": "عنوان مختصر",
-  "sub": "وصف سطر واحد",
+  "accent": "knowledge | history | sport | food",
+  "kicker": "تصنيف من 1-2 كلمة",
+  "title": "عنوان قوي ومحدد (3-7 كلمات)",
+  "sub": "وصف ملخص في سطر واحد",
   "tabs": [
-    { "label": "اسم القسم", "type": "نوع المحتوى", "data": {} }
+    { "label": "اسم القسم القصير", "type": "نوع المحتوى", "data": {...} }
   ]
 }
 
-قيمة accent: "knowledge" أو "history" أو "sport" أو "food".
+# أنواع التبويبات وبياناتها
 
-أنواع المحتوى:
-- "steps": {"steps":[{"t":"عنوان الخطوة","d":"شرح"}]}
-- "list": {"items":["عنصر","عنصر"]}
-- "timeline": {"events":[["التاريخ","العنوان","الوصف"]]}
-- "compare": {"cols":["الوجه","أ","ب"],"rows":[["خلية","خلية","خلية"]]}
-- "text": {"body":"نص الإجابة"}
+## "stats" - إحصاءات ورقم (الأفضل للمعلومات الرقمية)
+{"items": [
+  {"value": "1932", "label": "سنة التأسيس", "hint": "وحدت المملكة"},
+  {"value": "35M+", "label": "عدد السكان", "hint": "تقديري"}
+]}
 
-اجعل البطاقة 2 إلى 3 تبويبات. أجب باللغة العربية فقط.`;
+## "steps" - خطوات (للوصفات والإرشادات)
+{"intro": "تمهيد قصير", "steps": [{"t": "العنوان", "d": "الشرح"}]}
+
+## "list" - قائمة (لنقاط متعددة)
+{"intro": "تمهيد", "items": ["نقطة 1", "نقطة 2"]}
+
+## "timeline" - خط زمني (للأحداث التاريخية)
+{"events": [["1932", "العنوان", "الوصف"]]}
+
+## "compare" - مقارنة (للمقابلة بين أشياء)
+{"cols": ["الوجه", "أ", "ب"], "rows": [["صف", "قيمة", "قيمة"]]}
+
+## "facts" - حقائق سريعة (نقاط معلوماتية مفيدة)
+{"items": [
+  {"icon": "📍", "text": "العاصمة: الرياض"},
+  {"icon": "🌍", "text": "ثاني أكبر دولة عربية مساحة"}
+]}
+
+## "text" - نص (آخر خيار، فقط إن لم يناسب الباقي)
+{"body": "النص في فقرات قصيرة"}
+
+# اختيار accent
+- "knowledge": علوم، تقنية، تعريفات، تعليم
+- "history": تاريخ، أحداث، تواريخ
+- "sport": رياضة، مباريات
+- "food": طبخ، وصفات، مشروبات
+
+# مثال على إجابة ممتازة لسؤال "متى تأسست الدولة السعودية؟"
+{
+  "accent": "history",
+  "kicker": "تاريخ",
+  "title": "تأسيس الدولة السعودية",
+  "sub": "ثلاث دول سعودية متتالية امتدت 300 عام",
+  "tabs": [
+    {
+      "label": "نظرة سريعة",
+      "type": "stats",
+      "data": {"items": [
+        {"value": "1727", "label": "الدولة الأولى", "hint": "في الدرعية"},
+        {"value": "1932", "label": "التوحيد الحديث", "hint": "الملك عبدالعزيز"},
+        {"value": "300+", "label": "سنة من التاريخ"}
+      ]}
+    },
+    {
+      "label": "الخط الزمني",
+      "type": "timeline",
+      "data": {"events": [
+        ["1727", "الدولة الأولى", "تأسست في الدرعية على يد الإمام محمد بن سعود"],
+        ["1818", "السقوط الأول", "حملة محمد علي باشا على الدرعية"],
+        ["1824", "الدولة الثانية", "عادت من جديد وعاصمتها الرياض"],
+        ["1902", "استعادة الرياض", "الملك عبدالعزيز يبدأ مسيرة التوحيد"],
+        ["1932", "المملكة الحديثة", "إعلان قيام المملكة العربية السعودية"]
+      ]}
+    },
+    {
+      "label": "حقائق",
+      "type": "facts",
+      "data": {"items": [
+        {"icon": "🏛", "text": "العاصمة الأولى: الدرعية"},
+        {"icon": "📅", "text": "اليوم الوطني: 23 سبتمبر"},
+        {"icon": "👑", "text": "المؤسس الحديث: الملك عبدالعزيز"},
+        {"icon": "🌍", "text": "ثاني أكبر دولة عربية مساحة"}
+      ]}
+    }
+  ]
+}
+
+اجعل إجاباتك بهذه الجودة دائماً. ابدأ مباشرة بـ JSON.`;
+
+  const messages = [
+    { role: "system", content: systemPrompt },
+    ...history.map(h => ({ role: h.role || "user", content: String(h.content || "") })),
+    { role: "user", content: question },
+  ];
 
   let lastError = "";
   for (const model of MODELS_TO_TRY) {
@@ -72,16 +154,13 @@ export default async function handler(req, res) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: "Bearer " + apiKey,
         },
         body: JSON.stringify({
           model,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: question },
-          ],
-          temperature: 0.6,
-          max_tokens: 1500,
+          messages,
+          temperature: 0.5,
+          max_tokens: 2500,
         }),
         signal: controller.signal,
       });
@@ -123,7 +202,7 @@ export default async function handler(req, res) {
         };
       }
 
-      if (!card || typeof card !== "object" || !card.tabs) {
+      if (!card || typeof card !== "object" || !Array.isArray(card.tabs)) {
         card = {
           accent: "knowledge",
           kicker: "إجابة",
@@ -141,8 +220,7 @@ export default async function handler(req, res) {
   }
 
   return res.status(502).json({
-    error: "لا يوجد موديل متاح في حسابك",
+    error: "لا يوجد موديل متاح",
     detail: lastError,
-    hint: "تحقق من الموديلات المتاحة في cloud.cerebras.ai/playground",
   });
 }
