@@ -104,6 +104,10 @@ const Icon = {
   Globe: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
   Type: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>,
   Download: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+  Edit: () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  Refresh: () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>,
+  Search2: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  Web: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
 };
 
 /* ============ التطبيق الرئيسي ============ */
@@ -126,8 +130,12 @@ export default function App() {
   const [favs, setFavs] = useState([]);
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
-  const [confirmDialog, setConfirmDialog] = useState(null); // { title, action }
+  const [confirmDialog, setConfirmDialog] = useState(null);
   const [toast, setToast] = useState(null);
+  const [editingMsg, setEditingMsg] = useState(null); // {chatId, index, text}
+  const [renameDialog, setRenameDialog] = useState(null); // {id, currentTitle}
+  const [forceSearch, setForceSearch] = useState(false);
+  const [chatSearch, setChatSearch] = useState("");
 
   const endRef = useRef(null);
   const inputRef = useRef(null);
@@ -194,7 +202,17 @@ export default function App() {
   /* ===== الإجراءات ===== */
   const currentMessages = activeChat ? (chats[activeChat]?.messages || []) : [];
   const empty = currentMessages.length === 0;
-  const sortedChats = useMemo(() => Object.values(chats).sort((a, b) => b.createdAt - a.createdAt), [chats]);
+  const sortedChats = useMemo(() => {
+    let list = Object.values(chats).sort((a, b) => b.createdAt - a.createdAt);
+    if (chatSearch.trim()) {
+      const q = chatSearch.toLowerCase();
+      list = list.filter(c =>
+        c.title.toLowerCase().includes(q) ||
+        c.messages.some(m => (m.text || "").toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [chats, chatSearch]);
 
   const newChat = useCallback(() => {
     setActiveChat(null);
@@ -295,13 +313,15 @@ export default function App() {
   }, [t, isRTL, showToast]);
 
   /* ===== الإرسال ===== */
-  const send = async (text) => {
-    const q = (text ?? draft).trim();
+  const sendMessage = async (q, opts = {}) => {
+    const { chatId: targetChatId, replaceFromIndex, forceWebSearch } = opts;
     if (!q || thinking) return;
 
-    let chatId = activeChat;
+    let chatId = targetChatId || activeChat;
+    let isNewChat = false;
     if (!chatId) {
       chatId = "c_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+      isNewChat = true;
       setChats(prev => ({
         ...prev,
         [chatId]: { id: chatId, title: q.slice(0, 40), messages: [], createdAt: Date.now() }
@@ -309,17 +329,24 @@ export default function App() {
       setActiveChat(chatId);
     }
 
-    setChats(prev => ({
-      ...prev,
-      [chatId]: {
-        ...prev[chatId],
-        messages: [...(prev[chatId]?.messages || []), { role: "user", text: q, at: Date.now() }],
+    // لو فيه replaceFromIndex - نحذف الرسائل من هذا الفهرس فما بعد
+    setChats(prev => {
+      const cur = prev[chatId] || { id: chatId, title: q.slice(0, 40), messages: [], createdAt: Date.now() };
+      let msgs = [...cur.messages];
+      if (typeof replaceFromIndex === "number") {
+        msgs = msgs.slice(0, replaceFromIndex);
       }
-    }));
+      msgs.push({ role: "user", text: q, at: Date.now() });
+      return { ...prev, [chatId]: { ...cur, messages: msgs } };
+    });
     setDraft("");
+    setEditingMsg(null);
     setThinking(true);
 
-    const history = (chats[chatId]?.messages || []).slice(-6).map(m => ({
+    // التاريخ
+    const baseMessages = (chats[chatId]?.messages || []);
+    const trimmed = typeof replaceFromIndex === "number" ? baseMessages.slice(0, replaceFromIndex) : baseMessages;
+    const history = trimmed.slice(-6).map(m => ({
       role: m.role === "user" ? "user" : "assistant",
       content: m.role === "user" ? m.text : (m.card?.title || ""),
     }));
@@ -328,7 +355,12 @@ export default function App() {
       const r = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: q, history, lang: settings.lang }),
+        body: JSON.stringify({
+          question: q,
+          history,
+          lang: settings.lang,
+          forceSearch: forceWebSearch === true,
+        }),
       });
       let data = null;
       try { data = await r.json(); } catch {}
@@ -338,7 +370,7 @@ export default function App() {
         if (!cur) return prev;
         let newMsg;
         if (r.ok && data?.card) {
-          newMsg = { role: "card", card: data.card, searched: data.searched, at: Date.now() };
+          newMsg = { role: "card", card: data.card, searched: data.searched, at: Date.now(), forSearchQuery: q };
         } else {
           const errMsg = (data && (data.error || data.detail))
             ? `${data.error || ""}${data.detail ? " — " + data.detail : ""}`
@@ -358,7 +390,35 @@ export default function App() {
       });
     } finally {
       setThinking(false);
+      setForceSearch(false);
     }
+  };
+
+  const send = (text) => {
+    const q = (text ?? draft).trim();
+    sendMessage(q, { forceWebSearch: forceSearch });
+  };
+
+  const editAndResend = (chatId, index, newText) => {
+    sendMessage(newText.trim(), { chatId, replaceFromIndex: index });
+  };
+
+  const regenerate = (chatId, cardIndex) => {
+    // نلاقي رسالة المستخدم السابقة قبل البطاقة
+    const msgs = chats[chatId]?.messages || [];
+    let userIndex = cardIndex - 1;
+    while (userIndex >= 0 && msgs[userIndex]?.role !== "user") userIndex--;
+    if (userIndex < 0) return;
+    const userMsg = msgs[userIndex];
+    // نحذف من فهرس البطاقة فأكثر، ونعيد إرسال السؤال
+    sendMessage(userMsg.text, { chatId, replaceFromIndex: cardIndex });
+  };
+
+  const renameChat = (id, newTitle) => {
+    setChats(prev => ({
+      ...prev,
+      [id]: { ...prev[id], title: newTitle.slice(0, 60) || prev[id].title }
+    }));
   };
 
   /* ===== العرض ===== */
@@ -387,6 +447,8 @@ export default function App() {
         effectiveMode={effectiveMode}
         clearAllChats={clearAllChats} clearAllFavs={clearAllFavs}
         exportChats={exportChats}
+        chatSearch={chatSearch} setChatSearch={setChatSearch}
+        onRename={(id) => setRenameDialog({ id, currentTitle: chats[id]?.title || "" })}
       />
 
       {/* المنطقة الرئيسية */}
@@ -420,10 +482,14 @@ export default function App() {
             )}
 
             {currentMessages.map((m, i) => (
-              <MessageItem key={i} m={m} T={T} t={t} F={F}
+              <MessageItem key={i} m={m} idx={i} T={T} t={t} F={F}
                 isRTL={isRTL} lang={settings.lang}
                 isFav={isFav} toggleFav={() => toggleFav(m.text, activeChat)}
                 copyCard={copyCard} activeChat={activeChat}
+                editingMsg={editingMsg} setEditingMsg={setEditingMsg}
+                onEditSend={(newText) => editAndResend(activeChat, i, newText)}
+                onRegenerate={() => regenerate(activeChat, i)}
+                thinking={thinking}
               />
             ))}
 
@@ -458,18 +524,41 @@ export default function App() {
                 ))}
               </div>
             )}
-            <Glass T={T} radius={16} style={{ padding: isRTL ? "5px 5px 5px 16px" : "5px 16px 5px 5px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Glass T={T} radius={16} style={{ padding: isRTL ? "5px 5px 5px 8px" : "5px 8px 5px 5px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <button onClick={() => setForceSearch(s => !s)}
+                  title={isRTL ? "بحث في الإنترنت" : "Search the web"}
+                  style={{
+                    background: forceSearch ? "#34c75922" : "transparent",
+                    color: forceSearch ? "#34c759" : T.faint,
+                    border: `1px solid ${forceSearch ? "#34c75944" : T.line}`,
+                    borderRadius: 10, width: 36, height: 36,
+                    cursor: "pointer", fontFamily: "inherit",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    transition: "all .2s", flexShrink: 0,
+                  }}>
+                  <Icon.Web />
+                </button>
                 <input
                   ref={inputRef}
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") send(); }}
-                  placeholder={t.placeholder}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      send();
+                    }
+                    if (e.key === "Escape") {
+                      setDraft("");
+                      setEditingMsg(null);
+                    }
+                  }}
+                  placeholder={forceSearch ? (isRTL ? "ابحث في الإنترنت..." : "Search the web...") : t.placeholder}
                   style={{
                     flex: 1, background: "transparent", border: "none", outline: "none",
-                    color: T.text, fontSize: F.base + 0.5, padding: "11px 2px", fontFamily: "inherit",
+                    color: T.text, fontSize: F.base + 0.5, padding: "11px 6px", fontFamily: "inherit",
                     direction: isRTL ? "rtl" : "ltr", textAlign: isRTL ? "right" : "left",
+                    minWidth: 0,
                   }}
                 />
                 <button onClick={() => send()} disabled={!draft.trim() || thinking}
@@ -510,6 +599,15 @@ export default function App() {
         />
       )}
 
+      {/* نافذة إعادة التسمية */}
+      {renameDialog && (
+        <RenameModal T={T} t={t} F={F} isRTL={isRTL}
+          currentTitle={renameDialog.currentTitle}
+          onSave={(newTitle) => { renameChat(renameDialog.id, newTitle); setRenameDialog(null); }}
+          onCancel={() => setRenameDialog(null)}
+        />
+      )}
+
       {/* Toast */}
       {toast && (
         <div style={{
@@ -546,7 +644,8 @@ export default function App() {
 /* ============ الشريط الجانبي ============ */
 function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, setTab,
   sortedChats, activeChat, openChat, deleteChat, favs, send, newChat,
-  settings, setSettings, effectiveMode, clearAllChats, clearAllFavs, exportChats }) {
+  settings, setSettings, effectiveMode, clearAllChats, clearAllFavs, exportChats,
+  chatSearch, setChatSearch, onRename }) {
 
   return (
     <aside style={{
@@ -622,12 +721,44 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
       {/* المحتوى */}
       <div style={{ flex: 1, overflowY: "auto", padding: "0 8px 12px" }}>
         {tab === "chats" && (
-          sortedChats.length === 0 ? (
-            <EmptyTab T={T} F={F} text={t.noChats} />
-          ) : sortedChats.map(c => (
-            <ChatItem key={c.id} c={c} T={T} F={F} isActive={activeChat === c.id}
-              onOpen={() => openChat(c.id)} onDelete={() => deleteChat(c.id)} lang={settings.lang} />
-          ))
+          <>
+            {Object.keys(sortedChats).length > 0 || chatSearch ? (
+              <div style={{ padding: "0 4px 8px" }}>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  background: T.pillFill, border: `1px solid ${T.line}`,
+                  borderRadius: 9, padding: "7px 10px",
+                }}>
+                  <Icon.Search2 />
+                  <input
+                    value={chatSearch}
+                    onChange={(e) => setChatSearch(e.target.value)}
+                    placeholder={isRTL ? "بحث في المحادثات..." : "Search chats..."}
+                    style={{
+                      flex: 1, background: "transparent", border: "none", outline: "none",
+                      color: T.text, fontSize: F.base - 2, fontFamily: "inherit",
+                      direction: isRTL ? "rtl" : "ltr",
+                    }}
+                  />
+                  {chatSearch && (
+                    <button onClick={() => setChatSearch("")} style={{
+                      background: "transparent", border: "none", color: T.faint,
+                      cursor: "pointer", padding: 2, display: "flex",
+                    }}>
+                      <Icon.Close />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : null}
+            {sortedChats.length === 0 ? (
+              <EmptyTab T={T} F={F} text={chatSearch ? (isRTL ? "لا توجد نتائج" : "No results") : t.noChats} />
+            ) : sortedChats.map(c => (
+              <ChatItem key={c.id} c={c} T={T} F={F} isActive={activeChat === c.id}
+                onOpen={() => openChat(c.id)} onDelete={() => deleteChat(c.id)}
+                onRename={() => onRename(c.id)} lang={settings.lang} />
+            ))}
+          </>
         )}
 
         {tab === "favs" && (
@@ -661,12 +792,13 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
 }
 
 /* ============ عنصر المحادثة ============ */
-function ChatItem({ c, T, F, isActive, onOpen, onDelete, lang }) {
+function ChatItem({ c, T, F, isActive, onOpen, onDelete, onRename, lang }) {
   return (
     <div onClick={onOpen} style={{
       display: "flex", alignItems: "center", justifyContent: "space-between",
       padding: "10px 12px", margin: "1px 0", borderRadius: 9, cursor: "pointer",
       background: isActive ? T.pillActive : "transparent", transition: "background .15s",
+      gap: 4,
     }}
     onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = T.hover; }}
     onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}>
@@ -678,6 +810,13 @@ function ChatItem({ c, T, F, isActive, onOpen, onDelete, lang }) {
           {formatRelativeTime(c.createdAt, lang)}
         </div>
       </div>
+      <button onClick={(e) => { e.stopPropagation(); onRename(); }} style={{
+        background: "transparent", border: "none", color: T.faint,
+        cursor: "pointer", padding: 4, borderRadius: 5,
+        display: "flex", alignItems: "center", flexShrink: 0,
+      }}>
+        <Icon.Edit />
+      </button>
       <button onClick={(e) => { e.stopPropagation(); onDelete(); }} style={{
         background: "transparent", border: "none", color: T.faint,
         cursor: "pointer", padding: 4, borderRadius: 5,
@@ -858,10 +997,59 @@ function EmptyState({ T, t, F, send, settings }) {
 }
 
 /* ============ عنصر الرسالة ============ */
-function MessageItem({ m, T, t, F, isRTL, lang, isFav, toggleFav, copyCard, activeChat }) {
+function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard, activeChat,
+  editingMsg, setEditingMsg, onEditSend, onRegenerate, thinking }) {
   const timeStr = m.at ? formatTime(m.at, lang) : "";
+  const isEditing = editingMsg && editingMsg.idx === idx;
+  const [editDraft, setEditDraft] = useState(m.text || "");
+
+  useEffect(() => {
+    if (isEditing) setEditDraft(m.text || "");
+  }, [isEditing, m.text]);
 
   if (m.role === "user") {
+    if (isEditing) {
+      return (
+        <div style={{ marginBottom: 14 }}>
+          <Glass T={T} radius={16} style={{ padding: "10px 12px" }}>
+            <textarea
+              value={editDraft}
+              onChange={(e) => setEditDraft(e.target.value)}
+              autoFocus
+              rows={2}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (editDraft.trim()) onEditSend(editDraft);
+                }
+                if (e.key === "Escape") setEditingMsg(null);
+              }}
+              style={{
+                width: "100%", background: "transparent", border: "none", outline: "none",
+                color: T.text, fontSize: F.base, fontFamily: "inherit", resize: "none",
+                direction: isRTL ? "rtl" : "ltr",
+              }}
+            />
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
+              <button onClick={() => setEditingMsg(null)} style={{
+                background: "transparent", color: T.sub, border: `1px solid ${T.line}`,
+                borderRadius: 8, padding: "6px 12px", fontSize: F.label, fontWeight: 600,
+                cursor: "pointer", fontFamily: "inherit",
+              }}>{t.cancel}</button>
+              <button onClick={() => editDraft.trim() && onEditSend(editDraft)}
+                disabled={!editDraft.trim()}
+                style={{
+                  background: ACCENTS.knowledge, color: "#fff", border: "none",
+                  borderRadius: 8, padding: "6px 14px", fontSize: F.label, fontWeight: 600,
+                  cursor: editDraft.trim() ? "pointer" : "default", fontFamily: "inherit",
+                  opacity: editDraft.trim() ? 1 : 0.5,
+                }}>{isRTL ? "إرسال" : "Send"}</button>
+            </div>
+          </Glass>
+        </div>
+      );
+    }
+
     return (
       <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 14, alignItems: "flex-start", gap: 6 }}>
         <button onClick={toggleFav} style={{
@@ -869,6 +1057,16 @@ function MessageItem({ m, T, t, F, isRTL, lang, isFav, toggleFav, copyCard, acti
           color: isFav(m.text) ? "#ffb800" : T.faint, padding: 6, marginTop: 4,
         }}>
           <Icon.Star filled={isFav(m.text)} />
+        </button>
+        <button onClick={() => setEditingMsg({ idx })}
+          disabled={thinking}
+          title={isRTL ? "تعديل" : "Edit"}
+          style={{
+            background: "transparent", border: "none",
+            cursor: thinking ? "default" : "pointer",
+            color: T.faint, padding: 6, marginTop: 4, opacity: thinking ? 0.3 : 1,
+          }}>
+          <Icon.Edit />
         </button>
         <div>
           <div style={{
@@ -897,14 +1095,18 @@ function MessageItem({ m, T, t, F, isRTL, lang, isFav, toggleFav, copyCard, acti
 
   return (
     <div className="card-in" style={{ marginBottom: 20 }}>
-      <BigCard card={m.card} T={T} t={t} F={F} searched={m.searched} onCopy={() => copyCard(m.card)} />
+      <BigCard card={m.card} T={T} t={t} F={F} searched={m.searched}
+        onCopy={() => copyCard(m.card)}
+        onRegenerate={thinking ? null : onRegenerate}
+        isRTL={isRTL}
+      />
       {timeStr && <div style={{ fontSize: F.label - 1, color: T.faint, marginTop: 4 }}>{timeStr}</div>}
     </div>
   );
 }
 
 /* ============ البطاقة الكبيرة ============ */
-function BigCard({ card, T, t, F, searched, onCopy }) {
+function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
   const a = ACCENTS[card.accent] || ACCENTS.knowledge;
   const [activeTab, setActiveTab] = useState(0);
   const tabs = Array.isArray(card.tabs) ? card.tabs : [];
@@ -932,15 +1134,16 @@ function BigCard({ card, T, t, F, searched, onCopy }) {
               </div>
             )}
           </div>
-          <button onClick={onCopy} title={t.copy} style={{
-            background: "transparent", border: "none", color: T.faint,
-            cursor: "pointer", padding: 4, borderRadius: 5,
-            display: "flex", alignItems: "center", transition: "color .2s",
-          }}
-          onMouseEnter={e => e.currentTarget.style.color = T.text}
-          onMouseLeave={e => e.currentTarget.style.color = T.faint}>
-            <Icon.Copy />
-          </button>
+          <div style={{ display: "flex", gap: 2 }}>
+            {onRegenerate && (
+              <button onClick={onRegenerate} title={isRTL ? "إعادة توليد" : "Regenerate"} style={cardActionBtn(T)}>
+                <Icon.Refresh />
+              </button>
+            )}
+            <button onClick={onCopy} title={t.copy} style={cardActionBtn(T)}>
+              <Icon.Copy />
+            </button>
+          </div>
         </div>
         <h2 style={{ fontSize: F.h2, fontWeight: 700, margin: 0, letterSpacing: "-0.4px", lineHeight: 1.3 }}>{card.title}</h2>
         {card.sub && <div style={{ color: T.sub, fontSize: F.base - 1, marginTop: 5, lineHeight: 1.5 }}>{card.sub}</div>}
@@ -1124,6 +1327,62 @@ function settingsBtnStyle(T, F) {
     color: T.text, fontSize: F.base - 1, fontWeight: 500,
     cursor: "pointer", fontFamily: "inherit", borderRadius: 9, textAlign: "right",
   };
+}
+
+function cardActionBtn(T) {
+  return {
+    background: "transparent", border: "none", color: T.faint,
+    cursor: "pointer", padding: 6, borderRadius: 7,
+    display: "flex", alignItems: "center", transition: "all .2s",
+  };
+}
+
+/* ============ نافذة إعادة التسمية ============ */
+function RenameModal({ T, t, F, isRTL, currentTitle, onSave, onCancel }) {
+  const [value, setValue] = useState(currentTitle);
+  return (
+    <div onClick={onCancel} style={{
+      position: "fixed", inset: 0, background: T.modalBg, zIndex: 200,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      backdropFilter: "blur(8px)", padding: 20, animation: "ci .2s",
+    }}>
+      <div onClick={e => e.stopPropagation()}>
+        <Glass T={T} radius={18} style={{ padding: 24, maxWidth: 360, width: "100%" }}>
+          <div style={{ fontSize: F.base + 1, fontWeight: 700, marginBottom: 14, textAlign: "center" }}>
+            {isRTL ? "تغيير اسم المحادثة" : "Rename Chat"}
+          </div>
+          <input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === "Enter") onSave(value);
+              if (e.key === "Escape") onCancel();
+            }}
+            style={{
+              width: "100%", padding: "11px 14px",
+              background: T.pillFill, border: `1px solid ${T.line}`,
+              borderRadius: 10, color: T.text, fontSize: F.base,
+              fontFamily: "inherit", outline: "none", boxSizing: "border-box",
+              direction: isRTL ? "rtl" : "ltr", marginBottom: 16,
+            }}
+          />
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={onCancel} style={{
+              flex: 1, background: T.pillFill, color: T.text,
+              border: "none", borderRadius: 11, padding: "11px",
+              fontSize: F.base, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+            }}>{t.cancel}</button>
+            <button onClick={() => onSave(value)} style={{
+              flex: 1, background: ACCENTS.knowledge, color: "#fff",
+              border: "none", borderRadius: 11, padding: "11px",
+              fontSize: F.base, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+            }}>{isRTL ? "حفظ" : "Save"}</button>
+          </div>
+        </Glass>
+      </div>
+    </div>
+  );
 }
 
 function formatTime(ts, lang) {
