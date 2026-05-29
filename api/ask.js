@@ -1,13 +1,57 @@
-// الوسيط الآمن - النسخة المطوّرة
-// ذكاء أعمق، إجابات أكمل، بطاقات أغنى
+// الوسيط الآمن - النسخة المتقدمة
+// مع البحث على الإنترنت + ذكاء أعمق + بطاقات أغنى
 
 const MODELS_TO_TRY = [
-  "llama3.1-8b",
   "llama-3.3-70b",
+  "llama3.1-8b",
   "llama-4-scout-17b-16e-instruct",
   "gpt-oss-120b",
-  "qwen-3-32b",
 ];
+
+// كلمات تدل على الحاجة للبحث الحي
+const NEEDS_SEARCH_PATTERNS = [
+  /اليوم|أمس|الآن|حالي|الحالي|الحالية|أحدث|آخر|جديد|مؤخر/,
+  /\d{4}/,  // أي رقم سنة
+  /سعر|أسعار|نتيجة|نتائج|مباراة|مباريات|طقس|درجة|أخبار|جدول|ترتيب/,
+  /من فاز|من يلعب|متى يلعب|متى تذاع|متى ينطلق/,
+];
+
+function needsLiveSearch(question) {
+  return NEEDS_SEARCH_PATTERNS.some(p => p.test(question));
+}
+
+async function searchWeb(query, tavilyKey) {
+  if (!tavilyKey) return null;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    const res = await fetch("https://api.tavily.com/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: tavilyKey,
+        query,
+        search_depth: "basic",
+        max_results: 5,
+        include_answer: true,
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const lines = [];
+    if (data.answer) lines.push("الإجابة المختصرة: " + data.answer);
+    if (Array.isArray(data.results)) {
+      data.results.slice(0, 5).forEach((r, i) => {
+        lines.push(`[${i + 1}] ${r.title}\n${r.content?.slice(0, 400) || ""}`);
+      });
+    }
+    return lines.join("\n\n");
+  } catch {
+    return null;
+  }
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -16,21 +60,21 @@ export default async function handler(req, res) {
 
   const rawKey = process.env.CEREBRAS_API_KEY;
   if (!rawKey) {
-    return res.status(500).json({ error: "المفتاح غير موجود في إعدادات الخادم" });
+    return res.status(500).json({ error: "المفتاح غير موجود" });
   }
   const apiKey = rawKey.trim();
   if (!apiKey.startsWith("csk-")) {
-    return res.status(500).json({
-      error: "المفتاح غير صالح",
-      hint: "يبدأ بـ " + apiKey.slice(0, 4) + " - يجب أن يبدأ بـ csk-",
-    });
+    return res.status(500).json({ error: "المفتاح غير صالح" });
   }
 
-  let question, history;
+  const tavilyKey = (process.env.TAVILY_API_KEY || "").trim();
+
+  let question, history, forceSearch;
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     question = body?.question;
     history = Array.isArray(body?.history) ? body.history.slice(-6) : [];
+    forceSearch = body?.forceSearch === true;
   } catch {
     return res.status(400).json({ error: "صيغة الطلب غير صحيحة" });
   }
@@ -38,105 +82,55 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "السؤال مفقود" });
   }
 
+  // البحث على الإنترنت إذا لزم
+  let searchContext = "";
+  let didSearch = false;
+  if (tavilyKey && (forceSearch || needsLiveSearch(question))) {
+    const results = await searchWeb(question, tavilyKey);
+    if (results) {
+      searchContext = "\n\n# نتائج البحث على الإنترنت (استخدمها لإجابتك):\n" + results;
+      didSearch = true;
+    }
+  }
+
   const systemPrompt = `أنت "مرن" - مساعد ذكاء اصطناعي ذكي ومثقف يردّ باللغة العربية الفصحى السهلة.
 
 # المبدأ الأساسي
-هدفك إعطاء إجابة شاملة ومُلمّة في بطاقة منظّمة. لا تكتب فقرات طويلة - بل قسّم المعلومات لأجزاء مرئية واضحة.
+هدفك إعطاء إجابة شاملة دقيقة في بطاقة منظّمة. قسّم المعلومات لأجزاء مرئية واضحة، لا فقرات طويلة.
 
 # قواعد الجودة
-- كن دقيقاً: استخدم أرقاماً وحقائق محددة (تواريخ، أعداد، إحصاءات معروفة)
-- كن شاملاً: غطّ السؤال من 2-3 زوايا مختلفة (تبويبات)
-- كن موجزاً: كل تبويب فيه معلومات مكثفة بدون حشو
+- كن دقيقاً جداً: استخدم أرقاماً وحقائق محددة
+- إن وُجدت نتائج بحث مرفقة، اعتمد عليها بشكل أساسي
+- كن شاملاً: غطّ السؤال من 2-4 زوايا مختلفة (تبويبات)
 - استخدم العربية الفصحى الواضحة
-- إذا كان السؤال يتعلق ببيانات لحظية (نتائج رياضية حالية، أسعار، طقس)، اذكر بصراحة في sub أن المعلومات قد لا تكون محدّثة
 
 # الشكل المطلوب - JSON فقط بدون أي نص آخر
 {
   "accent": "knowledge | history | sport | food",
-  "kicker": "تصنيف من 1-2 كلمة",
-  "title": "عنوان قوي ومحدد (3-7 كلمات)",
-  "sub": "وصف ملخص في سطر واحد",
+  "kicker": "تصنيف قصير",
+  "title": "عنوان قوي (3-8 كلمات)",
+  "sub": "ملخص في سطر واحد",
   "tabs": [
-    { "label": "اسم القسم القصير", "type": "نوع المحتوى", "data": {...} }
+    { "label": "اسم القسم", "type": "نوع المحتوى", "data": {...} }
   ]
 }
 
-# أنواع التبويبات وبياناتها
+# أنواع التبويبات
+- "stats": {"items":[{"value":"1932","label":"عنوان","hint":"تفاصيل"}]}
+- "steps": {"intro":"تمهيد","steps":[{"t":"عنوان","d":"شرح"}]}
+- "list": {"intro":"تمهيد","items":["نقطة","نقطة"]}
+- "timeline": {"events":[["1932","العنوان","الوصف"]]}
+- "compare": {"cols":["الوجه","أ","ب"],"rows":[["صف","قيمة","قيمة"]]}
+- "facts": {"items":[{"icon":"📍","text":"معلومة"}]}
+- "text": {"body":"نص في فقرات قصيرة"}
 
-## "stats" - إحصاءات ورقم (الأفضل للمعلومات الرقمية)
-{"items": [
-  {"value": "1932", "label": "سنة التأسيس", "hint": "وحدت المملكة"},
-  {"value": "35M+", "label": "عدد السكان", "hint": "تقديري"}
-]}
+# accent
+- "knowledge": علوم، تقنية، تعليم
+- "history": تاريخ
+- "sport": رياضة
+- "food": طبخ ومشروبات
 
-## "steps" - خطوات (للوصفات والإرشادات)
-{"intro": "تمهيد قصير", "steps": [{"t": "العنوان", "d": "الشرح"}]}
-
-## "list" - قائمة (لنقاط متعددة)
-{"intro": "تمهيد", "items": ["نقطة 1", "نقطة 2"]}
-
-## "timeline" - خط زمني (للأحداث التاريخية)
-{"events": [["1932", "العنوان", "الوصف"]]}
-
-## "compare" - مقارنة (للمقابلة بين أشياء)
-{"cols": ["الوجه", "أ", "ب"], "rows": [["صف", "قيمة", "قيمة"]]}
-
-## "facts" - حقائق سريعة (نقاط معلوماتية مفيدة)
-{"items": [
-  {"icon": "📍", "text": "العاصمة: الرياض"},
-  {"icon": "🌍", "text": "ثاني أكبر دولة عربية مساحة"}
-]}
-
-## "text" - نص (آخر خيار، فقط إن لم يناسب الباقي)
-{"body": "النص في فقرات قصيرة"}
-
-# اختيار accent
-- "knowledge": علوم، تقنية، تعريفات، تعليم
-- "history": تاريخ، أحداث، تواريخ
-- "sport": رياضة، مباريات
-- "food": طبخ، وصفات، مشروبات
-
-# مثال على إجابة ممتازة لسؤال "متى تأسست الدولة السعودية؟"
-{
-  "accent": "history",
-  "kicker": "تاريخ",
-  "title": "تأسيس الدولة السعودية",
-  "sub": "ثلاث دول سعودية متتالية امتدت 300 عام",
-  "tabs": [
-    {
-      "label": "نظرة سريعة",
-      "type": "stats",
-      "data": {"items": [
-        {"value": "1727", "label": "الدولة الأولى", "hint": "في الدرعية"},
-        {"value": "1932", "label": "التوحيد الحديث", "hint": "الملك عبدالعزيز"},
-        {"value": "300+", "label": "سنة من التاريخ"}
-      ]}
-    },
-    {
-      "label": "الخط الزمني",
-      "type": "timeline",
-      "data": {"events": [
-        ["1727", "الدولة الأولى", "تأسست في الدرعية على يد الإمام محمد بن سعود"],
-        ["1818", "السقوط الأول", "حملة محمد علي باشا على الدرعية"],
-        ["1824", "الدولة الثانية", "عادت من جديد وعاصمتها الرياض"],
-        ["1902", "استعادة الرياض", "الملك عبدالعزيز يبدأ مسيرة التوحيد"],
-        ["1932", "المملكة الحديثة", "إعلان قيام المملكة العربية السعودية"]
-      ]}
-    },
-    {
-      "label": "حقائق",
-      "type": "facts",
-      "data": {"items": [
-        {"icon": "🏛", "text": "العاصمة الأولى: الدرعية"},
-        {"icon": "📅", "text": "اليوم الوطني: 23 سبتمبر"},
-        {"icon": "👑", "text": "المؤسس الحديث: الملك عبدالعزيز"},
-        {"icon": "🌍", "text": "ثاني أكبر دولة عربية مساحة"}
-      ]}
-    }
-  ]
-}
-
-اجعل إجاباتك بهذه الجودة دائماً. ابدأ مباشرة بـ JSON.`;
+ابدأ مباشرة بـ { وانتهِ بـ }. لا تكتب أي شي قبل أو بعد JSON.${searchContext}`;
 
   const messages = [
     { role: "system", content: systemPrompt },
@@ -148,7 +142,7 @@ export default async function handler(req, res) {
   for (const model of MODELS_TO_TRY) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 25000);
+      const timeout = setTimeout(() => controller.abort(), 28000);
 
       const response = await fetch("https://api.cerebras.ai/v1/chat/completions", {
         method: "POST",
@@ -159,7 +153,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           model,
           messages,
-          temperature: 0.5,
+          temperature: 0.4,
           max_tokens: 2500,
         }),
         signal: controller.signal,
@@ -173,9 +167,8 @@ export default async function handler(req, res) {
           continue;
         }
         return res.status(response.status).json({
-          error: "الذكاء الاصطناعي رفض الطلب (" + response.status + ")",
+          error: "خطأ من الذكاء الاصطناعي (" + response.status + ")",
           detail: errText.slice(0, 300),
-          model,
         });
       }
 
@@ -185,9 +178,7 @@ export default async function handler(req, res) {
 
       const start = raw.indexOf("{");
       const end = raw.lastIndexOf("}");
-      if (start !== -1 && end !== -1 && end > start) {
-        raw = raw.slice(start, end + 1);
-      }
+      if (start !== -1 && end !== -1 && end > start) raw = raw.slice(start, end + 1);
 
       let card;
       try {
@@ -212,15 +203,12 @@ export default async function handler(req, res) {
         };
       }
 
-      return res.status(200).json({ card, model_used: model });
+      return res.status(200).json({ card, model_used: model, searched: didSearch });
     } catch (e) {
       lastError = model + ": " + String(e?.message || e);
       continue;
     }
   }
 
-  return res.status(502).json({
-    error: "لا يوجد موديل متاح",
-    detail: lastError,
-  });
+  return res.status(502).json({ error: "لا يوجد موديل متاح", detail: lastError });
 }
