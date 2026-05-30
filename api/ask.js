@@ -1,23 +1,12 @@
-// الوسيط الآمن - نسخة محسّنة بنظام بحث ذكي موسّع
-// يبحث في الإنترنت لمعظم الأسئلة اللي تحتاج معلومات دقيقة
+// الوسيط الآمن - نسخة "الالتزام بالحقائق"
+// تجبر الذكاء على استخدام نتائج البحث كحقائق نهائية
 
 const MODELS_TO_TRY = [
   "llama-3.3-70b",
-  "llama3.1-8b",
   "llama-4-scout-17b-16e-instruct",
   "gpt-oss-120b",
+  "llama3.1-8b",
 ];
-
-/* =========================================================
-   نظام كشف "متى يبحث" - موسّع وذكي
-   يبحث في كل سؤال يحتوي على:
-   - أرقام (تواريخ، سنوات، إحصاءات)
-   - أسماء أعلام، أحداث، مؤسسات
-   - بطولات، رياضة، أخبار، تقنية
-   - أسعار، اقتصاد، طقس
-   - أي سؤال "متى/أين/من/كم"
-   - الإنجليزية أيضاً
-   ========================================================= */
 
 const TIME_WORDS = /اليوم|أمس|الآن|حالي|الحالي|الحالية|أحدث|آخر|جديد|مؤخر|قادم|المقبل|next|today|yesterday|now|current|latest|recent|breaking|upcoming/i;
 const QUESTION_WORDS = /متى|أين|كم|كيف|من هو|من هي|من فاز|أي\s|ما هو|ما هي|when|where|how many|how much|who is|who won|what is/i;
@@ -27,11 +16,7 @@ const TECH_WORDS = /آيفون|سامسونج|تسلا|قوقل|أبل|مايك�
 const MONEY_WORDS = /سعر|أسعار|تكلفة|راتب|أرباح|دخل|قيمة|سهم|أسهم|عملة|دولار|ريال|يورو|بتكوين|price|cost|salary|earnings|revenue|stock|currency|dollar|riyal|euro|bitcoin/i;
 const WEATHER_WORDS = /طقس|درجة|حرارة|أمطار|رياح|temperature|weather|rain|wind/i;
 const GEO_WORDS = /دولة|مدينة|عاصمة|سكان|مساحة|تعداد|country|city|capital|population|area/i;
-
-// أرقام: سنوات (1900-2099) أو أرقام كبيرة
 const HAS_NUMBERS = /\b(19|20)\d{2}\b|\b\d{4,}\b/;
-
-// أسماء علم (حروف كبيرة في الإنجليزية أو ال + اسم)
 const PROPER_NOUNS_EN = /\b[A-Z][a-z]{3,}\b/;
 
 const SEARCH_PATTERNS = [
@@ -40,21 +25,15 @@ const SEARCH_PATTERNS = [
   HAS_NUMBERS, PROPER_NOUNS_EN,
 ];
 
-// أسئلة لا تحتاج بحث (محادثة عامة، إبداع، تعريفات بسيطة)
 const NO_SEARCH_PATTERNS = [
   /^(مرحبا|أهلا|السلام|هاي|هلا|hi|hello|hey)\b/i,
   /^(شكرا|thanks|thank you)\b/i,
   /اكتب لي|اقترح لي|أعطني فكرة|ابتكر|اخترع|write me|suggest me|give me an idea/i,
-  /ترجم|translate/i,
-  /ما معنى|what does .* mean|meaning of/i,
 ];
 
 function needsLiveSearch(question) {
-  // لو محادثة عامة، لا نبحث
   if (NO_SEARCH_PATTERNS.some(p => p.test(question))) return false;
-  // طول السؤال - الأسئلة القصيرة جداً غالباً محادثة
   if (question.trim().length < 8) return false;
-  // لو فيه أي نمط من أنماط البحث، نبحث
   return SEARCH_PATTERNS.some(p => p.test(question));
 }
 
@@ -62,29 +41,33 @@ async function searchWeb(query, tavilyKey) {
   if (!tavilyKey) return null;
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
+    const timeout = setTimeout(() => controller.abort(), 18000);
     const res = await fetch("https://api.tavily.com/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         api_key: tavilyKey, query,
-        search_depth: "advanced",  // متقدم - نتائج أفضل
-        max_results: 7,
-        include_answer: true,
+        search_depth: "advanced",
+        max_results: 8,
+        include_answer: "advanced",
+        include_raw_content: false,
       }),
       signal: controller.signal,
     });
     clearTimeout(timeout);
     if (!res.ok) return null;
     const data = await res.json();
-    const lines = [];
-    if (data.answer) lines.push("Quick Answer: " + data.answer);
+    const out = { answer: data.answer || "", results: [] };
     if (Array.isArray(data.results)) {
-      data.results.slice(0, 7).forEach((r, i) => {
-        lines.push(`[${i + 1}] ${r.title}\nURL: ${r.url}\n${r.content?.slice(0, 500) || ""}`);
+      data.results.slice(0, 8).forEach(r => {
+        out.results.push({
+          title: r.title || "",
+          url: r.url || "",
+          content: (r.content || "").slice(0, 600),
+        });
       });
     }
-    return lines.join("\n\n");
+    return out;
   } catch { return null; }
 }
 
@@ -112,40 +95,58 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Question missing" });
   }
 
-  // قرار البحث
-  let searchContext = "";
+  let searchData = null;
   let didSearch = false;
   const shouldSearch = forceSearch || (tavilyKey && needsLiveSearch(question));
 
   if (shouldSearch && tavilyKey) {
-    const results = await searchWeb(question, tavilyKey);
-    if (results) {
-      searchContext = "\n\n# نتائج بحث الإنترنت (اعتمد عليها بشكل أساسي - هذي حقائق من مصادر حية):\n" + results;
-      didSearch = true;
-    }
+    searchData = await searchWeb(question, tavilyKey);
+    if (searchData) didSearch = true;
   }
 
-  const systemPromptAr = `أنت "مرن" - مساعد ذكاء اصطناعي ذكي ودقيق يردّ باللغة العربية الفصحى السهلة.
+  // بناء جزء البحث في system prompt
+  let searchBlock = "";
+  if (searchData) {
+    const lines = [];
+    lines.push("\n\n===== FACTS FROM WEB SEARCH =====");
+    lines.push("⚠️ CRITICAL: These are the ONLY authoritative facts. Use them as primary source.");
+    lines.push("⚠️ If your training memory contradicts these facts, IGNORE your memory and use these.");
+    lines.push("⚠️ Do NOT invent details not present in these results.");
+    lines.push("");
+    if (searchData.answer) {
+      lines.push("📌 Verified summary:");
+      lines.push(searchData.answer);
+      lines.push("");
+    }
+    if (searchData.results.length) {
+      lines.push("📚 Detailed sources:");
+      searchData.results.forEach((r, i) => {
+        lines.push(`\n[Source ${i + 1}] ${r.title}`);
+        lines.push(`URL: ${r.url}`);
+        lines.push(r.content);
+      });
+    }
+    lines.push("\n===== END OF FACTS =====");
+    searchBlock = lines.join("\n");
+  }
 
-# قواعد الدقة (مهمة جداً)
-1. **إذا وُجدت نتائج بحث مرفقة في الأسفل**: اعتمد عليها بشكل أساسي، ولا تخترع أي معلومة لا توجد فيها
-2. **إذا لم توجد نتائج بحث**: استخدم معرفتك بحذر، واذكر في "sub" أن المعلومات قد لا تكون محدّثة
-3. **لا تخترع أرقاماً أو تواريخ** - إذا لم تكن متأكداً، قل ذلك صراحة
-4. **افهم السياق من المحادثة السابقة** - إذا سأل المستخدم سؤال متابعة، اربطه بالسؤال الأصلي
+  const systemPromptAr = `أنت "مرن" - مساعد ذكاء اصطناعي دقيق يردّ باللغة العربية الفصحى.
 
-# هدفك
-إعطاء إجابة شاملة دقيقة في بطاقة منظّمة. قسّم المعلومات لأجزاء مرئية واضحة، لا فقرات طويلة.
+# 🚨 قواعد الصدق المطلقة (لا يجوز كسرها)
+1. ${searchData ? "هناك حقائق من بحث الإنترنت مرفقة في الأسفل. هذه الحقائق هي **المصدر الوحيد المعتمد**. التزم بها حرفياً." : "لا توجد نتائج بحث متاحة. استخدم معرفتك، وإذا لم تكن متأكداً قل ذلك صراحة في الإجابة."}
+2. **لا تخترع أبداً**: لا تواريخ، لا أرقام، لا أسماء، لا أماكن. إذا لم تجد المعلومة في نتائج البحث، اكتب "غير متوفر في المصادر" بدلاً من التخمين.
+3. **إذا تعارضت معرفتك مع نتائج البحث**: ✋ توقف فوراً عن استخدام معرفتك واتبع نتائج البحث.
+4. **اقتبس بدقة من نتائج البحث**: التواريخ، الأسماء، الأماكن، الأرقام - كلها يجب أن تكون كما وردت في المصادر.
+5. ${searchData ? "اذكر في 'sub' أن المعلومات مستندة على بحث حي حديث." : "اذكر في 'sub' أن المعلومات من المعرفة العامة وقد لا تكون محدّثة."}
 
-# قواعد الجودة
-- كن دقيقاً جداً: استخدم أرقاماً وحقائق محددة من نتائج البحث
-- غطّ السؤال من 2-4 زوايا مختلفة (تبويبات)
-- استخدم العربية الفصحى الواضحة
+# المهمة
+إعطاء إجابة منظّمة في بطاقة JSON. غطّ السؤال من 2-4 زوايا (تبويبات).
 
-# الشكل المطلوب - JSON فقط بدون أي نص آخر
+# الشكل المطلوب - JSON فقط
 {
   "accent": "knowledge | history | sport | food",
   "kicker": "تصنيف قصير",
-  "title": "عنوان قوي (3-8 كلمات)",
+  "title": "عنوان دقيق",
   "sub": "ملخص في سطر واحد",
   "tabs": [
     { "label": "اسم القسم", "type": "النوع", "data": {} }
@@ -161,29 +162,25 @@ export default async function handler(req, res) {
 - "facts": {"items":[{"icon":"📍","text":"معلومة"}]}
 - "text": {"body":"نص"}
 
-ابدأ مباشرة بـ { وانتهِ بـ }. لا تكتب أي شي قبل أو بعد JSON.${searchContext}`;
+ابدأ مباشرة بـ { وانتهِ بـ }. لا تكتب أي شي قبل أو بعد JSON.${searchBlock}`;
 
-  const systemPromptEn = `You are "Marn" - an intelligent, accurate AI assistant. Respond in clear English.
+  const systemPromptEn = `You are "Marn" - an accurate AI assistant. Respond in clear English.
 
-# Accuracy Rules (critical)
-1. **If search results are attached below**: Rely on them as primary source. Do NOT invent any info not in them.
-2. **If no search results**: Use your knowledge cautiously, and mention in "sub" if info may not be current.
-3. **Don't invent numbers or dates** - if unsure, say so explicitly.
-4. **Understand context from conversation history** - link follow-up questions to original topic.
+# 🚨 STRICT TRUTH RULES (never break)
+1. ${searchData ? "Web search facts are attached below. These are the **ONLY authoritative source**. Follow them literally." : "No search results available. Use your knowledge, and explicitly state when uncertain."}
+2. **Never invent**: no dates, no numbers, no names, no places. If info isn't in search results, write "not available in sources" instead of guessing.
+3. **If your memory contradicts search**: ✋ STOP using memory, follow search results.
+4. **Quote precisely from sources**: dates, names, places, numbers - all must match sources exactly.
+5. ${searchData ? "Mention in 'sub' that info is based on live web search." : "Mention in 'sub' that info is from general knowledge and may not be current."}
 
-# Goal
-Give comprehensive, accurate answer in structured card. Split info into clear visual sections, not long paragraphs.
-
-# Quality Rules
-- Be very accurate: use specific numbers and facts from search results
-- Cover question from 2-4 angles (tabs)
-- Use clear, professional English
+# Task
+Give structured JSON card answer. Cover question from 2-4 angles (tabs).
 
 # Required Format - JSON only
 {
   "accent": "knowledge | history | sport | food",
   "kicker": "short category",
-  "title": "strong title (3-8 words)",
+  "title": "accurate title",
   "sub": "one-line summary",
   "tabs": [
     { "label": "section name", "type": "type", "data": {} }
@@ -199,7 +196,7 @@ Give comprehensive, accurate answer in structured card. Split info into clear vi
 - "facts": {"items":[{"icon":"📍","text":"info"}]}
 - "text": {"body":"text"}
 
-Start immediately with { and end with }. No text before/after JSON.${searchContext}`;
+Start immediately with { and end with }. No text before/after JSON.${searchBlock}`;
 
   const systemPrompt = lang === "en" ? systemPromptEn : systemPromptAr;
 
@@ -213,12 +210,17 @@ Start immediately with { and end with }. No text before/after JSON.${searchConte
   for (const model of MODELS_TO_TRY) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 30000);
+      const timeout = setTimeout(() => controller.abort(), 35000);
 
       const response = await fetch("https://api.cerebras.ai/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + apiKey },
-        body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: 2500 }),
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: 0.1,  // أقل حرارة = أكثر التزاماً بالحقائق
+          max_tokens: 3000,
+        }),
         signal: controller.signal,
       });
       clearTimeout(timeout);
