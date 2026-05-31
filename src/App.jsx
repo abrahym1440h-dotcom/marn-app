@@ -15,49 +15,55 @@ const ACCENTS = {
   food: "#ff9500",
 };
 
-/* ============ الثيمات ============ */
+/* ============ الثيمات الاحترافية ============ */
 const THEMES = {
   light: {
-    pageBg: "linear-gradient(160deg, #f0f3f8 0%, #e7ecf3 50%, #e1eaf3 100%)",
-    sidebarBg: "rgba(255,255,255,0.7)",
-    text: "#1d1d1f",
-    sub: "#5b5b60",
-    faint: "#9b9ba0",
-    glassFill: "linear-gradient(150deg, rgba(255,255,255,0.65), rgba(255,255,255,0.25))",
-    glassEdge: "rgba(255,255,255,0.95)",
-    glassBorder: "rgba(255,255,255,0.65)",
-    glassShadow: "0 8px 30px rgba(40,50,90,0.14), inset 0 1px 1px rgba(255,255,255,0.9)",
-    headerBg: "rgba(255,255,255,0.6)",
-    composerBg: "rgba(255,255,255,0.55)",
-    userFill: "linear-gradient(150deg, rgba(10,132,255,0.95), rgba(10,132,255,0.78))",
-    userText: "#fff",
-    pillFill: "rgba(255,255,255,0.55)",
-    pillActive: "rgba(255,255,255,0.95)",
-    line: "rgba(0,0,0,0.07)",
-    hover: "rgba(0,0,0,0.04)",
-    dotIdle: "#b8b8bd",
-    modalBg: "rgba(0,0,0,0.45)",
+    pageBg: "#f7f7f8",
+    sidebarBg: "#ffffff",
+    text: "#0d0d0d",
+    sub: "#6e6e80",
+    faint: "#aeaeb8",
+    glassFill: "#ffffff",
+    glassEdge: "rgba(0,0,0,0.06)",
+    glassBorder: "#e5e5ea",
+    glassShadow: "0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05)",
+    headerBg: "rgba(247,247,248,0.95)",
+    composerBg: "rgba(247,247,248,0.98)",
+    userFill: "#0a84ff",
+    userText: "#ffffff",
+    pillFill: "#f2f2f7",
+    pillActive: "#ffffff",
+    line: "#e5e5ea",
+    hover: "#f2f2f7",
+    dotIdle: "#c7c7cc",
+    modalBg: "rgba(0,0,0,0.4)",
+    cardBg: "#ffffff",
+    inputBg: "#ffffff",
+    accent: "#0a84ff",
   },
   dark: {
-    pageBg: "linear-gradient(160deg, #0a0a0c 0%, #131318 50%, #0c0c11 100%)",
-    sidebarBg: "rgba(16,16,20,0.85)",
-    text: "#f5f5f7",
-    sub: "#a1a1a8",
-    faint: "#636366",
-    glassFill: "linear-gradient(150deg, rgba(255,255,255,0.13), rgba(255,255,255,0.04))",
-    glassEdge: "rgba(255,255,255,0.5)",
-    glassBorder: "rgba(255,255,255,0.16)",
-    glassShadow: "0 8px 36px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.3)",
-    headerBg: "rgba(18,18,22,0.6)",
-    composerBg: "rgba(14,14,18,0.6)",
-    userFill: "linear-gradient(150deg, rgba(10,132,255,0.95), rgba(10,132,255,0.75))",
-    userText: "#fff",
-    pillFill: "rgba(255,255,255,0.08)",
-    pillActive: "rgba(255,255,255,0.22)",
-    line: "rgba(255,255,255,0.08)",
-    hover: "rgba(255,255,255,0.05)",
-    dotIdle: "#48484a",
-    modalBg: "rgba(0,0,0,0.65)",
+    pageBg: "#0d0d0d",
+    sidebarBg: "#111111",
+    text: "#ececec",
+    sub: "#8e8ea0",
+    faint: "#555560",
+    glassFill: "#1a1a1a",
+    glassEdge: "rgba(255,255,255,0.06)",
+    glassBorder: "#2a2a2a",
+    glassShadow: "0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2)",
+    headerBg: "rgba(13,13,13,0.97)",
+    composerBg: "rgba(13,13,13,0.98)",
+    userFill: "#0a84ff",
+    userText: "#ffffff",
+    pillFill: "#1e1e1e",
+    pillActive: "#2a2a2a",
+    line: "#2a2a2a",
+    hover: "#1e1e1e",
+    dotIdle: "#444450",
+    modalBg: "rgba(0,0,0,0.7)",
+    cardBg: "#1a1a1a",
+    inputBg: "#1a1a1a",
+    accent: "#0a84ff",
   },
 };
 
@@ -67,21 +73,16 @@ const FONT_SIZES = {
   large: { base: 16, h1: 27, h2: 22, label: 13 },
 };
 
-/* ============ مكوّن الزجاج ============ */
-function Glass({ T, children, style, radius = 22, onClick, className = "" }) {
+/* ============ مكوّن البطاقة الاحترافية ============ */
+function Glass({ T, children, style, radius = 12, onClick, className = "" }) {
   return (
-    <div onClick={onClick} className={`liquid ${className}`} style={{
-      position: "relative", borderRadius: radius, background: T.glassFill,
-      border: `1px solid ${T.glassBorder}`, boxShadow: T.glassShadow,
-      backdropFilter: "blur(22px) saturate(180%)",
-      WebkitBackdropFilter: "blur(22px) saturate(180%)",
+    <div onClick={onClick} className={`card-surface ${className}`} style={{
+      position: "relative", borderRadius: radius,
+      background: T.cardBg || T.glassFill,
+      border: `1px solid ${T.glassBorder}`,
+      boxShadow: T.glassShadow,
       overflow: "hidden", ...style,
     }}>
-      <div style={{
-        position: "absolute", top: 0, left: "8%", right: "8%", height: 1.5,
-        background: `linear-gradient(90deg, transparent, ${T.glassEdge}, transparent)`,
-        pointerEvents: "none",
-      }} />
       {children}
     </div>
   );
@@ -467,19 +468,25 @@ export default function App() {
         {/* الهيدر */}
         <header style={{
           flexShrink: 0, position: "relative", zIndex: 5,
-          background: T.headerBg, borderBottom: `1px solid ${T.line}`,
-          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+          background: T.headerBg,
+          borderBottom: `1px solid ${T.line}`,
         }}>
-          <div style={{ maxWidth: 820, margin: "0 auto", padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ maxWidth: 820, margin: "0 auto", padding: "14px 18px", display: "flex", alignItems: "center", gap: 12 }}>
             {isMobile && (
               <button onClick={() => setSidebarOpen(true)} style={iconBtnStyle(T)}>
                 <Icon.Menu />
               </button>
             )}
-            <div style={{ flex: 1, fontSize: F.base + 1.5, fontWeight: 700, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div style={{ flex: 1, fontSize: F.base, fontWeight: 600, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {activeChat ? chats[activeChat]?.title : t.appName}
             </div>
-            <button onClick={newChat} style={iconBtnStyle(T)} title={t.newChat}>
+            <button onClick={newChat} style={{
+              ...iconBtnStyle(T),
+              background: T.accent || "#0a84ff",
+              color: "#fff",
+              border: "none",
+              boxShadow: "0 2px 8px rgba(10,132,255,0.3)",
+            }} title={t.newChat}>
               <Icon.Plus />
             </button>
           </div>
@@ -489,7 +496,7 @@ export default function App() {
         <div style={{ flex: 1, overflowY: "auto", padding: "0 14px", position: "relative" }}>
           <div style={{ maxWidth: 760, margin: "0 auto", padding: "18px 0 16px" }}>
             {empty && (
-              <EmptyState T={T} t={t} F={F} send={send} settings={settings} />
+              <EmptyState T={T} t={t} F={F} send={send} settings={settings} userProfile={userProfile} />
             )}
 
             {currentMessages.map((m, i) => (
@@ -536,59 +543,61 @@ export default function App() {
                 ))}
               </div>
             )}
-            <Glass T={T} radius={16} style={{ padding: isRTL ? "5px 5px 5px 8px" : "5px 8px 5px 5px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{
+              background: T.inputBg || T.glassFill,
+              border: `1.5px solid ${T.line}`,
+              borderRadius: 14,
+              padding: "10px 10px 10px 14px",
+              display: "flex", alignItems: "center", gap: 8,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              transition: "border-color .15s",
+            }}>
+              <input
+                ref={inputRef}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+                  if (e.key === "Escape") { setDraft(""); setEditingMsg(null); }
+                }}
+                placeholder={forceSearch ? (isRTL ? "ابحث في الإنترنت..." : "Search the web...") : t.placeholder}
+                style={{
+                  flex: 1, background: "transparent", border: "none", outline: "none",
+                  color: T.text, fontSize: F.base, padding: "2px 4px", fontFamily: "inherit",
+                  direction: isRTL ? "rtl" : "ltr", textAlign: isRTL ? "right" : "left",
+                  minWidth: 0,
+                }}
+              />
+              <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
                 <MicButton T={T} isRTL={isRTL} onResult={(text) => setDraft(prev => prev + text)} />
                 <button onClick={() => setForceSearch(s => !s)}
                   title={isRTL ? "بحث في الإنترنت" : "Search the web"}
                   style={{
-                    background: forceSearch ? "#34c75922" : "transparent",
-                    color: forceSearch ? "#34c759" : T.faint,
-                    border: `1px solid ${forceSearch ? "#34c75944" : T.line}`,
-                    borderRadius: 10, width: 36, height: 36,
-                    cursor: "pointer", fontFamily: "inherit",
+                    background: forceSearch ? "rgba(10,132,255,0.1)" : "transparent",
+                    color: forceSearch ? "#0a84ff" : T.faint,
+                    border: "none", borderRadius: 8,
+                    width: 32, height: 32, cursor: "pointer", fontFamily: "inherit",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    transition: "all .2s", flexShrink: 0,
+                    transition: "all .15s",
                   }}>
                   <Icon.Web />
                 </button>
-                <input
-                  ref={inputRef}
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      send();
-                    }
-                    if (e.key === "Escape") {
-                      setDraft("");
-                      setEditingMsg(null);
-                    }
-                  }}
-                  placeholder={forceSearch ? (isRTL ? "ابحث في الإنترنت..." : "Search the web...") : t.placeholder}
-                  style={{
-                    flex: 1, background: "transparent", border: "none", outline: "none",
-                    color: T.text, fontSize: F.base + 0.5, padding: "11px 6px", fontFamily: "inherit",
-                    direction: isRTL ? "rtl" : "ltr", textAlign: isRTL ? "right" : "left",
-                    minWidth: 0,
-                  }}
-                />
                 <button onClick={() => send()} disabled={!draft.trim() || thinking}
                   style={{
-                    background: draft.trim() ? ACCENTS.knowledge : T.pillFill,
-                    color: "#fff", border: "none", borderRadius: 11,
-                    width: 40, height: 40, fontSize: 16,
+                    background: draft.trim() ? "#0a84ff" : T.pillFill,
+                    color: draft.trim() ? "#fff" : T.faint,
+                    border: "none", borderRadius: 9,
+                    width: 34, height: 34,
                     cursor: draft.trim() ? "pointer" : "default",
-                    fontFamily: "inherit", transition: "background .2s", flexShrink: 0,
-                    boxShadow: "inset 0 1px 1px rgba(255,255,255,0.4)",
+                    fontFamily: "inherit", transition: "all .15s", flexShrink: 0,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     transform: isRTL ? "scaleX(-1)" : "none",
+                    boxShadow: draft.trim() ? "0 2px 8px rgba(10,132,255,0.35)" : "none",
                   }}>
                   <Icon.Send />
                 </button>
               </div>
-            </Glass>
+            </div>
             <div style={{ textAlign: "center", fontSize: F.label - 1, color: T.faint, marginTop: 8 }}>
               {t.appName} {t.mayMakeMistakes}
             </div>
@@ -646,20 +655,23 @@ export default function App() {
       )}
 
       <style>{`
-        .liquid { transition: transform .25s cubic-bezier(.2,.7,.3,1); }
-        .press:hover { transform: translateY(-1px); }
-        .press:active { transform: scale(.96); }
-        .card-in { animation: ci .55s cubic-bezier(.22,.68,.28,1) both; }
-        @keyframes ci { from{opacity:0;transform:translateY(16px) scale(.99)} to{opacity:1;transform:translateY(0) scale(1)} }
-        .tab-in { animation: ti .4s cubic-bezier(.22,.68,.28,1) both; }
-        @keyframes ti { from{opacity:0;transform:translateY(7px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes toastIn { from{opacity:0;transform:translate(-50%,10px)} to{opacity:1;transform:translate(-50%,0)} }
-        @keyframes micPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        * { box-sizing: border-box; }
+        .card-surface { transition: box-shadow .15s ease; }
+        .press { transition: opacity .15s ease; }
+        .press:active { opacity: 0.7; }
+        .card-in { animation: ci .35s cubic-bezier(.2,.8,.3,1) both; }
+        @keyframes ci { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .tab-in { animation: ti .25s ease both; }
+        @keyframes ti { from{opacity:0} to{opacity:1} }
+        @keyframes toastIn { from{opacity:0;transform:translate(-50%,8px)} to{opacity:1;transform:translate(-50%,0)} }
+        @keyframes micPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
         input::placeholder { color: ${T.faint} }
-        @keyframes bd { 0%,80%,100%{transform:scale(.5);opacity:.4} 40%{transform:scale(1);opacity:1} }
-        ::-webkit-scrollbar { width: 6px; height: 0; }
+        textarea::placeholder { color: ${T.faint} }
+        @keyframes bd { 0%,80%,100%{transform:scale(.4);opacity:.3} 40%{transform:scale(1);opacity:1} }
+        ::-webkit-scrollbar { width: 4px; height: 0; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: ${T.line}; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: ${T.line}; border-radius: 2px; }
+        button { -webkit-tap-highlight-color: transparent; }
       `}</style>
     </div>
   );
@@ -685,16 +697,16 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
       boxShadow: isMobile && sidebarOpen ? "0 0 30px rgba(0,0,0,0.2)" : "none",
     }}>
       {/* الهيدر */}
-      <div style={{ padding: "16px 16px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ padding: "16px 14px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${T.line}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           <div style={{
-            width: 32, height: 32, borderRadius: 9,
-            background: `linear-gradient(135deg, ${ACCENTS.knowledge}, ${ACCENTS.history})`,
+            width: 30, height: 30, borderRadius: 8,
+            background: "#0a84ff",
             display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", fontWeight: 800, fontSize: 16,
-            boxShadow: "inset 0 1px 1px rgba(255,255,255,0.4)",
+            color: "#fff", fontWeight: 800, fontSize: 15,
+            boxShadow: "0 2px 8px rgba(10,132,255,0.3)",
           }}>{t.appName.charAt(0)}</div>
-          <div style={{ fontSize: F.base + 2.5, fontWeight: 700 }}>{t.appName}</div>
+          <div style={{ fontSize: F.base + 1, fontWeight: 700, color: T.text }}>{t.appName}</div>
         </div>
         {isMobile && (
           <button onClick={() => setSidebarOpen(false)} style={iconBtnStyle(T)}>
@@ -704,16 +716,19 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
       </div>
 
       {/* محادثة جديدة */}
-      <div style={{ padding: "0 12px 12px" }}>
+      <div style={{ padding: "12px 14px 8px" }}>
         <button onClick={newChat} style={{
           width: "100%",
-          background: `linear-gradient(135deg, ${ACCENTS.knowledge}, ${ACCENTS.history})`,
-          color: "#fff", border: "none", borderRadius: 12,
-          padding: "11px 14px", fontSize: F.base, fontWeight: 600,
+          background: "#0a84ff",
+          color: "#fff", border: "none", borderRadius: 9,
+          padding: "10px 14px", fontSize: F.base - 0.5, fontWeight: 600,
           cursor: "pointer", fontFamily: "inherit",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-          boxShadow: "0 4px 14px rgba(10,132,255,0.3), inset 0 1px 1px rgba(255,255,255,0.3)",
-        }}>
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+          boxShadow: "0 2px 8px rgba(10,132,255,0.3)",
+          transition: "opacity .15s",
+        }}
+        onMouseEnter={e => e.currentTarget.style.opacity = "0.9"}
+        onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
           <Icon.Plus /> {t.newChat}
         </button>
       </div>
@@ -1017,25 +1032,40 @@ function ConfirmModal({ T, t, F, title, onConfirm, onCancel }) {
 }
 
 /* ============ حالة فارغة ============ */
-function EmptyState({ T, t, F, send, settings }) {
+function EmptyState({ T, t, F, send, settings, userProfile }) {
+  const name = userProfile?.name;
   return (
-    <div style={{ textAlign: "center", padding: "30px 0 26px" }}>
+    <div style={{ textAlign: "center", padding: "40px 0 30px", maxWidth: 600, margin: "0 auto" }}>
       <div style={{
-        width: 64, height: 64, borderRadius: 18, margin: "0 auto 18px",
-        background: `linear-gradient(135deg, ${ACCENTS.knowledge}, ${ACCENTS.history})`,
+        width: 52, height: 52, borderRadius: 14, margin: "0 auto 20px",
+        background: "#0a84ff",
         display: "flex", alignItems: "center", justifyContent: "center",
-        color: "#fff", fontWeight: 800, fontSize: 30,
-        boxShadow: "inset 0 1px 2px rgba(255,255,255,0.4), 0 8px 24px rgba(124,58,237,0.3)",
+        color: "#fff", fontWeight: 800, fontSize: 24,
+        boxShadow: "0 4px 16px rgba(10,132,255,0.3)",
       }}>{t.appName.charAt(0)}</div>
-      <h1 style={{ fontSize: F.h1, fontWeight: 800, margin: "0 0 8px", letterSpacing: "-0.6px" }}>{t.tagline}</h1>
-      <p style={{ fontSize: F.base, color: T.sub, margin: "0 0 24px", lineHeight: 1.6 }}>{t.askAnything}</p>
+      <h1 style={{ fontSize: F.h1 + 2, fontWeight: 700, margin: "0 0 10px", color: T.text, letterSpacing: "-0.5px" }}>
+        {name ? (t.appName === "مرن" ? `أهلاً، ${name}` : `Hello, ${name}`) : t.tagline}
+      </h1>
+      <p style={{ fontSize: F.base, color: T.sub, margin: "0 0 32px", lineHeight: 1.7, maxWidth: 420, marginInline: "auto" }}>
+        {t.askAnything}
+      </p>
       {settings.showSuggestions && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, maxWidth: 520, margin: "0 auto" }}>
           {t.suggestions.map(s => (
-            <Glass key={s} T={T} radius={999} onClick={() => send(s)} className="press"
-              style={{ cursor: "pointer", padding: "10px 16px" }}>
-              <span style={{ fontSize: F.base - 0.5, fontWeight: 500 }}>{s}</span>
-            </Glass>
+            <button key={s} onClick={() => send(s)} className="press"
+              style={{
+                background: T.pillFill, color: T.text,
+                border: `1px solid ${T.line}`,
+                borderRadius: 10, padding: "13px 16px",
+                fontSize: F.base - 1, fontWeight: 500,
+                cursor: "pointer", fontFamily: "inherit",
+                textAlign: "right", lineHeight: 1.5,
+                transition: "all .15s",
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = T.hover}
+              onMouseLeave={e => e.currentTarget.style.background = T.pillFill}>
+              {s}
+            </button>
           ))}
         </div>
       )}
@@ -1118,9 +1148,9 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
         <div>
           <div style={{
             background: T.userFill, color: T.userText,
-            borderRadius: "18px 18px 5px 18px", padding: "11px 16px",
-            fontSize: F.base, fontWeight: 500, maxWidth: "100%", lineHeight: 1.5,
-            boxShadow: "0 4px 14px rgba(10,132,255,0.3), inset 0 1px 1px rgba(255,255,255,0.3)",
+            borderRadius: "16px 16px 4px 16px", padding: "10px 15px",
+            fontSize: F.base, fontWeight: 400, maxWidth: "100%", lineHeight: 1.6,
+            boxShadow: "0 2px 8px rgba(10,132,255,0.25)",
             wordBreak: "break-word",
           }}>{m.text}</div>
           {timeStr && <div style={{ fontSize: F.label - 1, color: T.faint, marginTop: 4, textAlign: "right" }}>{timeStr}</div>}
@@ -1162,10 +1192,11 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
   const active = tabs[activeTab] || {};
 
   return (
-    <Glass T={T} radius={22} style={{ padding: 20 }}>
+    <Glass T={T} radius={14} style={{ padding: 20 }}>
       <div style={{
-        position: "absolute", top: -90, right: -60, width: 260, height: 190,
-        background: a, opacity: 0.15, filter: "blur(75px)", pointerEvents: "none",
+        position: "absolute", top: 0, right: 0, bottom: 0, width: 3,
+        background: a, borderRadius: "0 14px 14px 0",
+        pointerEvents: "none",
       }} />
 
       {/* الهيدر */}
@@ -1200,19 +1231,21 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
 
       {tabs.length > 1 && (
         <div style={{
-          position: "relative", display: "flex", gap: 3,
-          background: T.pillFill, borderRadius: 11, padding: 3,
-          marginBottom: 16, border: `1px solid ${T.line}`, overflowX: "auto",
+          display: "flex", gap: 0,
+          borderBottom: `1px solid ${T.line}`,
+          marginBottom: 16, overflowX: "auto",
         }}>
           {tabs.map((tt, i) => (
             <button key={i} onClick={() => setActiveTab(i)} style={{
-              flex: "1 0 auto",
-              background: i === activeTab ? T.pillActive : "transparent",
-              border: "none", borderRadius: 8, padding: "8px 12px",
+              background: "transparent",
+              border: "none",
+              borderBottom: `2px solid ${i === activeTab ? a : "transparent"}`,
+              padding: "8px 14px",
               color: i === activeTab ? T.text : T.sub,
-              fontSize: F.label + 0.5, fontWeight: 600, cursor: "pointer",
-              fontFamily: "inherit", transition: "all .2s", whiteSpace: "nowrap",
-              boxShadow: i === activeTab ? "0 1px 4px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.5)" : "none",
+              fontSize: F.label + 0.5, fontWeight: i === activeTab ? 600 : 400,
+              cursor: "pointer", fontFamily: "inherit",
+              transition: "all .15s", whiteSpace: "nowrap",
+              marginBottom: -1,
             }}>{tt.label}</button>
           ))}
         </div>
@@ -1503,9 +1536,9 @@ function FollowUps({ suggestions, T, F, onSelect, thinking }) {
 function iconBtnStyle(T) {
   return {
     background: T.pillFill, color: T.text, border: `1px solid ${T.line}`,
-    borderRadius: 10, width: 38, height: 38, cursor: "pointer",
+    borderRadius: 8, width: 34, height: 34, cursor: "pointer",
     display: "flex", alignItems: "center", justifyContent: "center",
-    fontFamily: "inherit", transition: "background .2s",
+    fontFamily: "inherit", transition: "all .15s", flexShrink: 0,
   };
 }
 
