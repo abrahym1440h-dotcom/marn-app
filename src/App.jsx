@@ -5,7 +5,8 @@ import { TRANSLATIONS } from "./i18n.js";
 const STORAGE_KEY = "marn_chats_v2";
 const SETTINGS_KEY = "marn_settings_v2";
 const FAV_KEY = "marn_favs_v2";
-const VERSION = "2.1";
+const PROFILE_KEY = "marn_profile_v1";
+const VERSION = "3.0";
 
 const ACCENTS = {
   sport: "#34c759",
@@ -108,6 +109,8 @@ const Icon = {
   Refresh: () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>,
   Search2: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
   Web: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+  Mic: ({ active }) => <svg width="16" height="16" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>,
+  User: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
 };
 
 /* ============ التطبيق الرئيسي ============ */
@@ -126,6 +129,8 @@ export default function App() {
   const [tab, setTab] = useState("chats");
   const [isMobile, setIsMobile] = useState(false);
   const [chats, setChats] = useState({});
+  const [userProfile, setUserProfile] = useState({ name:"", job:"", interests:"" });
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [activeChat, setActiveChat] = useState(null);
   const [favs, setFavs] = useState([]);
   const [draft, setDraft] = useState("");
@@ -156,6 +161,9 @@ export default function App() {
       if (c) setChats(JSON.parse(c));
       const f = localStorage.getItem(FAV_KEY);
       if (f) setFavs(JSON.parse(f));
+      const p = localStorage.getItem(PROFILE_KEY);
+      if (p) { const parsed = JSON.parse(p); setUserProfile(parsed); }
+      else { setTimeout(() => setShowProfileSetup(true), 800); }
     } catch {}
   }, []);
 
@@ -163,6 +171,7 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch {} }, [settings]);
   useEffect(() => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(chats)); } catch {} }, [chats]);
   useEffect(() => { try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); } catch {} }, [favs]);
+  useEffect(() => { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(userProfile)); } catch {} }, [userProfile]);
 
   /* ===== تحديث html element ===== */
   useEffect(() => {
@@ -370,7 +379,7 @@ export default function App() {
         if (!cur) return prev;
         let newMsg;
         if (r.ok && data?.card) {
-          newMsg = { role: "card", card: data.card, searched: data.searched, at: Date.now(), forSearchQuery: q };
+          newMsg = { role: "card", card: data.card, searched: data.searched, at: Date.now(), forSearchQuery: q, followUps: Array.isArray(data.card?.followUps) ? data.card.followUps : [] };
         } else {
           const errMsg = (data && (data.error || data.detail))
             ? `${data.error || ""}${data.detail ? " — " + data.detail : ""}`
@@ -449,6 +458,8 @@ export default function App() {
         exportChats={exportChats}
         chatSearch={chatSearch} setChatSearch={setChatSearch}
         onRename={(id) => setRenameDialog({ id, currentTitle: chats[id]?.title || "" })}
+        userProfile={userProfile} setUserProfile={setUserProfile}
+        onEditProfile={() => setShowProfileSetup(true)}
       />
 
       {/* المنطقة الرئيسية */}
@@ -489,6 +500,7 @@ export default function App() {
                 editingMsg={editingMsg} setEditingMsg={setEditingMsg}
                 onEditSend={(newText) => editAndResend(activeChat, i, newText)}
                 onRegenerate={() => regenerate(activeChat, i)}
+                onSelect={(q) => send(q)}
                 thinking={thinking}
               />
             ))}
@@ -526,6 +538,7 @@ export default function App() {
             )}
             <Glass T={T} radius={16} style={{ padding: isRTL ? "5px 5px 5px 8px" : "5px 8px 5px 5px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <MicButton T={T} isRTL={isRTL} onResult={(text) => setDraft(prev => prev + text)} />
                 <button onClick={() => setForceSearch(s => !s)}
                   title={isRTL ? "بحث في الإنترنت" : "Search the web"}
                   style={{
@@ -608,6 +621,16 @@ export default function App() {
         />
       )}
 
+      {/* نافذة إعداد الملف الشخصي */}
+      {showProfileSetup && (
+        <ProfileSetup T={T} F={F} isRTL={isRTL}
+          onSave={(profile) => {
+            setUserProfile(profile);
+            setShowProfileSetup(false);
+          }}
+        />
+      )}
+
       {/* Toast */}
       {toast && (
         <div style={{
@@ -631,6 +654,7 @@ export default function App() {
         .tab-in { animation: ti .4s cubic-bezier(.22,.68,.28,1) both; }
         @keyframes ti { from{opacity:0;transform:translateY(7px)} to{opacity:1;transform:translateY(0)} }
         @keyframes toastIn { from{opacity:0;transform:translate(-50%,10px)} to{opacity:1;transform:translate(-50%,0)} }
+        @keyframes micPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
         input::placeholder { color: ${T.faint} }
         @keyframes bd { 0%,80%,100%{transform:scale(.5);opacity:.4} 40%{transform:scale(1);opacity:1} }
         ::-webkit-scrollbar { width: 6px; height: 0; }
@@ -645,7 +669,7 @@ export default function App() {
 function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, setTab,
   sortedChats, activeChat, openChat, deleteChat, favs, send, newChat,
   settings, setSettings, effectiveMode, clearAllChats, clearAllFavs, exportChats,
-  chatSearch, setChatSearch, onRename }) {
+  chatSearch, setChatSearch, onRename, userProfile, setUserProfile, onEditProfile }) {
 
   return (
     <aside style={{
@@ -784,6 +808,9 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
             effectiveMode={effectiveMode}
             clearAllChats={clearAllChats} clearAllFavs={clearAllFavs}
             exportChats={exportChats}
+            userProfile={userProfile} setUserProfile={setUserProfile}
+            onEditProfile={onEditProfile}
+            isRTL={isRTL}
           />
         )}
       </div>
@@ -839,7 +866,7 @@ function EmptyTab({ T, F, text, hint }) {
 }
 
 /* ============ لوحة الإعدادات ============ */
-function SettingsPanel({ T, t, F, settings, setSettings, effectiveMode, clearAllChats, clearAllFavs, exportChats }) {
+function SettingsPanel({ T, t, F, settings, setSettings, effectiveMode, clearAllChats, clearAllFavs, exportChats, userProfile, setUserProfile, onEditProfile, isRTL }) {
   const section = (label) => (
     <div style={{
       fontSize: F.label - 1, fontWeight: 700, color: T.faint,
@@ -893,6 +920,26 @@ function SettingsPanel({ T, t, F, settings, setSettings, effectiveMode, clearAll
 
   return (
     <div style={{ padding: "4px 4px 16px" }}>
+      {/* الملف الشخصي */}
+      {section(isRTL ? "ملفي الشخصي" : "My Profile")}
+      <div style={{ padding:"10px 12px", borderRadius:9 }}>
+        {(userProfile?.name || userProfile?.job || userProfile?.interests) ? (
+          <div style={{ display:"flex", flexDirection:"column", gap:4, marginBottom:10 }}>
+            {userProfile.name && <div style={{ fontSize:F.base-0.5 }}>👤 {userProfile.name}</div>}
+            {userProfile.job && <div style={{ fontSize:F.base-1, color:T.sub }}>💼 {userProfile.job}</div>}
+            {userProfile.interests && <div style={{ fontSize:F.base-1, color:T.sub }}>⭐ {userProfile.interests}</div>}
+          </div>
+        ) : (
+          <div style={{ fontSize:F.base-1, color:T.faint, marginBottom:8 }}>
+            {isRTL ? "لم تضف ملفك الشخصي بعد" : "No profile added yet"}
+          </div>
+        )}
+        <button onClick={onEditProfile} style={{ ...settingsBtnStyle(T, F), background:T.pillFill, borderRadius:9, padding:"8px 12px" }}>
+          <Icon.User />
+          <span>{isRTL ? "تعديل الملف الشخصي" : "Edit Profile"}</span>
+        </button>
+      </div>
+
       {section(t.appearance)}
       {setItem(<Icon.Sun />, t.appearance, segmented(settings.mode, [
         { value: "light", label: t.light },
@@ -998,7 +1045,7 @@ function EmptyState({ T, t, F, send, settings }) {
 
 /* ============ عنصر الرسالة ============ */
 function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard, activeChat,
-  editingMsg, setEditingMsg, onEditSend, onRegenerate, thinking }) {
+  editingMsg, setEditingMsg, onEditSend, onRegenerate, onSelect, thinking }) {
   const timeStr = m.at ? formatTime(m.at, lang) : "";
   const isEditing = editingMsg && editingMsg.idx === idx;
   const [editDraft, setEditDraft] = useState(m.text || "");
@@ -1100,6 +1147,8 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
         onRegenerate={thinking ? null : onRegenerate}
         isRTL={isRTL}
       />
+      <FollowUps suggestions={m.followUps} T={T} F={F}
+        onSelect={onSelect} thinking={thinking} />
       {timeStr && <div style={{ fontSize: F.label - 1, color: T.faint, marginTop: 4 }}>{timeStr}</div>}
     </div>
   );
@@ -1309,6 +1358,146 @@ function TabContent({ tab, a, T, F }) {
       return <p style={{ color: T.text, lineHeight: 1.9, margin: 0, fontSize: F.base - 0.5, whiteSpace: "pre-wrap" }}>{d.body}</p>;
   }
 }
+
+
+
+/* ============ زر الميكروفون ============ */
+function MicButton({ T, isRTL, onResult }) {
+  const [listening, setListening] = useState(false);
+  const recRef = React.useRef(null);
+
+  const toggle = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    if (listening) {
+      recRef.current?.stop();
+      setListening(false);
+      return;
+    }
+    const rec = new SR();
+    rec.lang = isRTL ? "ar-SA" : "en-US";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.onresult = (e) => {
+      const text = e.results[0][0].transcript;
+      onResult(text);
+    };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
+    rec.start();
+    recRef.current = rec;
+    setListening(true);
+  };
+
+  const SR = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
+  if (!SR) return null;
+
+  return (
+    <button onClick={toggle}
+      title={isRTL ? (listening ? "إيقاف التسجيل" : "تحدث الآن") : (listening ? "Stop" : "Speak")}
+      style={{
+        background: listening ? "rgba(255,69,58,0.15)" : "transparent",
+        color: listening ? "#ff453a" : T.faint,
+        border: listening ? "1px solid rgba(255,69,58,0.3)" : "none",
+        borderRadius: 10, width: 36, height: 36,
+        cursor: "pointer", fontFamily: "inherit",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "all .2s", flexShrink: 0,
+        animation: listening ? "micPulse 1.2s infinite" : "none",
+      }}>
+      <Icon.Mic active={listening} />
+    </button>
+  );
+}
+
+/* ============ إعداد الملف الشخصي ============ */
+function ProfileSetup({ T, F, isRTL, onSave }) {
+  const [name, setName] = useState("");
+  const [job, setJob] = useState("");
+  const [interests, setInterests] = useState("");
+  const fields = [
+    { val:name, set:setName, ph:isRTL?"اسمك (مثال: أحمد)":"Your name (e.g. Ahmed)", icon:"👤" },
+    { val:job, set:setJob, ph:isRTL?"مهنتك (مثال: مطور، طالب)":"Your job (e.g. developer, student)", icon:"💼" },
+    { val:interests, set:setInterests, ph:isRTL?"اهتماماتك (مثال: تقنية، رياضة)":"Your interests (e.g. tech, sports)", icon:"⭐" },
+  ];
+  return (
+    <div onClick={()=>{}} style={{
+      position:"fixed", inset:0, background:T.modalBg, zIndex:300,
+      display:"flex", alignItems:"center", justifyContent:"center",
+      backdropFilter:"blur(12px)", padding:20, animation:"ci .4s",
+    }}>
+      <div style={{ maxWidth:420, width:"100%" }}>
+        <Glass T={T} radius={22} style={{ padding:28 }}>
+          <div style={{ textAlign:"center", marginBottom:22 }}>
+            <div style={{
+              width:56, height:56, borderRadius:16, margin:"0 auto 14px",
+              background:"linear-gradient(135deg, #0a84ff, #bf5af2)",
+              display:"flex", alignItems:"center", justifyContent:"center",
+              color:"#fff", fontSize:26, fontWeight:800,
+            }}>م</div>
+            <h2 style={{ fontSize:F.h1, fontWeight:800, margin:"0 0 8px" }}>
+              {isRTL ? "مرحباً بك في مرن!" : "Welcome to Marn!"}
+            </h2>
+            <p style={{ fontSize:F.base-1, color:T.sub, margin:0, lineHeight:1.6 }}>
+              {isRTL ? "أخبرني عن نفسك حتى أخصّص إجاباتي لك. يمكنك تخطي هذه الخطوة." : "Tell me about yourself so I can personalize my answers. You can skip."}
+            </p>
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+            {fields.map((f,i) => (
+              <div key={i} style={{
+                display:"flex", alignItems:"center", gap:10,
+                background:T.pillFill, borderRadius:11, padding:"10px 14px",
+              }}>
+                <span style={{ fontSize:18, flexShrink:0 }}>{f.icon}</span>
+                <input value={f.val} onChange={e=>f.set(e.target.value)} placeholder={f.ph}
+                  style={{ flex:1, background:"transparent", border:"none", outline:"none",
+                    color:T.text, fontSize:F.base-0.5, fontFamily:"inherit",
+                    direction:isRTL?"rtl":"ltr" }} />
+              </div>
+            ))}
+          </div>
+          <div style={{ display:"flex", gap:10, marginTop:20 }}>
+            <button onClick={()=>onSave({name:"",job:"",interests:""})} style={{
+              flex:1, background:T.pillFill, color:T.sub, border:"none",
+              borderRadius:12, padding:"12px", fontSize:F.base, fontWeight:600,
+              cursor:"pointer", fontFamily:"inherit",
+            }}>{isRTL?"تخطي":"Skip"}</button>
+            <button onClick={()=>onSave({name,job,interests})} style={{
+              flex:2, background:"linear-gradient(135deg, #0a84ff, #bf5af2)", color:"#fff",
+              border:"none", borderRadius:12, padding:"12px", fontSize:F.base, fontWeight:700,
+              cursor:"pointer", fontFamily:"inherit",
+              boxShadow:"0 4px 14px rgba(10,132,255,0.3)",
+            }}>{isRTL?"ابدأ مع مرن ✨":"Start with Marn ✨"}</button>
+          </div>
+        </Glass>
+      </div>
+    </div>
+  );
+}
+
+/* ============ اقتراحات المتابعة ============ */
+function FollowUps({ suggestions, T, F, onSelect, thinking }) {
+  if (!suggestions || suggestions.length === 0) return null;
+  return (
+    <div style={{ display:"flex", flexWrap:"wrap", gap:7, marginTop:10, marginBottom:4 }}>
+      {suggestions.map((s,i) => (
+        <button key={i} onClick={()=>!thinking&&onSelect(s)} disabled={thinking}
+          style={{
+            background:T.pillFill, color:T.sub, border:"none",
+            borderRadius:20, padding:"7px 14px",
+            fontSize:F.base-2, fontWeight:500,
+            cursor:thinking?"default":"pointer",
+            fontFamily:"inherit", transition:"all .2s",
+            opacity:thinking?0.5:1,
+            display:"flex", alignItems:"center", gap:5,
+          }}>
+          <span style={{ fontSize:11, opacity:0.6 }}>↩</span>{s}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 
 /* ============ دوال مساعدة ============ */
 function iconBtnStyle(T) {
