@@ -12,7 +12,7 @@ const SEARCH_PATTERNS = [
   /when|where|how many|how much|who is|who won|what is/i,
   /بطولة|كأس|مباراة|مباريات|دوري|نتيجة|نتائج|ترتيب|جدول|لاعب|فريق|نادي|منتخب/i,
   /championship|cup|match|league|score|standings|team|player/i,
-  /أخبار|خبر|إعلان|إطلاق|إصدار|تحديث|ترامب|محمد بن سلمان|الملك|الأمير|الرئيس/i,
+  /أخبار|خبر|إعلان|إطلاق|إصدار|تحديث|ترامب|الملك|الأمير|الرئيس/i,
   /news|launch|release|update|trump|elon|president|king|prince/i,
   /آيفون|سامسونج|تسلا|قوقل|أبل|مايكروسوفت|gpt|chatgpt|claude|gemini/i,
   /iphone|samsung|tesla|google|apple|microsoft|openai|meta|amazon/i,
@@ -24,7 +24,7 @@ const SEARCH_PATTERNS = [
 ];
 
 const NO_SEARCH = [
-  /^(مرحبا|أهلا|السلام|هاي|هلا|hi|hello|hey|كيف حالك|كيف الحال)\b/i,
+  /^(مرحبا|أهلا|السلام|هاي|هلا|hi|hello|hey|كيف حالك)\b/i,
   /^(شكرا|thanks|thank you)\b/i,
   /اكتب لي قصيدة|اكتب لي قصة|ترجم هذا|write me a poem|translate this/i,
 ];
@@ -62,21 +62,23 @@ async function searchWeb(query, key) {
   } catch { return null; }
 }
 
+const delay = ms => new Promise(r => setTimeout(r, ms));
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const apiKey = (process.env.CEREBRAS_API_KEY || "").trim();
-  if (!apiKey.startsWith("csk-")) return res.status(500).json({ error: "Invalid Cerebras key" });
-
+  if (!apiKey.startsWith("csk-")) return res.status(500).json({ error: "Invalid key" });
   const tavilyKey = (process.env.TAVILY_API_KEY || "").trim();
 
-  let question, history, lang, forceSearch;
+  let question, history, lang, forceSearch, userProfile;
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     question = body?.question;
     history = Array.isArray(body?.history) ? body.history.slice(-8) : [];
     lang = body?.lang === "en" ? "en" : "ar";
     forceSearch = body?.forceSearch === true;
+    userProfile = body?.userProfile || null; // { name, job, interests }
   } catch { return res.status(400).json({ error: "Bad request" }); }
   if (!question) return res.status(400).json({ error: "Question missing" });
 
@@ -86,42 +88,37 @@ export default async function handler(req, res) {
   if (tavilyKey && (forceSearch || needsSearch(question))) {
     const results = await searchWeb(question, tavilyKey);
     if (results) {
-      searchBlock = `
-
-===== WEB SEARCH RESULTS (AUTHORITATIVE) =====
-⚠️ USE THESE AS YOUR ONLY SOURCE OF FACTS.
-⚠️ If your training memory contradicts these → IGNORE memory, use these results.
-⚠️ Do NOT invent dates, names, numbers, or places not present below.
-⚠️ If info is not found below → say "غير متوفر في المصادر" (not available in sources).
-
-${results}
-===== END OF WEB RESULTS =====`;
+      searchBlock = `\n\n===== WEB SEARCH RESULTS (AUTHORITATIVE) =====\n⚠️ Use ONLY these facts. Ignore memory if contradicted.\n⚠️ Never invent dates, names, numbers not present below.\n\n${results}\n===== END =====`;
       didSearch = true;
     }
   }
 
-  const SYSTEM_AR = `أنت "مرن" — مساعد ذكاء اصطناعي ذكي ودقيق يجيب باللغة العربية.
+  // ملف المستخدم
+  let profileBlock = "";
+  if (userProfile && (userProfile.name || userProfile.job || userProfile.interests)) {
+    profileBlock = `\n\n# معلومات المستخدم (استخدمها لتخصيص إجاباتك)\n`;
+    if (userProfile.name) profileBlock += `- الاسم: ${userProfile.name}\n`;
+    if (userProfile.job) profileBlock += `- المهنة: ${userProfile.job}\n`;
+    if (userProfile.interests) profileBlock += `- الاهتمامات: ${userProfile.interests}\n`;
+    profileBlock += `خاطب المستخدم باسمه إذا كان مناسباً، وربط إجاباتك باهتماماته ومهنته.`;
+  }
 
-# قواعد أساسية لا تُكسر
-1. إذا كان السؤال مبهماً أو ناقصاً → اطرح سؤال توضيح واحد قصير للمستخدم واعرضه في بطاقة من نوع "text"، ولا تخمن.
-   مثال: "وش أفضل API؟" → اسأل: "أفضل API لأي غرض؟ (ذكاء اصطناعي، دفع، خرائط، ...؟)"
-2. إذا وُجدت نتائج بحث مرفقة → استخدمها كمصدر وحيد للحقائق، لا تخترع معلومة غير موجودة فيها.
-3. إذا لم تجد إجابة في نتائج البحث → قل ذلك صراحة في الإجابة.
-4. لا تخترع أرقاماً أو تواريخ أو أسماء أو أماكن.
-5. افهم سياق المحادثة — ربط الأسئلة المتابعة بالسياق السابق.
+  const SYSTEM_AR = `أنت "مرن" — مساعد ذكاء اصطناعي ذكي ودقيق يجيب باللغة العربية.${profileBlock}
 
-# أمثلة على الأسئلة المبهمة التي تحتاج توضيح
-- "وش أفضل؟" → اسأل: "أفضل ماذا؟"
-- "كيف أبدأ؟" → اسأل: "تبدأ في أي مجال؟"
-- "وين أروح؟" → اسأل: "تقصد سياحة في أي بلد؟"
+# قواعد أساسية
+1. إذا كان السؤال مبهماً → اطرح سؤال توضيح واحد في بطاقة "text".
+2. إذا وجدت نتائج بحث → استخدمها كمصدر وحيد، لا تخترع.
+3. لا تخترع أرقاماً أو تواريخ أو أسماء.
+4. في نهاية كل إجابة، أضف حقل "followUps" فيه 3 أسئلة متابعة ذكية مرتبطة بالموضوع.
 
-# الشكل — JSON فقط لا شيء آخر
+# الشكل — JSON فقط
 {
   "accent": "knowledge|history|sport|food",
   "kicker": "تصنيف",
   "title": "عنوان",
   "sub": "وصف سطر",
-  "tabs": [{"label":"اسم","type":"النوع","data":{}}]
+  "tabs": [{"label":"اسم","type":"النوع","data":{}}],
+  "followUps": ["سؤال متابعة 1", "سؤال متابعة 2", "سؤال متابعة 3"]
 }
 
 # الأنواع
@@ -133,25 +130,24 @@ ${results}
 - "facts": {"items":[{"icon":"📍","text":"معلومة"}]}
 - "text": {"body":"نص"}
 
-ابدأ فوراً بـ { وانتهِ بـ }.${searchBlock}`;
+ابدأ بـ { وانتهِ بـ }.${searchBlock}`;
 
-  const SYSTEM_EN = `You are "Marn" — a smart, accurate AI assistant. Respond in English.
+  const SYSTEM_EN = `You are "Marn" — a smart, accurate AI assistant. Respond in English.${profileBlock ? profileBlock.replace(/العربية/g,"English") : ""}
 
-# Core rules (never break)
-1. If question is vague/incomplete → ask ONE clarifying question in a "text" card. Never guess.
-   Example: "What's the best API?" → ask: "Best API for what? (AI, payments, maps, ...?)"
-2. If web search results are attached → use them as sole source of facts.
-3. If info not found in search results → say so explicitly.
-4. Never invent numbers, dates, names, or places.
-5. Understand conversation context — link follow-ups to prior topics.
+# Core rules
+1. If question is vague → ask ONE clarifying question in a "text" card.
+2. If search results attached → use as sole source of facts.
+3. Never invent numbers, dates, names.
+4. At end of every answer, add "followUps" with 3 smart follow-up questions.
 
 # Format — JSON only
 {
   "accent": "knowledge|history|sport|food",
   "kicker": "category",
   "title": "title",
-  "sub": "one-line summary",
-  "tabs": [{"label":"name","type":"type","data":{}}]
+  "sub": "summary",
+  "tabs": [{"label":"name","type":"type","data":{}}],
+  "followUps": ["follow-up 1", "follow-up 2", "follow-up 3"]
 }
 
 # Types
@@ -163,7 +159,7 @@ ${results}
 - "facts": {"items":[{"icon":"📍","text":"info"}]}
 - "text": {"body":"text"}
 
-Start immediately with { end with }.${searchBlock}`;
+Start with { end with }.${searchBlock}`;
 
   const messages = [
     { role: "system", content: lang === "en" ? SYSTEM_EN : SYSTEM_AR },
@@ -171,9 +167,7 @@ Start immediately with { end with }.${searchBlock}`;
     { role: "user", content: question },
   ];
 
-  const delay = ms => new Promise(r => setTimeout(r, ms));
   let lastError = "";
-
   for (const model of MODELS_TO_TRY) {
     let attempts = 0;
     while (attempts < 2) {
@@ -181,7 +175,6 @@ Start immediately with { end with }.${searchBlock}`;
       try {
         const ctrl = new AbortController();
         const t = setTimeout(() => ctrl.abort(), 35000);
-
         const response = await fetch("https://api.cerebras.ai/v1/chat/completions", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: "Bearer " + apiKey },
@@ -192,36 +185,28 @@ Start immediately with { end with }.${searchBlock}`;
 
         if (!response.ok) {
           const errText = await response.text().catch(() => "");
-          // موديل غير موجود → جرب الثاني
-          if (response.status === 404 || errText.includes("not_found_error")) {
-            lastError = model + ": not found"; break;
-          }
-          // ضغط زائد → انتظر وأعد المحاولة مرة واحدة
+          if (response.status === 404 || errText.includes("not_found_error")) { lastError = model + ": not found"; break; }
           if (response.status === 429 || errText.includes("too_many") || errText.includes("queue_exceeded")) {
             lastError = model + ": rate limited";
             if (attempts < 2) { await delay(3000); continue; }
             break;
           }
-          lastError = model + ": " + response.status;
-          break;
+          lastError = model + ": " + response.status; break;
         }
 
         const data = await response.json();
-        let raw = (data?.choices?.[0]?.message?.content || "")
-          .replace(/```json/gi, "").replace(/```/g, "").trim();
+        let raw = (data?.choices?.[0]?.message?.content || "").replace(/```json/gi,"").replace(/```/g,"").trim();
         const s = raw.indexOf("{"), e = raw.lastIndexOf("}");
         if (s !== -1 && e > s) raw = raw.slice(s, e + 1);
 
         let card;
         try { card = JSON.parse(raw); } catch {
-          card = { accent:"knowledge", kicker:lang==="en"?"Answer":"إجابة", title:lang==="en"?"Answer":"الإجابة", sub:"", tabs:[{label:lang==="en"?"Answer":"الإجابة",type:"text",data:{body:raw||""}}] };
+          card = { accent:"knowledge", kicker:"إجابة", title:"الإجابة", sub:"", tabs:[{label:"الإجابة",type:"text",data:{body:raw||""}}], followUps:[] };
         }
-        if (!card?.tabs) {
-          card = { accent:"knowledge", kicker:lang==="en"?"Answer":"إجابة", title:lang==="en"?"Answer":"الإجابة", sub:"", tabs:[{label:lang==="en"?"Answer":"الإجابة",type:"text",data:{body:String(raw||"")}}] };
-        }
+        if (!card?.tabs) card = { accent:"knowledge", kicker:"إجابة", title:"الإجابة", sub:"", tabs:[{label:"الإجابة",type:"text",data:{body:String(raw||"")}}], followUps:[] };
+        if (!Array.isArray(card.followUps)) card.followUps = [];
 
         return res.status(200).json({ card, model_used: model, searched: didSearch });
-
       } catch (e) {
         lastError = model + ": " + String(e?.message || e);
         if (attempts < 2) await delay(1000);
@@ -229,5 +214,5 @@ Start immediately with { end with }.${searchBlock}`;
     }
   }
 
-  return res.status(502).json({ error: "لا يوجد موديل متاح حالياً، حاول مرة ثانية", detail: lastError });
+  return res.status(502).json({ error: "حاول مرة ثانية", detail: lastError });
 }
