@@ -2381,3 +2381,126 @@ function formatRelativeTime(ts, lang) {
 
   return d.toLocaleDateString(lang === "ar" ? "ar-SA" : "en-US", { month: "short", day: "numeric" });
 }
+
+/* ============ MicButton ============ */
+function MicButton({ T, isRTL, onResult }) {
+  const [listening, setListening] = React.useState(false);
+  const recRef = React.useRef(null);
+
+  const start = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    const rec = new SR();
+    rec.lang = isRTL ? "ar-SA" : "en-US";
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.onresult = (e) => { onResult(e.results[0][0].transcript + " "); };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
+    recRef.current = rec;
+    rec.start();
+    setListening(true);
+  };
+
+  const stop = () => { recRef.current?.stop(); setListening(false); };
+
+  if (!("SpeechRecognition" in window || "webkitSpeechRecognition" in window)) return null;
+
+  return (
+    <button
+      onClick={listening ? stop : start}
+      style={{
+        background: listening ? "rgba(255,59,48,0.12)" : "transparent",
+        color: listening ? "#ff3b30" : T.faint,
+        border: "none", borderRadius: 8,
+        width: 32, height: 32, cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        animation: listening ? "micPulse 1.4s infinite" : "none",
+      }}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill={listening ? "#ff3b30" : "currentColor"}>
+        <rect x="9" y="2" width="6" height="12" rx="3"/>
+        <path d="M5 10a7 7 0 0014 0M12 18v4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    </button>
+  );
+}
+
+/* ============ FollowUps ============ */
+function FollowUps({ suggestions, T, F, onSelect, thinking }) {
+  if (!suggestions || suggestions.length === 0) return null;
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 10 }}>
+      {suggestions.map((s, i) => (
+        <button key={i} onClick={() => !thinking && onSelect(s)}
+          style={{
+            background: T.pillFill, color: T.sub,
+            border: `1px solid ${T.line}`,
+            borderRadius: 20, padding: "6px 13px",
+            fontSize: F.base - 2, fontWeight: 500,
+            cursor: thinking ? "default" : "pointer",
+            fontFamily: "inherit", opacity: thinking ? 0.5 : 1,
+            transition: "all .15s",
+          }}
+        >{s}</button>
+      ))}
+    </div>
+  );
+}
+
+/* ============ ProfileSetup ============ */
+function ProfileSetup({ T, F, isRTL, onSave }) {
+  const [name, setName] = React.useState("");
+  const [job, setJob] = React.useState("");
+  const [interests, setInterests] = React.useState("");
+
+  const inputStyle = {
+    width: "100%", background: T.inputBg || T.glassFill,
+    border: `1px solid ${T.line}`, borderRadius: 9,
+    padding: "10px 13px", fontSize: F.base, color: T.text,
+    fontFamily: "inherit", outline: "none", boxSizing: "border-box",
+    direction: isRTL ? "rtl" : "ltr",
+  };
+  const labelStyle = { fontSize: F.base - 1, color: T.sub, marginBottom: 5, display: "block" };
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: T.modalBg,
+      zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center",
+      padding: 20,
+    }}>
+      <div style={{
+        background: T.cardBg || T.glassFill,
+        border: `1px solid ${T.glassBorder || T.line}`,
+        borderRadius: 18, padding: 28, width: "100%", maxWidth: 400,
+        boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+      }}>
+        <div style={{ fontSize: F.h2, fontWeight: 700, color: T.text, marginBottom: 6 }}>
+          {isRTL ? "مرحباً بك في مرن" : "Welcome to Marn"}
+        </div>
+        <div style={{ fontSize: F.base - 1, color: T.sub, marginBottom: 22 }}>
+          {isRTL ? "أخبرنا عنك لنخصص تجربتك" : "Tell us about yourself"}
+        </div>
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>{isRTL ? "الاسم" : "Name"}</label>
+          <input value={name} onChange={e => setName(e.target.value)} style={inputStyle} placeholder={isRTL ? "اسمك..." : "Your name..."} />
+        </div>
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>{isRTL ? "المهنة" : "Job"}</label>
+          <input value={job} onChange={e => setJob(e.target.value)} style={inputStyle} placeholder={isRTL ? "مهنتك..." : "Your job..."} />
+        </div>
+        <div style={{ marginBottom: 22 }}>
+          <label style={labelStyle}>{isRTL ? "اهتماماتك" : "Interests"}</label>
+          <input value={interests} onChange={e => setInterests(e.target.value)} style={inputStyle} placeholder={isRTL ? "رياضة، تقنية، طبخ..." : "Sports, tech, cooking..."} />
+        </div>
+        <button onClick={() => onSave({ name: name.trim(), job: job.trim(), interests: interests.trim() })}
+          style={{
+            width: "100%", background: T.text, color: T.pageBg || "#fff",
+            border: "none", borderRadius: 11, padding: 13,
+            fontSize: F.base, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+          }}
+        >{isRTL ? "ابدأ الآن" : "Get Started"}</button>
+      </div>
+    </div>
+  );
+}
