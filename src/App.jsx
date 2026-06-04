@@ -30,54 +30,70 @@ const ACCENTS = {
 /* ============ الثيمات الاحترافية ============ */
 const THEMES = {
   light: {
-    // SIGNAL — فاتح
-    pageBg: "#ffffff",
-    sidebarBg: "#fafafa",
-    text: "#111827",
-    sub: "#6b7280",
-    faint: "#9ca3af",
-    glassFill: "#ffffff",
-    glassEdge: "rgba(0,0,0,0.04)",
-    glassBorder: "#f3f4f6",
-    glassShadow: "0 1px 2px rgba(0,0,0,0.03)",
-    headerBg: "rgba(255,255,255,0.98)",
-    composerBg: "rgba(255,255,255,0.98)",
-    userFill: "#111827",
-    userText: "#ffffff",
-    pillFill: "#f9fafb",
-    pillActive: "#ffffff",
-    line: "#f3f4f6",
-    hover: "#f9fafb",
-    dotIdle: "#d1d5db",
-    modalBg: "rgba(0,0,0,0.35)",
-    cardBg: "#ffffff",
-    inputBg: "#ffffff",
-    accent: "#111827",
+    // Clean Navy — فاتح
+    pageBg:      "#F7F9FF",
+    sidebarBg:   "#FFFFFF",
+    text:        "#0B1A3D",
+    sub:         "#5B7AAA",
+    faint:       "#9BBAD8",
+    glassFill:   "#FFFFFF",
+    glassEdge:   "rgba(27,47,107,0.06)",
+    glassBorder: "#D4E0FA",
+    glassShadow: "0 4px 32px rgba(27,47,107,0.08)",
+    headerBg:    "rgba(255,255,255,0.97)",
+    composerBg:  "rgba(255,255,255,0.97)",
+    userFill:    "linear-gradient(135deg,#0F2060,#1E4BB8)",
+    userText:    "#ffffff",
+    pillFill:    "#F0F4FF",
+    pillActive:  "#FFFFFF",
+    line:        "#D4E0FA",
+    hover:       "#F0F4FF",
+    dotIdle:     "#C5D5EE",
+    modalBg:     "rgba(11,26,61,0.35)",
+    cardBg:      "#FFFFFF",
+    inputBg:     "#F7F9FF",
+    accent:      "#0F2060",
+    accentBlue:  "#2A5ED8",
+    stat:        "#F0F4FF",
+    statBorder:  "#D4E0FA",
+    // ألوان هوية Clean Navy
+    navy:        "#0F2060",
+    blue:        "#2A5ED8",
+    ice:         "#1B2F6B",
+    gradBtn:     "linear-gradient(135deg,#0F2060,#2A5ED8)",
   },
   dark: {
-    // SIGNAL — داكن
-    pageBg: "#111111",
-    sidebarBg: "#0a0a0a",
-    text: "#f9fafb",
-    sub: "#9ca3af",
-    faint: "#6b7280",
-    glassFill: "#1a1a1a",
-    glassEdge: "rgba(255,255,255,0.04)",
-    glassBorder: "#272727",
-    glassShadow: "0 1px 2px rgba(0,0,0,0.2)",
-    headerBg: "rgba(17,17,17,0.98)",
-    composerBg: "rgba(17,17,17,0.98)",
-    userFill: "#f9fafb",
-    userText: "#111111",
-    pillFill: "#1a1a1a",
-    pillActive: "#272727",
-    line: "#272727",
-    hover: "#1a1a1a",
-    dotIdle: "#3f3f3f",
-    modalBg: "rgba(0,0,0,0.7)",
-    cardBg: "#1a1a1a",
-    inputBg: "#1a1a1a",
-    accent: "#f9fafb",
+    // Clean Navy — داكن
+    pageBg:      "#090F22",
+    sidebarBg:   "#0A1228",
+    text:        "#EFF5FF",
+    sub:         "#7A9CC4",
+    faint:       "#3A5A84",
+    glassFill:   "#0E1730",
+    glassEdge:   "rgba(74,143,255,0.06)",
+    glassBorder: "#162450",
+    glassShadow: "0 4px 32px rgba(0,0,0,0.5)",
+    headerBg:    "rgba(9,15,34,0.97)",
+    composerBg:  "rgba(9,15,34,0.97)",
+    userFill:    "linear-gradient(135deg,#0F2060,#1E4BB8)",
+    userText:    "#ffffff",
+    pillFill:    "#0E1730",
+    pillActive:  "#162450",
+    line:        "#162450",
+    hover:       "#0E1730",
+    dotIdle:     "#2A4070",
+    modalBg:     "rgba(0,0,0,0.7)",
+    cardBg:      "#0E1730",
+    inputBg:     "#0E1730",
+    accent:      "#EFF5FF",
+    accentBlue:  "#4A8FFF",
+    stat:        "#0E1730",
+    statBorder:  "#162450",
+    // ألوان هوية Clean Navy
+    navy:        "#1B2F6B",
+    blue:        "#4A8FFF",
+    ice:         "#C8DEFF",
+    gradBtn:     "linear-gradient(135deg,#0F2060,#2A5ED8)",
   },
 };
 
@@ -496,8 +512,8 @@ export default function App() {
             </div>
             <button onClick={newChat} style={{
               ...iconBtnStyle(T),
-              background: T.text,
-              color: T.pageBg,
+              background: T.gradBtn||"linear-gradient(135deg,#0F2060,#2A5ED8)",
+              color: "#fff",
               border: "none",
               boxShadow: "none",
               borderRadius: 9,
@@ -599,9 +615,9 @@ export default function App() {
                 </button>
                 <button onClick={() => send()} disabled={!draft.trim() || thinking}
                   style={{
-                    background: draft.trim() ? T.text : T.pillFill,
-                    color: draft.trim() ? T.pageBg||"#fff" : T.faint,
-                    border: "none", borderRadius: 9,
+                    background: draft.trim() ? (T.gradBtn||"linear-gradient(135deg,#0F2060,#2A5ED8)") : T.pillFill,
+                    color: draft.trim() ? "#fff" : T.faint,
+                    border: draft.trim() ? "none" : `1px solid ${T.line}`, borderRadius: 9,
                     width: 34, height: 34,
                     cursor: draft.trim() ? "pointer" : "default",
                     fontFamily: "inherit", transition: "all .15s", flexShrink: 0,
@@ -716,11 +732,11 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           <div style={{
             width: 30, height: 30, borderRadius: 8,
-            background: "transparent",
+            background: "linear-gradient(145deg,#0F2060,#2A5ED8)",
             display: "flex", alignItems: "center", justifyContent: "center",
             overflow: "hidden",
-            boxShadow: "none", padding: 0,
-          }}><img src={T.pageBg === "#ffffff" ? LOGO_DARK_XS : LOGO_LIGHT_XS} alt="مرن" style={{ width:"100%", height:"100%", objectFit:"contain" }}/></div>
+            boxShadow: "0 2px 10px rgba(15,32,96,0.4)", padding: 3,
+          }}><img src={LOGO_LIGHT_XS} alt="مرن" style={{ width:"100%", height:"100%", objectFit:"contain" }}/></div>
           <div style={{ fontSize: F.base + 1, fontWeight: 700, color: T.text }}>{t.appName}</div>
         </div>
         {isMobile && (
@@ -734,8 +750,8 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
       <div style={{ padding: "12px 14px 8px" }}>
         <button onClick={newChat} style={{
           width: "100%",
-          background: T.text,
-          color: T.pageBg||"#fff", border: "none", borderRadius: 9,
+          background: T.gradBtn||T.navy,
+          color: "#fff", border: "none", borderRadius: 9,
           padding: "10px 14px", fontSize: F.base - 0.5, fontWeight: 600,
           cursor: "pointer", fontFamily: "inherit",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
@@ -855,6 +871,7 @@ function ChatItem({ c, T, F, isActive, onOpen, onDelete, onRename, lang }) {
       display: "flex", alignItems: "center", justifyContent: "space-between",
       padding: "10px 12px", margin: "1px 0", borderRadius: 9, cursor: "pointer",
       background: isActive ? T.pillActive : "transparent", transition: "background .15s",
+      borderRight: isActive ? `3px solid ${T.accentBlue||"#2A5ED8"}` : "3px solid transparent",
       gap: 4,
     }}
     onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = T.hover; }}
@@ -1053,11 +1070,11 @@ function EmptyState({ T, t, F, send, settings, userProfile }) {
     <div style={{ textAlign: "center", padding: "40px 0 30px", maxWidth: 600, margin: "0 auto" }}>
       <div style={{
         width: 52, height: 52, borderRadius: 14, margin: "0 auto 20px",
-        background: "transparent",
+        background: "linear-gradient(145deg,#0F2060,#2A5ED8)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        overflow: "hidden",
-        boxShadow: "none",
-      }}><img src={T.pageBg === "#ffffff" ? LOGO_DARK_SM : LOGO_LIGHT_SM} alt="مرن" style={{ width:"100%", height:"100%", objectFit:"contain" }}/></div>
+        overflow: "hidden", padding: 6,
+        boxShadow: "0 4px 20px rgba(15,32,96,0.4)",
+      }}><img src={LOGO_LIGHT_SM} alt="مرن" style={{ width:"100%", height:"100%", objectFit:"contain" }}/></div>
       <h1 style={{ fontSize: F.h1 + 2, fontWeight: 700, margin: "0 0 10px", color: T.text, letterSpacing: "-0.5px" }}>
         {name ? (t.appName === "مرن" ? `أهلاً، ${name}` : `Hello, ${name}`) : t.tagline}
       </h1>
@@ -1162,7 +1179,7 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
         </button>
         <div>
           <div style={{
-            background: T.userFill, color: T.userText,
+            background: T.userFill||"linear-gradient(135deg,#0F2060,#1E4BB8)", color: T.userText||"#fff",
             borderRadius: "16px 16px 4px 16px", padding: "10px 15px",
             fontSize: F.base, fontWeight: 400, maxWidth: "100%", lineHeight: 1.6,
             boxShadow: "none",
@@ -1207,19 +1224,21 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
   const active = tabs[activeTab] || {};
 
   return (
-    <Glass T={T} radius={14} style={{ padding: 20 }}>
-
+    <Glass T={T} radius={14} style={{ padding: 0, overflow: "hidden" }}>
+      {/* شريط هوية Clean Navy */}
+      <div style={{ height: 3, background: "linear-gradient(90deg,#0F2060,#2A5ED8,#7BB3FF)" }}/>
+      <div style={{ padding: 20 }}>
 
       {/* الهيدر */}
       <div style={{ position: "relative", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 5 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-            {card.kicker && <div style={{ color: T.faint, fontSize: F.label - 1, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8 }}>{card.kicker}</div>}
+            {card.kicker && <div style={{ color: T.accentBlue||"#2A5ED8", fontSize: F.label - 1, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>{card.kicker}</div>}
             {searched && (
               <div style={{
-                fontSize: F.label - 1, fontWeight: 500, color: T.faint,
-                background: T.pillFill, padding: "2px 7px",
-                borderRadius: 4, border: `1px solid ${T.line}`, display: "flex", alignItems: "center", gap: 4,
+                fontSize: F.label - 1, fontWeight: 600, color: "#34D399",
+                background: "rgba(52,211,153,0.1)", padding: "2px 8px",
+                borderRadius: 6, border: "1px solid rgba(52,211,153,0.2)", display: "flex", alignItems: "center", gap: 4,
               }}>
                 <Icon.Search /> {t.liveSearch}
               </div>
@@ -1250,7 +1269,7 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
             <button key={i} onClick={() => setActiveTab(i)} style={{
               background: "transparent",
               border: "none",
-              borderBottom: `1.5px solid ${i === activeTab ? T.text : "transparent"}`,
+              borderBottom: `2px solid ${i === activeTab ? T.accentBlue||T.blue : "transparent"}`,
               padding: "8px 14px",
               color: i === activeTab ? T.text : T.sub,
               fontSize: F.label + 0.5, fontWeight: i === activeTab ? 600 : 400,
@@ -1265,6 +1284,7 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
       <div key={activeTab} className="tab-in">
         <TabContent tab={active} a={a} T={T} F={F} />
       </div>
+          </div>
     </Glass>
   );
 }
@@ -1280,7 +1300,7 @@ function IBar({ v, max=100, color, label, right, T }) {
         <span style={{ fontSize:12, fontWeight:700, color }}>{right||v+(max===100?"/100":"")}</span>
       </div>
       <div style={{ height:4, background:T.line, borderRadius:2 }}>
-        <div style={{ height:"100%", width:`${Math.min((v/max)*100,100)}%`, background:color, borderRadius:2, boxShadow:`0 0 8px ${color}40` }}/>
+        <div style={{ height:"100%", width:`${Math.min((v/max)*100,100)}%`, background:color||`linear-gradient(90deg,${T.navy||"#0F2060"},${T.blue||"#2A5ED8"})`, borderRadius:2 }}/>
       </div>
     </div>
   );
