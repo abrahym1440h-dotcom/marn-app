@@ -1,6 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { TRANSLATIONS } from "./i18n.js";
 
+
+/* ===== شعار مرن ===== */
+const LOGO_SM = "data:image/webp;base64,UklGRr4HAABXRUJQVlA4ILIHAAAQJACdASpQAFAAPikUh0KhoQijCgwBQlAFYZuQST6TzVLt224wFt70UbePzN+cb/vvVlvI/9P9QD9cutn/wNrFZ+/ir0KXsFlJ3tX5I/ldrCH8a/rH5J/lPnL/z7/CflhzNd5X+g/7rjp6AH5w/0H5VfK1/K/6T/Bfk/7a/nL/c/234Bf5R/Nf8t/cv3b/yv//+pn2B/tn7EP6ikz0VwiLPgq0+pFZ+L1VmiS7+lgZZpkCnhJjZPDr6eHRyvRSTYJ+XW0C6Oo1XOB/5/IvVH1m5aU7c8NuozmBy+CaSLlM4jcIHq5oAuWHXPpDNp384oSuEbsrlFhmcShaJZ70SvTsP+VJJghTfGmlKruqGLekOL6eUwOWSHxj3kYzmiEhRSRvYh2VWtNhtAAA/v/+lD3Ua+0Aj6+HapmddIhcjT55WfPZBoD/Br5mkbx9XklyphbF1dAd1waWKsYf0sY3iIPcQcmpfy3U1uktlXrT4XLET5Or/B6+bvv8svXyIlvtJA4xvotMte7tIBv/j9Y97RuWmsQDbPF4sdUoCyTD7Br+r8W0pYjtr0U/gJ3yVMojGDhnpdv2UhjLEjQJk2pwRUsGPe+JKKbWkLh66d0zchBTX47/Fh3nr+CBznlsd4aAJZ/RdBXroGhgUxEclhASbDnCOpL/o1NpZ3byB58MdeO+Sp/u6uKr+PnFrp6a9qYJOB7Kp2ufYtYZMvfcw90ILlc3VGBhlMz55ubQVUTgMVZz0TMU+mhKTpSyG09UhYZ+TS6pmVJJRpwIKaLf0bQ7Wf/3gZBANUxreBau/VXPzsyuQM8HFl72YEtvxzdeguuPpwEKCflIu55aZF8ik8dfUPLDX/cD2LGKkcVG8kph5RURLX+u95J+MDbXPnn/CQk1QLIf8++sMqZH1Ge2Dvq0BVG+1zJu9eh4pNCYgfyU4GvszzbT7BTvBly64CzIbKqhIm6i6OOhPO+v3tCPqio+Lmk2l/OYugoexPfk2DFfwojLRgGO/kNPRA3zwvpp0k49GD7v0rvf4tWh5rUGHQ9R7c+jT4wMx/zKdd88aG/CNzM49mIevKUmX9LNCYfBMAwtr4NeoqcnQE5A5acuns6lTZMaBsqJf4+SmExMBn9s6F8lYkvOP3+3+FVJ+rT7ylSvjNOoNyPLBkf+/scvaww6O5bKDeWD8+o+OKuowJ4hLfKpiQFgnWEZMJ6TnRupfi0gjc0FksOGpVnwXEyUrlACN+hDXkkD8hmx4p3aXRkYVfIFYSioKo9UgS4SuIFX/7vO1P6IRGcK3E2aRQ+UN8BeRroZ/sj5cXMREisigaI0jjTU/VYFTLanItQXaicCsXOlTFVTA2yBjGP9ph9HeUCc93MNLTblugYGqjHzbPjZjz6CewythDBHXzeR2n5RcuEKMf2hHX0ANb2lOdlLjaRbqJPoYFVxZ+1prQOiKJ2P0fMcmHK/OPF3wGGRGVXT3e4brSk7+iwfA6Uz5GAxdv6Gyih62KSsZ8z4AIt6zrz9VNWmzqNmrsAv0RjbPlGIi/2taemZjwAO2fs4BBMiqAk3a7qtSdnDYw1RtWM0FjumUisfKA4Yo9vxPx9o22KN/DhcpTBPLenh1XUIKK9/qUb1DPO94tSv6uWVUl9m9Bcxh6Iwz8rHf4ASTzteqO2JsRxQmCnUo55pEuMHYxTnWevmdorDtXaVDMSmejeuV0PneXlVUKz2s2f/nXRtYc7xpJz6ABGsDhIqWrsIyk4ASNash4jTL8xISgaENJ21WlNKkSQl5+egLt2ietr2VqvwoWsBp6NaD8ztcKeI21usMmCJaBoegm6V2okKuDX3+DuyyUGoxbzeXx/AftGyx+NGGLQ9BUJOmnt+i+PGfxjOWSEkSTZ0EQ8uiJ9qNHeS5zz2nSc4tx7dj7d1zf+lsbvieuLsmmFdQq+IOeWsuLweicVKGhyK8c+f7QrD0ckDPoJLlZ8lWmw/+W7SBEJvgpXnyAL5ry/nRub1igYSvWS0q8pwgSlKg42BBSze2FHv6JZJXtQTRophMeQ3gmcqGhISqC51LN/5V/neD4/8sa7iWnWmAjJLa/sJ18U1/rydfEUwdfRzrRPLvzx+kO5YL5oU0M08jdAu7Jv6syRYicqjZEF3UYnDjl2Rktv2b+3o7v5yMO7/gd/Wm6+4HyqvKI7KowgsIjdHTVLa646PSyTq+orGuS94cGkQHYvhCURxbqBwj//b53Pe+l7SfoWRF75+S8UVsXUuglEie83jwTkw3nIfNaB4NNMSc7oEqZw7zykoQYjeq4jGGIHGqXkPzvGsGiFZq2IVXbcSXmxB5t+BiqsBOrnlDz1R8KZwxJtDkwztnnlCEslOSqTYVC10H9+3ZI3CwoaD8/ox4uaRk7113OunnZ967l0T9+rTz5Wtw7H22R37UP45DRvyvfH8yDUk2h6Lw2KPWRoE4kbjO2IUqd96ABsN/yLZasfR2h8NSiI+8uaAceeG/kn+/H9RItd6i0sIvl944J03cZ96Hjf0VJKDCQMgAlLThiClWon7MUnf1Mv039jrK4Up8kjfbl399NkXqMvRwf4L8c2jRNCtGjzel7au2KXs3+bbF/DO/FPSvfY2TslBC6r2qQ7IljyitrxHn4AAAA==";
+const LOGO_XS = "data:image/webp;base64,UklGRigGAABXRUJQVlA4IBwGAABwHQCdASpAAEAAPikSh0KhoQmGqsQMAUJQBS8uBpjyT/G8ttfVypzZ6BPQf5gHOw8wH7M+sn6Ot489EDpZP8Dap2ev4d9Dz7G/tVz5GPv2/8ivyq1Ff9r/Hz8js50+k/478c/Nb1U70X/LflpzmdAD+Tf1n/h/bB8UH9v9rXtr+d/+D7g38e/n/+Q/t372f37wReh5+whTW/IiZiRLnUJbf/xOzS5/Q3ss8xMyxad0Sb7AHlXpQpCdZ3C6rTrM7TfPpCChmkihiijY4e7baExE/mE5Zon3LVcIakKHZszA784/8t3wOvuL8Ffw3TbPL/YVRfyQAP7//pQ//RMqPFkdXOHhiGR6U6I3uUu3N+gcT9Jsgc4p3IVsAN0UO3xvYJbEHArbXtI75kOgsGlddKxhfzzeCEuGRfd3D5+JuN31/F9l5FWzzoLHrMC91/W17xfm5ub6bcHnQhzvD1OAdajcOltlYYQ0uhC7w1yYV38kN6vvUkjjkBCSeZt9HwpUDFxUFaMMPVcQl43WIyQbJ6o4OHMOPter1rd23Ep5AIYJiUJ9GMDeuC7MRTM3IIvjDRz0CNOGbBcUlrk8cyNE9sPM78TSr88Snr0ERzDnyUrvybO6bRCL+WxPY9YgXE+OeTByzHSKzzFSp1ILjwWFkZwMUPMlWp/PBJJy1SfV43RL0VFdoHfk5A3aPAtarDhbUTaBU+30Dbyyt9NRwD9sox7Ml6RbNryqnnHlJYH80IGfVLk5SIlZI3ZD1uEzPzYv5Zm7Yr9sOwFUkL1q7p+NlbqDPKpkTcLolO/7kFATGEkrWcV0ck/pW1UsBIcOXv3DQqZ5NYNTWoK8QWB5jASV66oLdm6CkcyR0UW3Yby3i3J69yIpA9Ca0z5r/yX0XeWfPpprLZ9IDSski9VwYHLaPmV+Dv2Sj5TpqcWMarVG9iakLPpyZCze6ov4u7qsZH+UfevDYGEzORIk8CDTO8AGIqfLD4x64SJeoCw0InqN0Qkw3sbXc03VbPKvUyqr1i1WyMWroXd7mhBPeePdEgvkhhu+r48PSH9jRDksDF5JBVNNwLcYMLJSdKju5ewKytOxMsC4jz/H/qInwXhgeXZNxtPLNfcnTDQblNk3eA4zdedXfjlmjm4eolkmFM8guSPLWAOVaVrDMvBxmkg9veEeJuCE1kXwUYwiBBF8Jny9eZGrrGMVj0vGxcDG3brBPta/pek5yDYh4gH/whWqVR3IJQeTxHrH397Xp3hXSn7Htz7A1L9yInLim9gseaHrJOQDZEGt84QjtUBethmK2slPFZrLtvJP3ksJlI9guCOeHBO1cbiioM7TCCwLKgXlvzOZ1j53uKRio/A6yKsuPb0tUa6+N/ucQ6RAS6HDqZtcEkH5dMqUAsL0j+EDEh3GyzL8AWQ/WyApAGiPAcMsPEYY5w4xKjgzbPtsdh/8ZfrEEeQdUPQB16qRJaA5OIrQcRE/hxtKjphNGpIunWag9etPwHjZ5L9KOVXfyuLB32UDhoNGh++Hsd/3/fH+W/uLZr0i946fXn/+pnVvpEMHWFbSDcP79BPoTDF21mp5o0NpI/8dEAayHU3y7fR6RlBnyg2FslIfJBlx2RSjnHHrg3g8/5oABp13xtf7HYdVfNPF0TLC8bBWWI9twCryfl6gvKRx7g2e3520KxZZFFP8GEvOqlspQDu+aoGcb1BzUZdXSqBm/6bJztDykMIRf/wBrWlVv8aRSlpNwrLELD+miMycQthVtGt21seSSZ7koO/UILfmx5Ef9f9/QSUhCiQZ67PmgLke3dlNylDQl7b37jVMl8FfyI0ypdf2VqTaEBRe+qnTKvD3Fn2fjnbaIo//D5WbquftCCeOM8vzMtx7mmt166EqP+XHwJUL1RSphXn0XZHE2gycJsV8fyLUQ+72W23ffrp3+5pEfTpepL/n02htjL64tIaB7fsKda8T8ERI4OWQQO5nIapNbTphK6nOIMCMpqbghPjIIEy/VuXsQgPbTgyjbVsC/UR1ZalSAvGGfLEVkX0GV7/O4tN7yKZGXSXwO7H/N7rNp3AHL1oSA7X9a2D6/RmiPlPSQPQmEAAA";
+
+
 /* ============ ثوابت ============ */
 const STORAGE_KEY = "marn_chats_v2";
 const SETTINGS_KEY = "marn_settings_v2";
@@ -705,9 +711,9 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
             width: 30, height: 30, borderRadius: 8,
             background: "#0a84ff",
             display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", fontWeight: 800, fontSize: 15,
-            boxShadow: "none",
-          }}>{t.appName.charAt(0)}</div>
+            overflow: "hidden", background: "transparent",
+            boxShadow: "none", padding: 0,
+          }}><img src={LOGO_XS} alt="مرن" style={{ width:"100%", height:"100%", objectFit:"cover", borderRadius:8 }}/></div>
           <div style={{ fontSize: F.base + 1, fontWeight: 700, color: T.text }}>{t.appName}</div>
         </div>
         {isMobile && (
@@ -1042,9 +1048,10 @@ function EmptyState({ T, t, F, send, settings, userProfile }) {
         width: 52, height: 52, borderRadius: 14, margin: "0 auto 20px",
         background: T.text,
         display: "flex", alignItems: "center", justifyContent: "center",
-        color: T.pageBg||"#fff", fontWeight: 800, fontSize: 24,
+        overflow: "hidden",
+        background: "transparent",
         boxShadow: "none",
-      }}>{t.appName.charAt(0)}</div>
+      }}><img src={LOGO_SM} alt="مرن" style={{ width:"100%", height:"100%", objectFit:"cover" }}/></div>
       <h1 style={{ fontSize: F.h1 + 2, fontWeight: 700, margin: "0 0 10px", color: T.text, letterSpacing: "-0.5px" }}>
         {name ? (t.appName === "مرن" ? `أهلاً، ${name}` : `Hello, ${name}`) : t.tagline}
       </h1>
