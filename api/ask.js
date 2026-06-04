@@ -252,9 +252,7 @@ export default async function handler(req, res) {
   const messages = [
     { role: "system", content: systemPrompt },
     ...history.map(h => ({ role: h.role === "user" ? "user" : "assistant", content: String(h.content || "") })),
-    { role: "user", content: `${question}
-
-[INSTRUCTION: أجب بشكل شامل كامل. الحد الأدنى 3 تبويبات تغطي جوانب مختلفة. لا تعطِ بطاقة واحدة أبداً لأي سؤال يحتمل التفصيل.]` },
+    { role: "user", content: question },
   ];
 
   let lastError = "";
@@ -285,46 +283,71 @@ export default async function handler(req, res) {
         }
 
         const data = await response.json();
-        let raw = (data?.choices?.[0]?.message?.content || "")
-          .replace(/```json\s*/gi, "")
-          .replace(/```\s*/g, "")
-          .trim();
+        const rawContent = (data?.choices?.[0]?.message?.content || "").trim();
 
-        // استخراج أول JSON صحيح
-        const s = raw.indexOf("{");
-        const e = raw.lastIndexOf("}");
-        if (s !== -1 && e > s) raw = raw.slice(s, e + 1);
-
-        let card;
-        try {
-          card = JSON.parse(raw);
-        } catch (parseErr) {
-          // محاولة إصلاح JSON المكسور
-          try {
-            const fixed = raw
-              .replace(/,\s*}/g, "}")
-              .replace(/,\s*]/g, "]")
-              .replace(/[\u0000-\u001F\u007F]/g, " ");
-            card = JSON.parse(fixed);
-          } catch {
-            // fallback نصي
-            card = {
-              accent: "knowledge",
-              kicker: lang === "ar" ? "إجابة" : "Answer",
-              title: lang === "ar" ? "الإجابة" : "Answer",
-              sub: "",
-              tabs: [{ label: lang === "ar" ? "الإجابة" : "Answer", type: "text", data: { body: raw.slice(0, 1000) } }],
-              followUps: [],
-            };
+        // ===== parsing متعدد المراحل =====
+        function tryParse(str) {
+          // 1. مباشرة
+          try { return JSON.parse(str); } catch {}
+          // 2. إزالة markdown
+          let s = str.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+          try { return JSON.parse(s); } catch {}
+          // 3. استخراج { ... }
+          const first = s.indexOf("{");
+          const last = s.lastIndexOf("}");
+          if (first !== -1 && last > first) {
+            const slice = s.slice(first, last + 1);
+            try { return JSON.parse(slice); } catch {}
+            // 4. إصلاح فواصل زائدة
+            try {
+              return JSON.parse(
+                slice
+                  .replace(/,\s*([}\]])/g, "$1")
+                  .replace(/([{,]\s*)"([^"]+)"\s*:\s*undefined/g, "")
+                  .replace(/[\x00-\x1F\x7F]/g, " ")
+              );
+            } catch {}
+            // 5. إصلاح أكثر عدوانية
+            try {
+              return JSON.parse(
+                slice
+                  .replace(/,\s*([}\]])/g, "$1")
+                  .replace(/\\n/g, " ")
+                  .replace(/\n/g, " ")
+                  .replace(/[\x00-\x1F\x7F]/g, "")
+              );
+            } catch {}
           }
+          return null;
+        }
+
+        let raw = rawContent;
+        let card = tryParse(raw);
+
+        if (!card) {
+          // fallback نصي — نعرض الإجابة كنص عادي
+          const cleanText = rawContent
+            .replace(/```json\s*/gi, "")
+            .replace(/```\s*/g, "")
+            .replace(/^[{[]/m, "")
+            .trim()
+            .slice(0, 1500);
+          card = {
+            accent: "knowledge",
+            kicker: lang === "ar" ? "إجابة" : "Answer",
+            title: lang === "ar" ? "الإجابة" : "Answer",
+            sub: "",
+            tabs: [{ label: lang === "ar" ? "الإجابة" : "Answer", type: "text", data: { body: cleanText } }],
+            followUps: [],
+          };
         }
 
         // تحقق من صحة الهيكل
         if (!card || typeof card !== "object") {
-          card = { accent:"knowledge", kicker:"إجابة", title:"الإجابة", sub:"", tabs:[{label:"الإجابة",type:"text",data:{body:raw.slice(0,500)}}], followUps:[] };
+          card = { accent:"knowledge", kicker:"إجابة", title:"الإجابة", sub:"", tabs:[{label:"الإجابة",type:"text",data:{body:rawContent.slice(0,500)}}], followUps:[] };
         }
         if (!Array.isArray(card.tabs) || card.tabs.length === 0) {
-          card.tabs = [{ label: lang === "ar" ? "الإجابة" : "Answer", type: "text", data: { body: raw.slice(0, 500) } }];
+          card.tabs = [{ label: lang === "ar" ? "الإجابة" : "Answer", type: "text", data: { body: rawContent.slice(0, 500) } }];
         }
         if (!Array.isArray(card.followUps)) card.followUps = [];
 
