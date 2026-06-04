@@ -9,61 +9,69 @@ const PROFILE_KEY = "marn_profile_v1";
 const VERSION = "3.0";
 
 const ACCENTS = {
-  sport: "#34c759",
-  knowledge: "#0a84ff",
-  history: "#bf5af2",
-  food: "#ff9500",
+  sport:     null,  // يرث من الثيم
+  knowledge: null,
+  history:   null,
+  food:      null,
 };
 
 /* ============ الثيمات الاحترافية ============ */
 const THEMES = {
   light: {
-    pageBg: "#f7f7f8",
-    sidebarBg: "#ffffff",
-    text: "#0d0d0d",
-    sub: "#6e6e80",
-    faint: "#aeaeb8",
+    // SIGNAL — فاتح
+    pageBg: "#ffffff",
+    sidebarBg: "#fafafa",
+    text: "#111827",
+    sub: "#6b7280",
+    faint: "#9ca3af",
     glassFill: "#ffffff",
-    glassEdge: "rgba(0,0,0,0.06)",
-    glassBorder: "#e5e5ea",
-    glassShadow: "0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05)",
-    headerBg: "rgba(247,247,248,0.95)",
-    composerBg: "rgba(247,247,248,0.98)",
-    userFill: "#0a84ff",
+    glassEdge: "rgba(0,0,0,0.04)",
+    glassBorder: "#f3f4f6",
+    glassShadow: "0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04)",
+    headerBg: "rgba(255,255,255,0.98)",
+    composerBg: "rgba(255,255,255,0.98)",
+    userFill: "#111827",
     userText: "#ffffff",
-    pillFill: "#f2f2f7",
+    pillFill: "#f9fafb",
     pillActive: "#ffffff",
-    line: "#e5e5ea",
-    hover: "#f2f2f7",
-    dotIdle: "#c7c7cc",
-    modalBg: "rgba(0,0,0,0.4)",
+    line: "#f3f4f6",
+    hover: "#f9fafb",
+    dotIdle: "#d1d5db",
+    modalBg: "rgba(0,0,0,0.35)",
     cardBg: "#ffffff",
     inputBg: "#ffffff",
-    accent: "#0a84ff",
+    accent: "#111827",
+    accentBlue: "#2563eb",
+    stat: "#f9fafb",
+    statBorder: "#f3f4f6",
   },
   dark: {
-    pageBg: "#0d0d0d",
-    sidebarBg: "#111111",
-    text: "#ececec",
-    sub: "#8e8ea0",
-    faint: "#555560",
-    glassFill: "#1a1a1a",
-    glassEdge: "rgba(255,255,255,0.06)",
-    glassBorder: "#2a2a2a",
-    glassShadow: "0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2)",
-    headerBg: "rgba(13,13,13,0.97)",
-    composerBg: "rgba(13,13,13,0.98)",
-    userFill: "#0a84ff",
-    userText: "#ffffff",
-    pillFill: "#1e1e1e",
-    pillActive: "#2a2a2a",
-    line: "#2a2a2a",
-    hover: "#1e1e1e",
-    dotIdle: "#444450",
+    // SIGNAL — داكن
+    pageBg: "#0f0f11",
+    sidebarBg: "#0a0a0c",
+    text: "#f9fafb",
+    sub: "#9ca3af",
+    faint: "#6b7280",
+    glassFill: "#18181b",
+    glassEdge: "rgba(255,255,255,0.04)",
+    glassBorder: "#27272a",
+    glassShadow: "0 1px 2px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.2)",
+    headerBg: "rgba(15,15,17,0.98)",
+    composerBg: "rgba(15,15,17,0.98)",
+    userFill: "#f9fafb",
+    userText: "#0f0f11",
+    pillFill: "#18181b",
+    pillActive: "#27272a",
+    line: "#27272a",
+    hover: "#18181b",
+    dotIdle: "#3f3f46",
     modalBg: "rgba(0,0,0,0.7)",
-    cardBg: "#1a1a1a",
-    inputBg: "#1a1a1a",
-    accent: "#0a84ff",
+    cardBg: "#18181b",
+    inputBg: "#18181b",
+    accent: "#f9fafb",
+    accentBlue: "#3b82f6",
+    stat: "#18181b",
+    statBorder: "#27272a",
   },
 };
 
@@ -84,6 +92,20 @@ function Glass({ T, children, style, radius = 12, onClick, className = "" }) {
       overflow: "hidden", ...style,
     }}>
       {children}
+    </div>
+  );
+}
+
+/* ===== مكون StatCell — خلية إحصاء نظيفة ===== */
+function StatCell({ label, value, color, T }) {
+  return (
+    <div style={{
+      background: T.stat || T.pillFill,
+      border: `1px solid ${T.statBorder || T.line}`,
+      borderRadius: 10, padding: "12px 10px", textAlign: "center",
+    }}>
+      <div style={{ fontSize: 11, color: T.faint, marginBottom: 4, fontWeight: 500 }}>{label}</div>
+      <div style={{ fontSize: 19, fontWeight: 700, color: color || T.text }}>{value}</div>
     </div>
   );
 }
@@ -436,13 +458,13 @@ export default function App() {
     <div dir={isRTL ? "rtl" : "ltr"} style={{
       height: "100dvh", display: "flex", position: "relative",
       background: T.pageBg, color: T.text,
-      fontFamily: "'Noto Sans Arabic','SF Pro Text','Segoe UI',sans-serif",
+      fontFamily: "'Noto Sans Arabic','Inter','SF Pro Text',sans-serif",
       WebkitFontSmoothing: "antialiased",
       transition: "background .5s ease, color .4s ease",
       overflow: "hidden",
       fontSize: F.base,
     }}>
-      <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
       {/* الشريط الجانبي */}
       <Sidebar
@@ -471,7 +493,7 @@ export default function App() {
           background: T.headerBg,
           borderBottom: `1px solid ${T.line}`,
         }}>
-          <div style={{ maxWidth: 820, margin: "0 auto", padding: "14px 18px", display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ maxWidth: 860, margin: "0 auto", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12 }}>
             {isMobile && (
               <button onClick={() => setSidebarOpen(true)} style={iconBtnStyle(T)}>
                 <Icon.Menu />
@@ -482,10 +504,10 @@ export default function App() {
             </div>
             <button onClick={newChat} style={{
               ...iconBtnStyle(T),
-              background: T.accent || "#0a84ff",
-              color: "#fff",
-              border: "none",
-              boxShadow: "0 2px 8px rgba(10,132,255,0.3)",
+              background: T.userFill,
+              color: T.userText,
+              border: `1px solid ${T.line}`,
+              boxShadow: "none",
             }} title={t.newChat}>
               <Icon.Plus />
             </button>
@@ -494,7 +516,7 @@ export default function App() {
 
         {/* خيط الرسائل */}
         <div style={{ flex: 1, overflowY: "auto", padding: "0 14px", position: "relative" }}>
-          <div style={{ maxWidth: 760, margin: "0 auto", padding: "18px 0 16px" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto", padding: "20px 0 16px" }}>
             {empty && (
               <EmptyState T={T} t={t} F={F} send={send} settings={settings} userProfile={userProfile} />
             )}
@@ -516,7 +538,7 @@ export default function App() {
               <div style={{ display: "flex", gap: 6, padding: "6px 4px 20px" }}>
                 {[0, 0.16, 0.32].map((d, i) => (
                   <span key={i} style={{
-                    width: 8, height: 8, borderRadius: "50%", background: T.dotIdle,
+                    width: 7, height: 7, borderRadius: "50%", background: T.dotIdle,
                     animation: `bd 1.3s ${d}s infinite ease-in-out`,
                   }} />
                 ))}
@@ -530,9 +552,8 @@ export default function App() {
         <div style={{
           flexShrink: 0, position: "relative", zIndex: 5,
           background: T.composerBg, borderTop: `1px solid ${T.line}`,
-          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
         }}>
-          <div style={{ maxWidth: 760, margin: "0 auto", padding: "12px 14px" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto", padding: "10px 14px" }}>
             {settings.showSuggestions && currentMessages.length > 0 && (
               <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 10, scrollbarWidth: "none" }}>
                 {t.suggestions.slice(0, 3).map(s => (
@@ -545,11 +566,11 @@ export default function App() {
             )}
             <div style={{
               background: T.inputBg || T.glassFill,
-              border: `1.5px solid ${T.line}`,
-              borderRadius: 14,
-              padding: "10px 10px 10px 14px",
+              border: `1px solid ${T.line}`,
+              borderRadius: 10,
+              padding: "8px 8px 8px 14px",
               display: "flex", alignItems: "center", gap: 8,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              boxShadow: "none",
               transition: "border-color .15s",
             }}>
               <input
@@ -573,8 +594,8 @@ export default function App() {
                 <button onClick={() => setForceSearch(s => !s)}
                   title={isRTL ? "بحث في الإنترنت" : "Search the web"}
                   style={{
-                    background: forceSearch ? "rgba(10,132,255,0.1)" : "transparent",
-                    color: forceSearch ? "#0a84ff" : T.faint,
+                    background: forceSearch ? T.pillFill : "transparent",
+                    color: forceSearch ? T.text : T.faint,
                     border: "none", borderRadius: 8,
                     width: 32, height: 32, cursor: "pointer", fontFamily: "inherit",
                     display: "flex", alignItems: "center", justifyContent: "center",
@@ -584,15 +605,15 @@ export default function App() {
                 </button>
                 <button onClick={() => send()} disabled={!draft.trim() || thinking}
                   style={{
-                    background: draft.trim() ? "#0a84ff" : T.pillFill,
-                    color: draft.trim() ? "#fff" : T.faint,
-                    border: "none", borderRadius: 9,
-                    width: 34, height: 34,
+                    background: draft.trim() ? T.text : T.pillFill,
+                    color: draft.trim() ? T.pageBg : T.faint,
+                    border: `1px solid ${draft.trim() ? T.text : T.line}`,
+                    borderRadius: 9, width: 34, height: 34,
                     cursor: draft.trim() ? "pointer" : "default",
                     fontFamily: "inherit", transition: "all .15s", flexShrink: 0,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     transform: isRTL ? "scaleX(-1)" : "none",
-                    boxShadow: draft.trim() ? "0 2px 8px rgba(10,132,255,0.35)" : "none",
+                    boxShadow: "none",
                   }}>
                   <Icon.Send />
                 </button>
@@ -659,19 +680,21 @@ export default function App() {
         .card-surface { transition: box-shadow .15s ease; }
         .press { transition: opacity .15s ease; }
         .press:active { opacity: 0.7; }
-        .card-in { animation: ci .35s cubic-bezier(.2,.8,.3,1) both; }
-        @keyframes ci { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-        .tab-in { animation: ti .25s ease both; }
+        .card-in { animation: ci .28s cubic-bezier(.2,.8,.3,1) both; }
+        @keyframes ci { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        .tab-in { animation: ti .2s ease both; }
         @keyframes ti { from{opacity:0} to{opacity:1} }
         @keyframes toastIn { from{opacity:0;transform:translate(-50%,8px)} to{opacity:1;transform:translate(-50%,0)} }
         @keyframes micPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        input::placeholder { color: ${T.faint} }
-        textarea::placeholder { color: ${T.faint} }
+        input::placeholder { color: ${T.faint}; }
+        textarea::placeholder { color: ${T.faint}; }
         @keyframes bd { 0%,80%,100%{transform:scale(.4);opacity:.3} 40%{transform:scale(1);opacity:1} }
-        ::-webkit-scrollbar { width: 4px; height: 0; }
+        ::-webkit-scrollbar { width: 3px; height: 0; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: ${T.line}; border-radius: 2px; }
         button { -webkit-tap-highlight-color: transparent; }
+        table { border-collapse: collapse; }
+        td, th { font-family: inherit; }
       `}</style>
     </div>
   );
@@ -687,24 +710,22 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
     <aside style={{
       position: isMobile ? "fixed" : "relative",
       [isRTL ? "right" : "left"]: isMobile ? (sidebarOpen ? 0 : "-300px") : 0,
-      top: 0, bottom: 0, width: 280,
+      top: 0, bottom: 0, width: 260,
       background: T.sidebarBg,
-      backdropFilter: "blur(30px) saturate(180%)",
-      WebkitBackdropFilter: "blur(30px) saturate(180%)",
       [isRTL ? "borderLeft" : "borderRight"]: `1px solid ${T.line}`,
       zIndex: 30, display: "flex", flexDirection: "column",
-      transition: `${isRTL ? "right" : "left"} .3s cubic-bezier(.22,.68,.28,1)`,
-      boxShadow: isMobile && sidebarOpen ? "0 0 30px rgba(0,0,0,0.2)" : "none",
+      transition: `${isRTL ? "right" : "left"} .28s ease`,
+      boxShadow: isMobile && sidebarOpen ? "0 0 40px rgba(0,0,0,0.15)" : "none",
     }}>
       {/* الهيدر */}
       <div style={{ padding: "16px 14px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${T.line}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           <div style={{
             width: 30, height: 30, borderRadius: 8,
-            background: "#0a84ff",
+            background: T.text,
             display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", fontWeight: 800, fontSize: 15,
-            boxShadow: "0 2px 8px rgba(10,132,255,0.3)",
+            color: T.pageBg, fontWeight: 800, fontSize: 15,
+            boxShadow: "none",
           }}>{t.appName.charAt(0)}</div>
           <div style={{ fontSize: F.base + 1, fontWeight: 700, color: T.text }}>{t.appName}</div>
         </div>
@@ -719,12 +740,12 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
       <div style={{ padding: "12px 14px 8px" }}>
         <button onClick={newChat} style={{
           width: "100%",
-          background: "#0a84ff",
-          color: "#fff", border: "none", borderRadius: 9,
+          background: T.text,
+          color: T.pageBg, border: "none", borderRadius: 9,
           padding: "10px 14px", fontSize: F.base - 0.5, fontWeight: 600,
           cursor: "pointer", fontFamily: "inherit",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-          boxShadow: "0 2px 8px rgba(10,132,255,0.3)",
+          boxShadow: "none",
           transition: "opacity .15s",
         }}
         onMouseEnter={e => e.currentTarget.style.opacity = "0.9"}
@@ -1038,10 +1059,10 @@ function EmptyState({ T, t, F, send, settings, userProfile }) {
     <div style={{ textAlign: "center", padding: "40px 0 30px", maxWidth: 600, margin: "0 auto" }}>
       <div style={{
         width: 52, height: 52, borderRadius: 14, margin: "0 auto 20px",
-        background: "#0a84ff",
+        background: T.text,
         display: "flex", alignItems: "center", justifyContent: "center",
-        color: "#fff", fontWeight: 800, fontSize: 24,
-        boxShadow: "0 4px 16px rgba(10,132,255,0.3)",
+        color: T.pageBg, fontWeight: 800, fontSize: 24,
+        boxShadow: "none",
       }}>{t.appName.charAt(0)}</div>
       <h1 style={{ fontSize: F.h1 + 2, fontWeight: 700, margin: "0 0 10px", color: T.text, letterSpacing: "-0.5px" }}>
         {name ? (t.appName === "مرن" ? `أهلاً، ${name}` : `Hello, ${name}`) : t.tagline}
@@ -1054,10 +1075,10 @@ function EmptyState({ T, t, F, send, settings, userProfile }) {
           {t.suggestions.map(s => (
             <button key={s} onClick={() => send(s)} className="press"
               style={{
-                background: T.pillFill, color: T.text,
-                border: `1px solid ${T.line}`,
-                borderRadius: 10, padding: "13px 16px",
-                fontSize: F.base - 1, fontWeight: 500,
+                background: T.cardBg||T.glassFill, color: T.sub,
+                border: `1px solid ${T.glassBorder||T.line}`,
+                borderRadius: 9, padding: "12px 16px",
+                fontSize: F.base - 1.5, fontWeight: 500,
                 cursor: "pointer", fontFamily: "inherit",
                 textAlign: "right", lineHeight: 1.5,
                 transition: "all .15s",
@@ -1116,7 +1137,7 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
               <button onClick={() => editDraft.trim() && onEditSend(editDraft)}
                 disabled={!editDraft.trim()}
                 style={{
-                  background: ACCENTS.knowledge, color: "#fff", border: "none",
+                  background: T.text, color: T.pageBg, border: "none",
                   borderRadius: 8, padding: "6px 14px", fontSize: F.label, fontWeight: 600,
                   cursor: editDraft.trim() ? "pointer" : "default", fontFamily: "inherit",
                   opacity: editDraft.trim() ? 1 : 0.5,
@@ -1148,9 +1169,9 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
         <div>
           <div style={{
             background: T.userFill, color: T.userText,
-            borderRadius: "16px 16px 4px 16px", padding: "10px 15px",
-            fontSize: F.base, fontWeight: 400, maxWidth: "100%", lineHeight: 1.6,
-            boxShadow: "0 2px 8px rgba(10,132,255,0.25)",
+            borderRadius: "10px 10px 3px 10px", padding: "9px 14px",
+            fontSize: F.base - 0.5, fontWeight: 400, maxWidth: "100%", lineHeight: 1.6,
+            boxShadow: "none",
             wordBreak: "break-word",
           }}>{m.text}</div>
           {timeStr && <div style={{ fontSize: F.label - 1, color: T.faint, marginTop: 4, textAlign: "right" }}>{timeStr}</div>}
@@ -1192,10 +1213,11 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
   const active = tabs[activeTab] || {};
 
   return (
-    <Glass T={T} radius={14} style={{ padding: 20 }}>
+    <Glass T={T} radius={12} style={{ padding: "18px 20px 16px" }}>
+      {/* خط علوي بدل الجانبي - SIGNAL */}
       <div style={{
-        position: "absolute", top: 0, right: 0, bottom: 0, width: 3,
-        background: a, borderRadius: "0 14px 14px 0",
+        position: "absolute", top: 0, left: 0, right: 0, height: 1,
+        background: T.line,
         pointerEvents: "none",
       }} />
 
@@ -1203,12 +1225,13 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
       <div style={{ position: "relative", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 5 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-            {card.kicker && <div style={{ color: a, fontSize: F.label, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>{card.kicker}</div>}
+            {card.kicker && <div style={{ color: T.sub, fontSize: F.label - 1, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8 }}>{card.kicker}</div>}
             {searched && (
               <div style={{
-                fontSize: F.label - 1, fontWeight: 600, color: "#34c759",
-                background: "rgba(52,199,89,0.12)", padding: "2px 7px",
-                borderRadius: 6, display: "flex", alignItems: "center", gap: 4,
+                fontSize: F.label - 1, fontWeight: 500, color: T.faint,
+                background: T.pillFill, padding: "2px 8px",
+                borderRadius: 4, border: `1px solid ${T.line}`,
+                display: "flex", alignItems: "center", gap: 4,
               }}>
                 <Icon.Search /> {t.liveSearch}
               </div>
@@ -1225,7 +1248,7 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
             </button>
           </div>
         </div>
-        <h2 style={{ fontSize: F.h2, fontWeight: 700, margin: 0, letterSpacing: "-0.4px", lineHeight: 1.3 }}>{card.title}</h2>
+        <h2 style={{ fontSize: F.h2 - 1, fontWeight: 700, margin: 0, letterSpacing: "-0.3px", lineHeight: 1.3, color: T.text }}>{card.title}</h2>
         {card.sub && <div style={{ color: T.sub, fontSize: F.base - 1, marginTop: 5, lineHeight: 1.5 }}>{card.sub}</div>}
       </div>
 
@@ -1239,9 +1262,9 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
             <button key={i} onClick={() => setActiveTab(i)} style={{
               background: "transparent",
               border: "none",
-              borderBottom: `2px solid ${i === activeTab ? a : "transparent"}`,
+              borderBottom: `1.5px solid ${i === activeTab ? T.text : "transparent"}`,
               padding: "8px 14px",
-              color: i === activeTab ? T.text : T.sub,
+              color: i === activeTab ? T.text : T.faint,
               fontSize: F.label + 0.5, fontWeight: i === activeTab ? 600 : 400,
               cursor: "pointer", fontFamily: "inherit",
               transition: "all .15s", whiteSpace: "nowrap",
@@ -1258,23 +1281,85 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
   );
 }
 
-/* ============ محتوى التبويب ============ */
+/* ============ محتوى التبويب — 35 نوع ============ */
+
+// --- مكونات مساعدة داخلية ---
+function IBar({ v, max=100, color, label, right, T }) {
+  return (
+    <div style={{ marginBottom:10 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+        <span style={{ fontSize:12, color:T.sub }}>{label}</span>
+        <span style={{ fontSize:12, fontWeight:600, color:T.text }}>{right||v+(max===100?"/100":"")}</span>
+      </div>
+      <div style={{ height:3, background:T.line, borderRadius:2 }}>
+        <div style={{ height:"100%", width:`${Math.min((v/max)*100,100)}%`, background:T.text, borderRadius:2 }}/>
+      </div>
+    </div>
+  );
+}
+
+function ITile({ icon, label, value, color, T }) {
+  return (
+    <div style={{ background:T.stat||T.pillFill, border:`1px solid ${T.statBorder||T.line}`, borderRadius:10, padding:"11px 8px", textAlign:"center" }}>
+      <div style={{ display:"flex", justifyContent:"center", marginBottom:5, opacity:0.4 }}>{icon}</div>
+      <div style={{ fontSize:16, fontWeight:700, color:T.text }}>{value}</div>
+      <div style={{ fontSize:10, color:T.faint, marginTop:2, fontWeight:500 }}>{label}</div>
+    </div>
+  );
+}
+
+function ITag({ text, color, T }) {
+  return (
+    <span style={{ fontSize:11, padding:"3px 9px", borderRadius:6, background: T ? (T.stat||T.pillFill) : "transparent", border:`1px solid ${T ? (T.statBorder||T.line) : "#ccc"}`, color: T ? T.sub : (color||"inherit"), fontWeight:500, whiteSpace:"nowrap" }}>{text}</span>
+  );
+}
+
+// أيقونات مدمجة خفيفة
+const Si = {
+  up: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+  dn: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>,
+  star: (f,c) => <svg width="12" height="12" viewBox="0 0 24 24" fill={f?c:"none"} stroke={c} strokeWidth="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  dot: (c) => <div style={{ width:8, height:8, borderRadius:"50%", background:c, flexShrink:0, boxShadow:`0 0 6px ${c}` }}/>,
+  pin: (c) => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+  zap: (c) => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+  shield: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+  plane: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>,
+  clock: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+  dollar: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+  users: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  music: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>,
+  book: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
+  film: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>,
+  cpu: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><rect x="9" y="9" width="6" height="6"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>,
+  activity: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+  globe: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+  award: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>,
+  home: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  car: (c) => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>,
+  eye: (c) => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+};
+
 function TabContent({ tab, a, T, F }) {
   const d = tab.data || {};
+  const ACCS = { sport:"#34c759", knowledge:"#0a84ff", history:"#bf5af2", food:"#ff9f0a", health:"#ff6b6b", weather:"#64d2ff", finance:"#30d158", tech:"#0a84ff", travel:"#ff9f0a" };
+
   switch (tab.type) {
+
+    // ========== البطاقات الأصلية ==========
+
     case "stats":
       return (
         <div>
-          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.6 }}>{d.intro}</p>}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 10 }}>
-            {(d.items || []).map((s, i) => (
-              <div key={i} style={{
-                background: T.pillFill, borderRadius: 12, padding: "12px 10px",
-                border: `1px solid ${T.line}`, textAlign: "center",
-              }}>
-                <div style={{ color: a, fontSize: F.h2, fontWeight: 800, lineHeight: 1.1, marginBottom: 4 }}>{s.value}</div>
-                <div style={{ fontSize: F.label, fontWeight: 600, color: T.text, marginBottom: 2 }}>{s.label}</div>
-                {s.hint && <div style={{ fontSize: F.label - 1, color: T.sub }}>{s.hint}</div>}
+          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 14px", lineHeight:1.6 }}>{d.intro}</p>}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(100px,1fr))", gap:10 }}>
+            {(d.items||[]).map((s,i) => (
+              <div key={i} style={{ background:T.pillFill, borderRadius:10, padding:"12px 10px", border:`1px solid ${T.line}`, textAlign:"center" }}>
+                <div style={{ color:a, fontSize:F.h2, fontWeight:800, lineHeight:1.1, marginBottom:3 }}>{s.value}</div>
+                <div style={{ fontSize:F.label, fontWeight:600, marginBottom:2 }}>{s.label}</div>
+                {s.hint && <div style={{ fontSize:F.label-1, color:T.sub }}>{s.hint}</div>}
+                <div style={{ height:3, background:T.line, borderRadius:2, marginTop:6 }}>
+                  <div style={{ height:"100%", width:"70%", background:a, borderRadius:2 }}/>
+                </div>
               </div>
             ))}
           </div>
@@ -1284,21 +1369,13 @@ function TabContent({ tab, a, T, F }) {
     case "steps":
       return (
         <div>
-          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 12px", lineHeight: 1.6 }}>{d.intro}</p>}
-          {(d.steps || []).map((s, i, arr) => (
-            <div key={i} style={{
-              display: "flex", gap: 12, padding: "12px 0",
-              borderBottom: i === arr.length - 1 ? "none" : `1px solid ${T.line}`,
-            }}>
-              <div style={{
-                flexShrink: 0, width: 28, height: 28, borderRadius: 8,
-                background: `${a}22`, color: a,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontWeight: 700, fontSize: F.label + 1,
-              }}>{i + 1}</div>
+          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 12px", lineHeight:1.6 }}>{d.intro}</p>}
+          {(d.steps||[]).map((s,i,arr) => (
+            <div key={i} style={{ display:"flex", gap:12, padding:"12px 0", borderBottom:i===arr.length-1?"none":`1px solid ${T.line}` }}>
+              <div style={{ flexShrink:0, width:26, height:26, borderRadius:7, background:`${a}18`, color:a, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:F.label+1 }}>{i+1}</div>
               <div>
-                <div style={{ fontWeight: 600, fontSize: F.base - 0.5, marginBottom: 3 }}>{s.t}</div>
-                {s.d && <div style={{ color: T.sub, fontSize: F.base - 1.5, lineHeight: 1.6 }}>{s.d}</div>}
+                <div style={{ fontWeight:600, fontSize:F.base-0.5, marginBottom:3 }}>{s.t}</div>
+                {s.d && <div style={{ color:T.sub, fontSize:F.base-1.5, lineHeight:1.6 }}>{s.d}</div>}
               </div>
             </div>
           ))}
@@ -1308,15 +1385,11 @@ function TabContent({ tab, a, T, F }) {
     case "list":
       return (
         <div>
-          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 12px", lineHeight: 1.6 }}>{d.intro}</p>}
-          {(d.items || []).map((x, i, arr) => (
-            <div key={i} style={{
-              display: "flex", alignItems: "flex-start", gap: 11, padding: "11px 0",
-              borderBottom: i === arr.length - 1 ? "none" : `1px solid ${T.line}`,
-              fontSize: F.base - 0.5, lineHeight: 1.6,
-            }}>
-              <span style={{ color: a, fontSize: 18, lineHeight: 1, marginTop: 2 }}>•</span>
-              <span>{typeof x === "string" ? x : (x.text || JSON.stringify(x))}</span>
+          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 12px", lineHeight:1.6 }}>{d.intro}</p>}
+          {(d.items||[]).map((x,i,arr) => (
+            <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"10px 0", borderBottom:i===arr.length-1?"none":`1px solid ${T.line}`, fontSize:F.base-0.5, lineHeight:1.6 }}>
+              <span style={{ color:a, fontSize:16, lineHeight:1, marginTop:2, flexShrink:0 }}>•</span>
+              <span>{typeof x==="string"?x:(x.text||JSON.stringify(x))}</span>
             </div>
           ))}
         </div>
@@ -1324,19 +1397,14 @@ function TabContent({ tab, a, T, F }) {
 
     case "timeline":
       return (
-        <div style={{ position: "relative", paddingRight: 20 }}>
-          <div style={{ position: "absolute", right: 5, top: 6, bottom: 6, width: 2, background: `${a}33` }} />
-          {(d.events || []).map((e, i, arr) => (
-            <div key={i} style={{ position: "relative", marginBottom: i === arr.length - 1 ? 0 : 18 }}>
-              <div style={{
-                position: "absolute", right: -19, top: 4,
-                width: 11, height: 11, borderRadius: "50%",
-                background: a, border: `3px solid ${T.text === "#f5f5f7" ? "#16181d" : "#fff"}`,
-                boxShadow: `0 0 8px ${a}88`,
-              }} />
-              <div style={{ color: a, fontWeight: 700, fontSize: F.base - 1.5 }}>{e[0]}</div>
-              <div style={{ fontWeight: 600, fontSize: F.base - 0.5, margin: "2px 0" }}>{e[1]}</div>
-              {e[2] && <div style={{ color: T.sub, fontSize: F.base - 1.5, lineHeight: 1.6 }}>{e[2]}</div>}
+        <div style={{ position:"relative", paddingRight:20 }}>
+          <div style={{ position:"absolute", right:5, top:6, bottom:6, width:2, background:`linear-gradient(180deg,${a},transparent)`, borderRadius:2 }}/>
+          {(d.events||[]).map((e,i,arr) => (
+            <div key={i} style={{ position:"relative", marginBottom:i===arr.length-1?0:18 }}>
+              <div style={{ position:"absolute", right:-19, top:4, width:10, height:10, borderRadius:"50%", background:a, border:`2px solid ${T.cardBg||T.glassFill}`, boxShadow:`0 0 8px ${a}80` }}/>
+              <div style={{ color:a, fontWeight:700, fontSize:F.base-1.5 }}>{e[0]}</div>
+              <div style={{ fontWeight:600, fontSize:F.base-0.5, margin:"2px 0" }}>{e[1]}</div>
+              {e[2] && <div style={{ color:T.sub, fontSize:F.base-1.5, lineHeight:1.6 }}>{e[2]}</div>}
             </div>
           ))}
         </div>
@@ -1344,199 +1412,909 @@ function TabContent({ tab, a, T, F }) {
 
     case "compare":
       return (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: F.base - 1, minWidth: 280 }}>
-            <thead>
-              <tr>{(d.cols || []).map((c, i) => (
-                <th key={i} style={{
-                  textAlign: "right", padding: "8px 10px",
-                  color: i === 0 ? T.sub : a, fontWeight: 700, fontSize: F.label,
-                }}>{c}</th>
-              ))}</tr>
-            </thead>
-            <tbody>
-              {(d.rows || []).map((row, ri) => (
-                <tr key={ri}>{row.map((cell, ci) => (
-                  <td key={ci} style={{
-                    padding: "12px 10px",
-                    color: ci === 0 ? T.text : T.sub,
-                    fontWeight: ci === 0 ? 600 : 400,
-                    borderTop: `1px solid ${T.line}`,
-                  }}>{cell}</td>
-                ))}</tr>
-              ))}
-            </tbody>
+        <div style={{ overflowX:"auto" }}>
+          <table style={{ width:"100%", borderCollapse:"collapse", fontSize:F.base-1, minWidth:260 }}>
+            <thead><tr>{(d.cols||[]).map((c,i) => <th key={i} style={{ textAlign:"right", padding:"8px 10px", color:i===0?T.sub:a, fontWeight:700, fontSize:F.label }}>{c}</th>)}</tr></thead>
+            <tbody>{(d.rows||[]).map((row,ri) => <tr key={ri}>{row.map((cell,ci) => <td key={ci} style={{ padding:"11px 10px", color:ci===0?T.text:T.sub, fontWeight:ci===0?600:400, borderTop:`1px solid ${T.line}` }}>{cell}</td>)}</tr>)}</tbody>
           </table>
         </div>
       );
 
     case "facts":
       return (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 8 }}>
-          {(d.items || []).map((f, i) => (
-            <div key={i} style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "11px 12px", borderRadius: 10,
-              background: T.pillFill, border: `1px solid ${T.line}`,
-              fontSize: F.base - 1,
-            }}>
-              <span style={{ fontSize: 18 }}>{f.icon || "•"}</span>
-              <span style={{ flex: 1 }}>{f.text}</span>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))", gap:8 }}>
+          {(d.items||[]).map((f,i) => (
+            <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:9, padding:"10px 12px", borderRadius:10, background:T.pillFill, border:`1px solid ${T.line}`, fontSize:F.base-1 }}>
+              {f.icon && <span style={{ fontSize:16, flexShrink:0 }}>{f.icon}</span>}
+              <span style={{ flex:1 }}>{f.text}</span>
+            </div>
+          ))}
+        </div>
+      );
+
+    // ========== بطاقات رياضية ==========
+
+    case "match":
+      return (
+        <div>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 0 12px" }}>
+            <div style={{ textAlign:"center", flex:1 }}>
+              <div style={{ fontSize:F.base, fontWeight:700 }}>{d.team1}</div>
+            </div>
+            <div style={{ textAlign:"center", padding:"0 12px" }}>
+              <div style={{ fontSize:44, fontWeight:900, color:T.text, letterSpacing:4, lineHeight:1 }}>
+                {d.score1!=null?`${d.score1}`:"—"}<span style={{ color:T.faint, fontSize:28 }}>-</span>{d.score2!=null?`${d.score2}`:"—"}
+              </div>
+              <div style={{ fontSize:10, color:a, fontWeight:600, marginTop:6, background:`${a}12`, padding:"2px 10px", borderRadius:20 }}>{d.status}</div>
+              {d.date && <div style={{ fontSize:10, color:T.faint, marginTop:4 }}>{d.date}</div>}
+            </div>
+            <div style={{ textAlign:"center", flex:1, opacity:0.65 }}>
+              <div style={{ fontSize:F.base, fontWeight:700, color:T.sub }}>{d.team2}</div>
+            </div>
+          </div>
+          {d.venue && <div style={{ textAlign:"center", fontSize:F.label, color:T.sub, paddingBottom:12, borderBottom:`1px solid ${T.line}`, marginBottom:12, display:"flex", alignItems:"center", justifyContent:"center", gap:4 }}>{Si.pin("#64d2ff")} {d.venue}</div>}
+          {(d.details||[]).map((dt,i,arr) => (
+            <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:i===arr.length-1?"none":`1px solid ${T.line}`, fontSize:F.base-1 }}>
+              <span style={{ color:T.sub }}>{dt.label}</span>
+              <span style={{ fontWeight:600 }}>{dt.value}</span>
+            </div>
+          ))}
+        </div>
+      );
+
+    case "standings":
+      return (
+        <div>
+          {d.league && <div style={{ fontSize:F.label, color:T.sub, marginBottom:10 }}>{d.league}</div>}
+          <table style={{ width:"100%", borderCollapse:"collapse", fontSize:F.base-1.5 }}>
+            <thead><tr style={{ borderBottom:`2px solid ${T.line}` }}>
+              {["#","النادي","ف","ت","خ","ن"].map((h,i) => <th key={i} style={{ padding:"6px 8px", textAlign:i<=1?"right":"center", color:T.faint, fontWeight:600, fontSize:F.label-1 }}>{h}</th>)}
+            </tr></thead>
+            <tbody>{(d.rows||[]).map((r,i) => (
+              <tr key={i} style={{ borderBottom:`1px solid ${T.line}` }}>
+                <td style={{ padding:"10px 8px", color:i<3?a:T.faint, fontWeight:700 }}>{r.pos}</td>
+                <td style={{ padding:"10px 8px", fontWeight:i===0?700:500 }}>{r.team}</td>
+                <td style={{ padding:"10px 8px", textAlign:"center", color:"#34c759" }}>{r.w}</td>
+                <td style={{ padding:"10px 8px", textAlign:"center", color:T.sub }}>{r.d}</td>
+                <td style={{ padding:"10px 8px", textAlign:"center", color:"#ff453a" }}>{r.l}</td>
+                <td style={{ padding:"10px 8px", textAlign:"center", color:a, fontWeight:800 }}>{r.pts}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </div>
+      );
+
+    case "lineup":
+      return (
+        <div>
+          {d.team && <div style={{ fontSize:F.label, color:T.sub, marginBottom:10 }}>{d.team} • {d.formation}</div>}
+          {(d.players||[]).map((p,i,arr) => (
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:i===arr.length-1?"none":`1px solid ${T.line}` }}>
+              <div style={{ width:28, height:28, borderRadius:"50%", background:`${a}18`, color:a, display:"flex", alignItems:"center", justifyContent:"center", fontSize:F.label-1, fontWeight:700, flexShrink:0 }}>{p.number}</div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontWeight:600, fontSize:F.base-0.5 }}>{p.name}</div>
+                <div style={{ fontSize:F.label-1, color:T.sub }}>{p.position}</div>
+              </div>
+              {p.rating && (
+                <div style={{ textAlign:"center" }}>
+                  <div style={{ fontSize:F.label, fontWeight:700, color:p.rating>=8.5?"#34c759":p.rating>=7.5?a:T.sub }}>{p.rating}</div>
+                  <div style={{ width:40, height:3, background:T.line, borderRadius:2, marginTop:3 }}>
+                    <div style={{ height:"100%", width:`${((p.rating-6)/4)*100}%`, background:p.rating>=8.5?"#34c759":a, borderRadius:2 }}/>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      );
+
+    case "player_profile":
+      return (
+        <div>
+          <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:14, padding:"12px", background:T.pillFill, borderRadius:12, border:`1px solid ${T.line}` }}>
+            <div style={{ width:54, height:54, borderRadius:15, background:`${a}18`, border:`2px solid ${a}30`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:26, fontWeight:800, color:a, flexShrink:0 }}>{(d.name||"?").charAt(0)}</div>
+            <div>
+              <div style={{ fontSize:F.base+2, fontWeight:700 }}>{d.name}</div>
+              <div style={{ fontSize:F.base-1, color:T.sub, marginTop:2 }}>{d.club} • {d.nationality}</div>
+              <div style={{ fontSize:F.label, color:a, fontWeight:600, marginTop:2 }}>{d.position}</div>
+            </div>
+          </div>
+          {(d.stats||[]).map((s,i,arr) => (
+            <div key={i} style={{ marginBottom:i<arr.length-1?10:0 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                <span style={{ fontSize:F.base-1, color:T.sub }}>{s.label}</span>
+                <span style={{ fontSize:F.base, fontWeight:800, color:a }}>{s.value}</span>
+              </div>
+              <div style={{ height:4, background:T.line, borderRadius:2 }}>
+                <div style={{ height:"100%", width:`${Math.min(parseInt(s.value)||50,100)}%`, background:a, borderRadius:2 }}/>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+
+    // ========== الطقس ==========
+
+    case "weather":
+      return (
+        <div>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px", background:T.pillFill, borderRadius:13, border:`1px solid ${T.line}`, marginBottom:14 }}>
+            <div>
+              <div style={{ marginBottom:4 }}>{Si.sun("currentColor")}</div>
+              <div style={{ fontSize:F.base, color:T.sub }}>{d.condition}</div>
+              {d.city && <div style={{ fontSize:F.label, color:T.faint }}>{d.city}</div>}
+            </div>
+            <div style={{ textAlign:"center" }}>
+              <div style={{ fontSize:56, fontWeight:900, color:T.text, lineHeight:1 }}>{d.temp}°</div>
+              {d.feels_like && <div style={{ fontSize:F.base-1, color:T.sub, marginTop:4 }}>يحس بـ {d.feels_like}°</div>}
+            </div>
+          </div>
+          {d.humidity!=null && <IBar v={d.humidity} color="#64d2ff" label="الرطوبة" right={`${d.humidity}%`} T={T}/>}
+          {d.wind!=null && <IBar v={d.wind} max={60} color="#bf5af2" label="الرياح" right={`${d.wind} km/h`} T={T}/>}
+          {d.forecast && (
+            <div style={{ display:"flex", gap:6, overflowX:"auto", marginTop:10 }}>
+              {d.forecast.map((f,i) => (
+                <div key={i} style={{ flex:"0 0 auto", textAlign:"center", padding:"10px 12px", background:T.pillFill, borderRadius:10, border:`1px solid ${T.line}` }}>
+                  <div style={{ fontSize:F.label-1, color:T.faint }}>{f.day}</div>
+                  <div style={{ margin:"6px 0" }}>{Si.sun("currentColor")}</div>
+                  <div style={{ fontSize:F.label, fontWeight:700 }}>{f.high}°</div>
+                  <div style={{ fontSize:F.label-1, color:T.faint }}>{f.low}°</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+
+    // ========== مالي ==========
+
+    case "stock":
+      const isUp = (d.change_pct||0) >= 0;
+      return (
+        <div>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
+            <div>
+              <div style={{ fontSize:40, fontWeight:900, lineHeight:1 }}>{d.price}</div>
+              <div style={{ display:"flex", alignItems:"center", gap:5, marginTop:5, color:isUp?"#34c759":"#ff453a" }}>
+                {isUp?Si.up:Si.dn}
+                <span style={{ fontSize:F.base, fontWeight:600 }}>{Math.abs(d.change_pct||0)}% ({d.change>0?"+":""}{d.change})</span>
+              </div>
+            </div>
+            <div style={{ background:isUp?"rgba(52,199,89,0.1)":"rgba(255,69,58,0.1)", border:`1px solid ${isUp?"rgba(52,199,89,0.2)":"rgba(255,69,58,0.2)"}`, borderRadius:11, padding:"10px 14px", textAlign:"center" }}>
+              <div style={{ fontSize:F.base, color:isUp?"#34c759":"#ff453a" }}>{d.symbol}</div>
+              <div style={{ fontSize:F.label-1, color:T.faint, marginTop:2 }}>{d.name}</div>
+            </div>
+          </div>
+          <IBar v={d.high||0} max={(d.high||0)+5} color="#34c759" label="أعلى اليوم" right={String(d.high)} T={T}/>
+          <IBar v={d.low||0} max={(d.high||0)+5} color="#ff453a" label="أدنى اليوم" right={String(d.low)} T={T}/>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginTop:4 }}>
+            {[["حجم التداول",d.volume],["الاتجاه",d.chart_direction==="up"?"صاعد":"هابط"]].filter(x=>x[1]).map(([l,v],i)=>(
+              <div key={i} style={{ padding:"10px", background:T.pillFill, borderRadius:9, border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.label-1, color:T.faint }}>{l}</div>
+                <div style={{ fontSize:F.base, fontWeight:600, marginTop:2 }}>{v}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+
+    case "crypto":
+      const cupCrypto = (d.change_pct||0) >= 0;
+      return (
+        <div>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14 }}>
+            <div>
+              <div style={{ fontSize:F.base+1, fontWeight:700 }}>{d.name}</div>
+              <div style={{ fontSize:F.label, color:T.faint }}>{d.symbol}</div>
+            </div>
+            <div>
+              <div style={{ fontSize:F.h1+2, fontWeight:900 }}>${Number(d.price||0).toLocaleString()}</div>
+              <div style={{ fontSize:F.base-1, color:cupCrypto?"#34c759":"#ff453a", display:"flex", alignItems:"center", gap:4 }}>
+                {cupCrypto?Si.up:Si.dn} {Math.abs(d.change_pct||0)}%
+              </div>
+            </div>
+          </div>
+          {[["القيمة السوقية",d.market_cap],["حجم التداول",d.volume],["المعروض",d.supply]].filter(x=>x[1]).map(([l,v],i,arr)=>(
+            <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"9px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none", fontSize:F.base-1 }}>
+              <span style={{ color:T.sub }}>{l}</span>
+              <span style={{ fontWeight:600 }}>{v}</span>
+            </div>
+          ))}
+        </div>
+      );
+
+    // ========== صحة ==========
+
+    case "symptoms":
+      return (
+        <div>
+          {d.severity && <div style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"4px 10px", borderRadius:20, marginBottom:12, background:"rgba(255,149,0,0.1)", color:"#ff9500", fontSize:F.label, fontWeight:600 }}>
+            {Si.shield("#ff9500")} {d.severity}
+          </div>}
+          {d.symptoms?.length>0 && (
+            <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:12 }}>
+              {d.symptoms.map((s,i) => <ITag key={i} text={s} color="#ff6b6b"/>)}
+            </div>
+          )}
+          {d.causes?.length>0 && (
+            <div style={{ background:T.pillFill, borderRadius:10, padding:"10px 12px", marginBottom:12, border:`1px solid ${T.line}` }}>
+              <div style={{ fontSize:F.label, color:T.faint, marginBottom:8, fontWeight:600 }}>الأسباب المحتملة</div>
+              {d.causes.map((c,i,arr) => (
+                <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"5px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none", fontSize:F.base-1 }}>
+                  <span style={{ color:T.sub }}>{c}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {d.remedies?.length>0 && d.remedies.map((r,i,arr)=>(
+            <div key={i} style={{ display:"flex", gap:10, padding:"10px 0", borderBottom:i===arr.length-1?"none":`1px solid ${T.line}` }}>
+              <div style={{ flexShrink:0, width:24, height:24, borderRadius:7, background:"rgba(255,107,107,0.1)", color:"#ff6b6b", display:"flex", alignItems:"center", justifyContent:"center", fontSize:F.label-1, fontWeight:700 }}>{i+1}</div>
+              <div>
+                <div style={{ fontWeight:600, fontSize:F.base-0.5 }}>{r.t}</div>
+                {r.d && <div style={{ color:T.sub, fontSize:F.base-2, lineHeight:1.5 }}>{r.d}</div>}
+              </div>
+            </div>
+          ))}
+          {d.warning && <div style={{ display:"flex", gap:8, padding:"10px 12px", background:"rgba(255,69,58,0.08)", borderRadius:9, marginTop:10, fontSize:F.base-2, color:"#ff453a", alignItems:"flex-start" }}>
+            {Si.shield("#ff453a")}<span>{d.warning}</span>
+          </div>}
+        </div>
+      );
+
+    case "nutrition":
+      return (
+        <div>
+          {d.food && <div style={{ fontSize:F.base+1, fontWeight:700, marginBottom:4 }}>{d.food}</div>}
+          {d.per100g && <div style={{ fontSize:F.label-1, color:T.faint, marginBottom:12 }}>لكل 100 جرام</div>}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:12 }}>
+            {[["سعرات",d.calories,"#ff9f0a"],["بروتين",`${d.protein}g`,"#0a84ff"],["كارب",`${d.carbs}g`,"#ff9f0a"],["دهون",`${d.fat}g`,"#bf5af2"]].map(([l,v,c],i)=>(
+              <div key={i} style={{ textAlign:"center", padding:"10px 6px", background:T.pillFill, borderRadius:9, border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.base, fontWeight:700, color:c }}>{v}</div>
+                <div style={{ fontSize:F.label-2, color:T.faint, marginTop:2 }}>{l}</div>
+              </div>
+            ))}
+          </div>
+          {d.vitamins?.length>0 && d.vitamins.map((v,i,arr)=>(
+            <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none", fontSize:F.base-1 }}>
+              <span style={{ color:T.sub }}>{v.name}</span>
+              <span style={{ fontWeight:600 }}>{v.amount}</span>
+            </div>
+          ))}
+        </div>
+      );
+
+    // ========== طبخ ==========
+
+    case "recipe":
+      return (
+        <div>
+          <div style={{ display:"flex", gap:8, marginBottom:14 }}>
+            {[["وقت",d.time,"#ff9f0a"],["أشخاص",d.servings&&`${d.servings}`,"#0a84ff"],["صعوبة",d.difficulty,"#bf5af2"]].filter(x=>x[1]).map(([l,v,c],i)=>(
+              <div key={i} style={{ flex:1, textAlign:"center", padding:"8px", background:T.pillFill, borderRadius:9, border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.base, fontWeight:700, color:c }}>{v}</div>
+                <div style={{ fontSize:F.label-1, color:T.faint, marginTop:2 }}>{l}</div>
+              </div>
+            ))}
+          </div>
+          {d.ingredients?.length>0 && (
+            <div style={{ marginBottom:12 }}>
+              <div style={{ fontSize:F.label, color:T.faint, marginBottom:8, fontWeight:600 }}>المقادير</div>
+              {d.ingredients.map((ing,i,arr)=>(
+                <div key={i} style={{ display:"flex", gap:8, padding:"7px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none", fontSize:F.base-1 }}>
+                  <span style={{ color:a, fontWeight:600, minWidth:55 }}>{ing.amount}</span>
+                  <span style={{ color:T.sub }}>{ing.item}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {d.steps?.length>0 && d.steps.map((s,i,arr)=>(
+            <div key={i} style={{ display:"flex", gap:10, padding:"10px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
+              <div style={{ flexShrink:0, width:22, height:22, borderRadius:6, background:`${a}18`, color:a, display:"flex", alignItems:"center", justifyContent:"center", fontSize:F.label-1, fontWeight:700 }}>{i+1}</div>
+              <div style={{ fontSize:F.base-1, lineHeight:1.6, color:T.sub }}>{s}</div>
+            </div>
+          ))}
+        </div>
+      );
+
+    // ========== تقنية ==========
+
+    case "tech_compare":
+      return (
+        <div>
+          {(d.items||[]).map((item,i)=>(
+            <div key={i} style={{ marginBottom:i===d.items.length-1?0:16 }}>
+              <div style={{ fontSize:F.base, fontWeight:700, marginBottom:8, color:a }}>{item.name}</div>
+              {(item.specs||[]).map((s,j,arr)=>(
+                <div key={j} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 0", borderBottom:j<arr.length-1?`1px solid ${T.line}`:"none", fontSize:F.base-1 }}>
+                  <span style={{ color:T.sub }}>{s.label}</span>
+                  <span style={{ fontWeight:s.winner?700:400, color:s.winner?a:T.text }}>{s.value}{s.winner?" ✓":""}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      );
+
+    case "app_card":
+      return (
+        <div>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:12 }}>
+            <div>
+              <div style={{ fontSize:F.base+1, fontWeight:700 }}>{d.name}</div>
+              <div style={{ fontSize:F.label, color:T.sub }}>{d.category}</div>
+            </div>
+            <div style={{ textAlign:"center" }}>
+              <div style={{ fontSize:F.base, fontWeight:700, color:a }}>{d.price||"مجاني"}</div>
+              {d.rating && <div style={{ fontSize:F.label, display:"flex", alignItems:"center", gap:2 }}>{Si.star(true,"#ffd60a")} {d.rating}</div>}
+            </div>
+          </div>
+          {d.features?.length>0 && d.features.map((f,i,arr)=>(
+            <div key={i} style={{ display:"flex", gap:8, padding:"7px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none", fontSize:F.base-1 }}>
+              {Si.zap("#34c759")}<span style={{ color:T.sub }}>{f}</span>
+            </div>
+          ))}
+          {d.platforms && <div style={{ display:"flex", gap:6, marginTop:10 }}>
+            {d.platforms.map((p,i)=><ITag key={i} text={p} color={a}/>)}
+          </div>}
+        </div>
+      );
+
+    // ========== سفر ==========
+
+    case "destination":
+      return (
+        <div>
+          <div style={{ display:"flex", gap:7, flexWrap:"wrap", marginBottom:14 }}>
+            {d.currency && <ITag text={d.currency} color="#ff9f0a"/>}
+            {d.language && <ITag text={d.language} color="#bf5af2"/>}
+            {d.best_time && <ITag text={d.best_time} color="#0a84ff"/>}
+          </div>
+          {d.attractions?.length>0 && (
+            <div style={{ marginBottom:12 }}>
+              <div style={{ fontSize:F.label, color:T.faint, marginBottom:8, fontWeight:600 }}>أبرز المعالم</div>
+              {d.attractions.map((att,i,arr)=>(
+                <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
+                  <div style={{ display:"flex" }}>{Si.pin(a)}</div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:F.base-0.5, fontWeight:500 }}>{att.name}</div>
+                    <div style={{ fontSize:F.label-1, color:T.sub }}>{att.type}</div>
+                  </div>
+                  {att.rating && <div style={{ display:"flex", alignItems:"center", gap:2 }}>{Si.star(true,"#ffd60a")}<span style={{ fontSize:F.label, color:"#ffd60a", fontWeight:700 }}>{att.rating}</span></div>}
+                </div>
+              ))}
+            </div>
+          )}
+          {d.tips?.length>0 && d.tips.map((t,i)=>(
+            <div key={i} style={{ display:"flex", gap:8, padding:"7px 0", fontSize:F.base-1 }}>
+              {Si.zap(a)}<span style={{ color:T.sub }}>{t}</span>
+            </div>
+          ))}
+        </div>
+      );
+
+    case "flight":
+      return (
+        <div>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"18px 0 14px", borderBottom:`1px solid ${T.line}` }}>
+            <div style={{ textAlign:"center" }}>
+              <div style={{ fontSize:F.h1+4, fontWeight:900 }}>{d.from?.split(" ")[0]}</div>
+              <div style={{ fontSize:F.label, color:T.faint }}>{d.from}</div>
+            </div>
+            <div style={{ flex:1, textAlign:"center", padding:"0 10px" }}>
+              <div style={{ fontSize:F.label-1, color:T.faint, marginBottom:4 }}>{d.duration}</div>
+              <div style={{ height:1, background:`linear-gradient(90deg,${a},transparent)`, position:"relative" }}>
+                <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)" }}>{Si.plane(a)}</div>
+              </div>
+              <div style={{ fontSize:F.label-1, color:"#34c759", marginTop:4 }}>مباشرة</div>
+            </div>
+            <div style={{ textAlign:"center" }}>
+              <div style={{ fontSize:F.h1+4, fontWeight:900 }}>{d.to?.split(" ")[0]}</div>
+              <div style={{ fontSize:F.label, color:T.faint }}>{d.to}</div>
+            </div>
+          </div>
+          {d.airlines?.length>0 && d.airlines.map((al,i,arr)=>(
+            <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"10px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none", fontSize:F.base-1 }}>
+              <span style={{ fontWeight:500 }}>{al.name}</span>
+              <div style={{ display:"flex", gap:10 }}>
+                <span style={{ color:T.sub }}>{al.stops===0?"مباشر":`${al.stops} توقف`}</span>
+                <span style={{ fontWeight:700, color:a }}>{al.price}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+
+    // ========== بطاقات جديدة ==========
+
+    case "real_estate":
+      return (
+        <div>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14, padding:"14px", background:T.pillFill, borderRadius:13, border:`1px solid ${T.line}` }}>
+            <div>
+              <div style={{ fontSize:F.h1+4, fontWeight:900, color:a }}>{d.price}</div>
+              <div style={{ fontSize:F.label, color:T.faint }}>{d.currency||"ريال سعودي"}</div>
+            </div>
+            {d.rent && <div style={{ textAlign:"center" }}>
+              <div style={{ fontSize:F.base, color:T.sub }}>الإيجار السنوي</div>
+              <div style={{ fontSize:F.base+2, fontWeight:700, color:"#34c759" }}>{d.rent}</div>
+              {d.yield && <div style={{ fontSize:F.label-1, color:T.faint }}>عائد {d.yield}</div>}
+            </div>}
+          </div>
+          {d.specs && <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12 }}>
+            {Object.entries(d.specs).map(([k,v],i)=>(
+              <div key={i} style={{ background:T.pillFill, borderRadius:10, padding:"10px 12px", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.label-1, color:T.faint }}>{k}</div>
+                <div style={{ fontSize:F.base, fontWeight:700, color:a, marginTop:3 }}>{v}</div>
+              </div>
+            ))}
+          </div>}
+          {d.ratings && d.ratings.map((r,i)=><IBar key={i} v={r.v} color={r.color||a} label={r.label} T={T}/>)}
+        </div>
+      );
+
+    case "job":
+      return (
+        <div>
+          {d.tags && <div style={{ display:"flex", gap:7, flexWrap:"wrap", marginBottom:14 }}>{d.tags.map((t,i)=><ITag key={i} text={t} color={a}/>)}</div>}
+          {d.skills?.length>0 && (
+            <div style={{ background:T.pillFill, borderRadius:12, padding:"12px 14px", marginBottom:12, border:`1px solid ${T.line}` }}>
+              <div style={{ fontSize:F.label, color:T.faint, marginBottom:10, fontWeight:600 }}>المهارات المطلوبة</div>
+              {d.skills.map((s,i,arr)=>(
+                <div key={i} style={{ marginBottom:i<arr.length-1?10:0 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                    <span style={{ fontSize:F.base-1, color:T.sub }}>{s.name}</span>
+                    <span style={{ fontSize:F.base-1, fontWeight:700, color:a }}>{s.pct}%</span>
+                  </div>
+                  <div style={{ height:4, background:T.line, borderRadius:2 }}>
+                    <div style={{ height:"100%", width:`${s.pct}%`, background:a, borderRadius:2 }}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {d.stats && d.stats.map((s,i,arr)=>(
+            <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none", fontSize:F.base-1 }}>
+              <span style={{ color:T.sub }}>{s.label}</span>
+              <span style={{ fontWeight:700, color:s.color||a }}>{s.value}</span>
+            </div>
+          ))}
+        </div>
+      );
+
+    case "car":
+      return (
+        <div>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14, padding:"14px", background:T.pillFill, borderRadius:13, border:`1px solid ${T.line}` }}>
+            <div>
+              <div style={{ fontSize:F.h1+4, fontWeight:900 }}>{d.price}</div>
+              <div style={{ fontSize:F.label, color:T.faint }}>{d.currency||"ريال"}</div>
+            </div>
+            {d.tags && <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+              {d.tags.map((t,i)=><ITag key={i} text={t} color={a}/>)}
+            </div>}
+          </div>
+          {d.specs && <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:12 }}>
+            {Object.entries(d.specs).map(([k,v],i)=>(
+              <div key={i} style={{ background:T.pillFill, borderRadius:10, padding:"10px 8px", textAlign:"center", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.base, fontWeight:700, color:a }}>{v}</div>
+                <div style={{ fontSize:F.label-1, color:T.faint, marginTop:2 }}>{k}</div>
+              </div>
+            ))}
+          </div>}
+          {d.ratings && d.ratings.map((r,i)=><IBar key={i} v={r.v} color={r.color||a} label={r.label} T={T}/>)}
+        </div>
+      );
+
+    case "book_review":
+      return (
+        <div>
+          {d.genres && <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:12 }}>{d.genres.map((g,i)=><ITag key={i} text={g} color={a}/>)}</div>}
+          {d.rating && <div style={{ display:"flex", gap:2, alignItems:"center", marginBottom:12 }}>
+            {[1,2,3,4,5].map(i=><span key={i}>{Si.star(i<=Math.round(d.rating),"#ffd60a")}</span>)}
+            <span style={{ fontSize:F.base-1, color:"#ffd60a", fontWeight:700, marginRight:6 }}>{d.rating}/5</span>
+            {d.reviews && <span style={{ fontSize:F.label-1, color:T.faint }}>من {d.reviews} تقييم</span>}
+          </div>}
+          {d.aspects && d.aspects.map((asp,i)=>(
+            <div key={i} style={{ marginBottom:10 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
+                <span style={{ fontSize:F.base-0.5, fontWeight:600 }}>{asp.label}</span>
+                <span style={{ fontSize:F.base-1, fontWeight:700, color:a }}>{asp.v}%</span>
+              </div>
+              {asp.hint && <div style={{ fontSize:F.label-1, color:T.faint, marginBottom:4 }}>{asp.hint}</div>}
+              <div style={{ height:4, background:T.line, borderRadius:2 }}>
+                <div style={{ height:"100%", width:`${asp.v}%`, background:a, borderRadius:2 }}/>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+
+    case "movie_review":
+      return (
+        <div>
+          {d.tags && <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:12 }}>{d.tags.map((t,i)=><ITag key={i} text={t} color={a}/>)}</div>}
+          {d.stats && <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:12 }}>
+            {d.stats.map((s,i)=>(
+              <div key={i} style={{ background:T.pillFill, borderRadius:10, padding:"10px 8px", textAlign:"center", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.base, fontWeight:800, color:a }}>{s.value}</div>
+                <div style={{ fontSize:F.label-1, color:T.faint, marginTop:2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>}
+          {d.aspects && d.aspects.map((asp,i)=>(
+            <div key={i} style={{ marginBottom:i<d.aspects.length-1?10:0 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                <span style={{ fontSize:F.base-1, color:T.sub }}>{asp.label}</span>
+                <span style={{ fontSize:F.base-1, fontWeight:700, color:a }}>{asp.v}%</span>
+              </div>
+              <div style={{ height:3, background:T.line, borderRadius:2 }}>
+                <div style={{ height:"100%", width:`${asp.v}%`, background:a, borderRadius:2 }}/>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+
+    case "restaurant":
+      return (
+        <div>
+          {d.rating && <div style={{ display:"flex", justifyContent:"space-between", marginBottom:12 }}>
+            <div style={{ display:"flex", gap:2, alignItems:"center" }}>
+              {[1,2,3,4,5].map(i=><span key={i}>{Si.star(i<=Math.round(d.rating),"#ffd60a")}</span>)}
+              <span style={{ fontSize:F.base-1, color:"#ffd60a", fontWeight:700, marginRight:6 }}>{d.rating}</span>
+            </div>
+            {d.open && <ITag text="مفتوح الآن" color="#34c759"/>}
+          </div>}
+          {d.stats && <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:12 }}>
+            {d.stats.map((s,i)=>(
+              <div key={i} style={{ background:T.pillFill, borderRadius:10, padding:"10px 6px", textAlign:"center", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.base-1, fontWeight:700, color:a }}>{s.value}</div>
+                <div style={{ fontSize:F.label-2, color:T.faint, marginTop:2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>}
+          {d.menu && d.menu.map((item,i,arr)=>(
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
+              <div style={{ width:8, height:8, borderRadius:"50%", background:item.popular?"#34c759":T.line, flexShrink:0 }}/>
+              <span style={{ flex:1, fontSize:F.base-0.5, fontWeight:item.popular?600:400, color:item.popular?T.text:T.sub }}>{item.name}</span>
+              {item.popular && <ITag text="الأكثر طلباً" color="#34c759"/>}
+              <span style={{ fontSize:F.base-0.5, fontWeight:700, color:a }}>{item.price}</span>
+            </div>
+          ))}
+        </div>
+      );
+
+    case "workout":
+      return (
+        <div>
+          {d.summary && <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:12 }}>
+            {d.summary.map((s,i)=>(
+              <div key={i} style={{ background:T.pillFill, borderRadius:10, padding:"10px 8px", textAlign:"center", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.base, fontWeight:700, color:s.color||a }}>{s.value}</div>
+                <div style={{ fontSize:F.label-1, color:T.faint, marginTop:2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>}
+          {d.exercises && d.exercises.map((ex,i,arr)=>(
+            <div key={i} style={{ padding:"10px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                <span style={{ fontSize:F.base-0.5, fontWeight:600 }}>{ex.name}</span>
+                <div style={{ display:"flex", gap:8 }}>
+                  <span style={{ fontSize:F.label-1, color:T.faint }}>{ex.sets}x{ex.reps}</span>
+                  <span style={{ fontSize:F.label-1, fontWeight:600, color:"#34c759" }}>{ex.weight}</span>
+                </div>
+              </div>
+              <div style={{ height:4, background:T.line, borderRadius:2 }}>
+                <div style={{ height:"100%", width:`${ex.pct||70}%`, background:a, borderRadius:2 }}/>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+
+    case "news":
+      return (
+        <div>
+          {d.counts && <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12 }}>
+            {d.counts.map((c,i)=>(
+              <div key={i} style={{ background:T.pillFill, borderRadius:12, padding:"12px", textAlign:"center", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.h1+4, fontWeight:900, color:c.color||a }}>{c.value}</div>
+                <div style={{ fontSize:F.label-1, color:T.faint, marginTop:2 }}>{c.label}</div>
+              </div>
+            ))}
+          </div>}
+          {d.items && d.items.map((item,i,arr)=>(
+            <div key={i} style={{ display:"flex", gap:10, padding:"10px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
+              <div style={{ width:8, height:8, borderRadius:"50%", background:item.hot?"#ff453a":T.line, flexShrink:0, marginTop:5 }}/>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:F.base-0.5, fontWeight:item.hot?600:400, color:item.hot?T.text:T.sub, lineHeight:1.4 }}>{item.title}</div>
+                <div style={{ fontSize:F.label-1, color:T.faint, marginTop:3 }}>{item.time}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+
+    case "language_learning":
+      return (
+        <div>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14, padding:"14px", background:T.pillFill, borderRadius:13, border:`1px solid ${T.line}` }}>
+            <div>
+              <div style={{ fontSize:F.h1+8, fontWeight:900, color:a }}>{d.level}</div>
+              <div style={{ fontSize:F.label, color:T.faint }}>{d.level_name}</div>
+            </div>
+            {d.progress!=null && <div style={{ textAlign:"center" }}>
+              <div style={{ fontSize:F.base+4, fontWeight:700 }}>{d.progress}%</div>
+              <div style={{ fontSize:F.label, color:T.faint }}>التقدم العام</div>
+              <div style={{ height:3, background:T.line, borderRadius:2, marginTop:6, width:80 }}>
+                <div style={{ height:"100%", width:`${d.progress}%`, background:a, borderRadius:2 }}/>
+              </div>
+            </div>}
+          </div>
+          {d.skills && d.skills.map((s,i)=><IBar key={i} v={s.v} color={s.color||a} label={s.label} T={T}/>)}
+        </div>
+      );
+
+    case "github":
+      return (
+        <div>
+          {d.counts && <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:12 }}>
+            {d.counts.map((c,i)=>(
+              <div key={i} style={{ background:T.pillFill, borderRadius:10, padding:"10px 6px", textAlign:"center", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.base, fontWeight:800, color:c.color||a }}>{c.value}</div>
+                <div style={{ fontSize:F.label-2, color:T.faint, marginTop:2 }}>{c.label}</div>
+              </div>
+            ))}
+          </div>}
+          {d.languages && (
+            <div style={{ marginBottom:12 }}>
+              <div style={{ display:"flex", height:8, borderRadius:6, overflow:"hidden", gap:1, marginBottom:8 }}>
+                {d.languages.map((l,i)=><div key={i} style={{ flex:l.pct, background:l.color }}/>)}
+              </div>
+              <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+                {d.languages.map((l,i)=>(
+                  <div key={i} style={{ display:"flex", alignItems:"center", gap:4 }}>
+                    <div style={{ width:8, height:8, borderRadius:"50%", background:l.color }}/>
+                    <span style={{ fontSize:F.label-1, color:T.sub }}>{l.name} {l.pct}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {d.metrics && d.metrics.map((m,i)=><IBar key={i} v={m.v} max={m.max||100} color={m.color||a} label={m.label} right={m.right} T={T}/>)}
+        </div>
+      );
+
+    case "app_review":
+      return (
+        <div>
+          {d.header && <div style={{ display:"flex", gap:12, marginBottom:14 }}>
+            <div style={{ width:60, height:60, borderRadius:16, background:`${a}18`, border:`1px solid ${a}25`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+              <span style={{ fontSize:28, fontWeight:800, color:a }}>{d.header.initial||"A"}</span>
+            </div>
+            <div>
+              <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                <div style={{ fontSize:F.h1+4, fontWeight:900, color:"#ffd60a" }}>{d.header.rating}</div>
+                {Si.star(true,"#ffd60a")}
+              </div>
+              <div style={{ fontSize:F.label, color:T.faint }}>{d.header.reviews}</div>
+              {d.header.tags && <div style={{ display:"flex", gap:6, marginTop:6 }}>
+                {d.header.tags.map((t,i)=><ITag key={i} text={t} color={a}/>)}
+              </div>}
+            </div>
+          </div>}
+          {d.distribution && d.distribution.map((r,i)=>(
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
+              <span style={{ fontSize:F.label-1, color:"#ffd60a", minWidth:20 }}>{r.stars}</span>
+              {Si.star(true,"#ffd60a")}
+              <div style={{ flex:1, height:5, background:T.line, borderRadius:3 }}>
+                <div style={{ height:"100%", width:`${r.pct}%`, background:r.stars>=4?"#34c759":r.stars===3?"#ff9f0a":"#ff453a", borderRadius:3 }}/>
+              </div>
+              <span style={{ fontSize:F.label-1, color:T.faint, minWidth:24 }}>{r.pct}%</span>
+            </div>
+          ))}
+        </div>
+      );
+
+    case "profile":
+      return (
+        <div>
+          <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:14, padding:"12px", background:T.pillFill, borderRadius:12, border:`1px solid ${T.line}` }}>
+            <div style={{ width:56, height:56, borderRadius:16, background:`${a}18`, border:`2px solid ${a}30`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:F.h1+4, fontWeight:800, color:a, flexShrink:0 }}>{d.initial||"م"}</div>
+            <div>
+              <div style={{ fontSize:F.base+2, fontWeight:800 }}>{d.name}</div>
+              <div style={{ fontSize:F.base-1, color:T.sub, marginTop:2 }}>{d.role}</div>
+              {d.tag && <div style={{ marginTop:6 }}><ITag text={d.tag} color="#34c759"/></div>}
+            </div>
+          </div>
+          {d.skills && <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:12 }}>
+            {d.skills.map((s,i)=><ITag key={i} text={s.name} color={s.color||a}/>)}
+          </div>}
+          {d.metrics && d.metrics.map((m,i)=><IBar key={i} v={m.v} color={m.color||a} label={m.label} right={m.right} T={T}/>)}
+        </div>
+      );
+
+    case "security":
+      return (
+        <div>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14, padding:"14px", background:"rgba(52,199,89,0.05)", borderRadius:13, border:"1px solid rgba(52,199,89,0.15)" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              {Si.shield("#34c759")}
+              <div>
+                <div style={{ fontSize:F.base, fontWeight:700, color:"#34c759" }}>{d.status||"النظام محمي"}</div>
+                <div style={{ fontSize:F.label-1, color:T.faint, marginTop:2 }}>{d.subtitle||""}</div>
+              </div>
+            </div>
+            {d.score!=null && <div style={{ textAlign:"center" }}>
+              <div style={{ fontSize:F.h1+4, fontWeight:900, color:"#34c759" }}>{d.score}</div>
+              <div style={{ fontSize:F.label-2, color:T.faint }}>نقاط الأمان</div>
+            </div>}
+          </div>
+          {d.threats && d.threats.map((t,i,arr)=>(
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
+              <div style={{ width:8, height:8, borderRadius:"50%", background:t.color||a, boxShadow:`0 0 6px ${t.color||a}`, flexShrink:0 }}/>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:F.base-0.5, fontWeight:500 }}>{t.name}</div>
+                <div style={{ fontSize:F.label-1, color:t.color||a }}>{t.level}</div>
+              </div>
+              <div style={{ textAlign:"center" }}>
+                <div style={{ fontSize:F.base, fontWeight:800, color:t.color||a }}>{t.count}</div>
+                <div style={{ fontSize:F.label-2, color:T.faint }}>اليوم</div>
+              </div>
+            </div>
+          ))}
+          {d.metrics && <div style={{ marginTop:12 }}>{d.metrics.map((m,i)=><IBar key={i} v={m.v} color={m.color||a} label={m.label} T={T}/>)}</div>}
+        </div>
+      );
+
+    case "itinerary":
+      return (
+        <div>
+          {d.summary && <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:14 }}>
+            {d.summary.map((s,i)=>(
+              <div key={i} style={{ background:T.pillFill, borderRadius:10, padding:"10px 6px", textAlign:"center", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.base, fontWeight:700, color:s.color||a }}>{s.value}</div>
+                <div style={{ fontSize:F.label-1, color:T.faint, marginTop:2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>}
+          {d.days && d.days.map((day,i)=>(
+            <div key={i} style={{ marginBottom:i<d.days.length-1?12:0, padding:"12px", background:T.pillFill, borderRadius:12, border:`1px solid ${T.line}` }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+                <span style={{ fontSize:F.label-1, color:a, fontWeight:700 }}>{day.day}</span>
+                <span style={{ fontSize:F.base-0.5, fontWeight:600 }}>{day.title}</span>
+              </div>
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                {day.spots && day.spots.map((s,j)=>(
+                  <div key={j} style={{ display:"flex", alignItems:"center", gap:3, fontSize:F.label-1, color:T.sub }}>
+                    {Si.pin(`${a}80`)}<span>{s}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+
+    case "energy":
+      return (
+        <div>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14, padding:"14px", background:T.pillFill, borderRadius:13, border:`1px solid ${T.line}` }}>
+            <div>
+              <div style={{ fontSize:F.h1+8, fontWeight:900, color:"#ffd60a" }}>{d.total}</div>
+              <div style={{ fontSize:F.label, color:T.faint }}>{d.unit||"كيلوواط ساعة"}</div>
+            </div>
+            {d.change && <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+              {d.change.includes("-")?Si.dn:Si.up}
+              <span style={{ fontSize:F.base, fontWeight:600, color:d.change.includes("-")?"#34c759":"#ff453a" }}>{d.change}</span>
+            </div>}
+          </div>
+          {d.chart && <div style={{ display:"flex", alignItems:"flex-end", gap:3, height:60, background:T.pillFill, borderRadius:10, padding:"8px", marginBottom:12, border:`1px solid ${T.line}` }}>
+            {d.chart.map((v,i)=>{
+              const max = Math.max(...d.chart);
+              const h = (v/max)*100;
+              const isLast = i===d.chart.length-1;
+              return <div key={i} style={{ flex:1, borderRadius:"2px 2px 0 0", height:`${Math.max(h,5)}%`, background:isLast?"#ffd60a":"rgba(255,214,10,0.3)" }}/>;
+            })}
+          </div>}
+          {d.metrics && d.metrics.map((m,i)=><IBar key={i} v={m.v} max={m.max||100} color={m.color||"#ffd60a"} label={m.label} right={m.right} T={T}/>)}
+        </div>
+      );
+
+    case "economy":
+      return (
+        <div>
+          {d.indicators && <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:12 }}>
+            {d.indicators.map((ind,i)=>(
+              <div key={i} style={{ background:T.pillFill, borderRadius:12, padding:"14px 12px", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.label-1, color:T.faint, marginBottom:4 }}>{ind.label}</div>
+                <div style={{ fontSize:F.base+6, fontWeight:900, color:ind.color||a }}>{ind.value}</div>
+              </div>
+            ))}
+          </div>}
+          {d.metrics && d.metrics.map((m,i)=><IBar key={i} v={m.v} color={m.color||a} label={m.label} T={T}/>)}
+        </div>
+      );
+
+    case "traffic":
+      return (
+        <div>
+          {d.overview && <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:12 }}>
+            {d.overview.map((o,i)=>(
+              <div key={i} style={{ background:`${o.color}08`, border:`1px solid ${o.color}20`, borderRadius:10, padding:"10px 6px", textAlign:"center" }}>
+                <div style={{ fontSize:F.base-0.5, fontWeight:700, color:o.color }}>{o.label}</div>
+                <div style={{ fontSize:F.label-2, color:T.faint, marginTop:2 }}>{o.desc}</div>
+              </div>
+            ))}
+          </div>}
+          {d.routes && d.routes.map((r,i,arr)=>(
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:12, padding:"12px", background:T.pillFill, borderRadius:12, border:`1px solid ${T.line}`, marginBottom:i<arr.length-1?8:0 }}>
+              <div style={{ width:10, height:10, borderRadius:"50%", background:r.color, boxShadow:`0 0 8px ${r.color}`, flexShrink:0 }}/>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:F.base-0.5, fontWeight:600 }}>{r.name}</div>
+                <div style={{ fontSize:F.label-1, color:r.color }}>{r.status}</div>
+              </div>
+              <div style={{ textAlign:"center" }}>
+                {Si.clock(r.color)}
+                <div style={{ fontSize:F.base-0.5, fontWeight:700, color:r.color }}>{r.time}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+
+    case "podcast":
+      return (
+        <div>
+          {d.header && <div style={{ display:"flex", gap:12, marginBottom:14 }}>
+            <div style={{ width:64, height:64, borderRadius:16, background:`${a}18`, border:`1px solid ${a}25`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+              {Si.music(a)}
+            </div>
+            <div>
+              {d.header.tags && <div style={{ display:"flex", gap:4, flexWrap:"wrap", marginBottom:6 }}>
+                {d.header.tags.map((t,i)=><ITag key={i} text={t} color={a}/>)}
+              </div>}
+              <div style={{ display:"flex", gap:2 }}>
+                {[1,2,3,4,5].map(i=><span key={i}>{Si.star(i<=Math.round(d.header.rating||4),a)}</span>)}
+              </div>
+              <div style={{ fontSize:F.label-1, color:T.faint, marginTop:2 }}>{d.header.listeners}</div>
+            </div>
+          </div>}
+          {d.progress!=null && (
+            <div style={{ marginBottom:12 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                <span style={{ fontSize:F.label-1, color:T.faint }}>التقدم في الاستماع</span>
+                <span style={{ fontSize:F.label-1, color:a, fontWeight:700 }}>{d.progress}%</span>
+              </div>
+              <div style={{ height:5, background:T.line, borderRadius:3 }}>
+                <div style={{ height:"100%", width:`${d.progress}%`, background:a, borderRadius:3 }}/>
+              </div>
+            </div>
+          )}
+          {d.chapters && d.chapters.map((ch,i,arr)=>(
+            <div key={i} style={{ display:"flex", gap:10, padding:"8px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
+              <div style={{ width:28, height:28, borderRadius:8, background:ch.done?`${a}18`:T.pillFill, border:`1px solid ${ch.done?a:T.line}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:F.label-1, fontWeight:700, color:ch.done?a:T.faint, flexShrink:0 }}>{i+1}</div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:F.base-0.5, fontWeight:ch.done?600:400, color:ch.done?T.text:T.sub }}>{ch.title}</div>
+                <div style={{ fontSize:F.label-1, color:T.faint }}>{ch.time}</div>
+              </div>
+              {ch.done && <span style={{ display:"flex" }}>{Si.eye(a)}</span>}
             </div>
           ))}
         </div>
       );
 
     default:
-      return <p style={{ color: T.text, lineHeight: 1.9, margin: 0, fontSize: F.base - 0.5, whiteSpace: "pre-wrap" }}>{d.body}</p>;
+      return <p style={{ color:T.text, lineHeight:1.9, margin:0, fontSize:F.base-0.5, whiteSpace:"pre-wrap" }}>{d.body||""}</p>;
   }
-}
-
-
-
-/* ============ زر الميكروفون ============ */
-function MicButton({ T, isRTL, onResult }) {
-  const [listening, setListening] = useState(false);
-  const recRef = React.useRef(null);
-
-  const toggle = () => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) return;
-    if (listening) {
-      recRef.current?.stop();
-      setListening(false);
-      return;
-    }
-    const rec = new SR();
-    rec.lang = isRTL ? "ar-SA" : "en-US";
-    rec.interimResults = false;
-    rec.maxAlternatives = 1;
-    rec.onresult = (e) => {
-      const text = e.results[0][0].transcript;
-      onResult(text);
-    };
-    rec.onend = () => setListening(false);
-    rec.onerror = () => setListening(false);
-    rec.start();
-    recRef.current = rec;
-    setListening(true);
-  };
-
-  const SR = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
-  if (!SR) return null;
-
-  return (
-    <button onClick={toggle}
-      title={isRTL ? (listening ? "إيقاف التسجيل" : "تحدث الآن") : (listening ? "Stop" : "Speak")}
-      style={{
-        background: listening ? "rgba(255,69,58,0.15)" : "transparent",
-        color: listening ? "#ff453a" : T.faint,
-        border: listening ? "1px solid rgba(255,69,58,0.3)" : "none",
-        borderRadius: 10, width: 36, height: 36,
-        cursor: "pointer", fontFamily: "inherit",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        transition: "all .2s", flexShrink: 0,
-        animation: listening ? "micPulse 1.2s infinite" : "none",
-      }}>
-      <Icon.Mic active={listening} />
-    </button>
-  );
-}
-
-/* ============ إعداد الملف الشخصي ============ */
-function ProfileSetup({ T, F, isRTL, onSave }) {
-  const [name, setName] = useState("");
-  const [job, setJob] = useState("");
-  const [interests, setInterests] = useState("");
-  const fields = [
-    { val:name, set:setName, ph:isRTL?"اسمك (مثال: أحمد)":"Your name (e.g. Ahmed)", icon:"👤" },
-    { val:job, set:setJob, ph:isRTL?"مهنتك (مثال: مطور، طالب)":"Your job (e.g. developer, student)", icon:"💼" },
-    { val:interests, set:setInterests, ph:isRTL?"اهتماماتك (مثال: تقنية، رياضة)":"Your interests (e.g. tech, sports)", icon:"⭐" },
-  ];
-  return (
-    <div onClick={()=>{}} style={{
-      position:"fixed", inset:0, background:T.modalBg, zIndex:300,
-      display:"flex", alignItems:"center", justifyContent:"center",
-      backdropFilter:"blur(12px)", padding:20, animation:"ci .4s",
-    }}>
-      <div style={{ maxWidth:420, width:"100%" }}>
-        <Glass T={T} radius={22} style={{ padding:28 }}>
-          <div style={{ textAlign:"center", marginBottom:22 }}>
-            <div style={{
-              width:56, height:56, borderRadius:16, margin:"0 auto 14px",
-              background:"linear-gradient(135deg, #0a84ff, #bf5af2)",
-              display:"flex", alignItems:"center", justifyContent:"center",
-              color:"#fff", fontSize:26, fontWeight:800,
-            }}>م</div>
-            <h2 style={{ fontSize:F.h1, fontWeight:800, margin:"0 0 8px" }}>
-              {isRTL ? "مرحباً بك في مرن!" : "Welcome to Marn!"}
-            </h2>
-            <p style={{ fontSize:F.base-1, color:T.sub, margin:0, lineHeight:1.6 }}>
-              {isRTL ? "أخبرني عن نفسك حتى أخصّص إجاباتي لك. يمكنك تخطي هذه الخطوة." : "Tell me about yourself so I can personalize my answers. You can skip."}
-            </p>
-          </div>
-          <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-            {fields.map((f,i) => (
-              <div key={i} style={{
-                display:"flex", alignItems:"center", gap:10,
-                background:T.pillFill, borderRadius:11, padding:"10px 14px",
-              }}>
-                <span style={{ fontSize:18, flexShrink:0 }}>{f.icon}</span>
-                <input value={f.val} onChange={e=>f.set(e.target.value)} placeholder={f.ph}
-                  style={{ flex:1, background:"transparent", border:"none", outline:"none",
-                    color:T.text, fontSize:F.base-0.5, fontFamily:"inherit",
-                    direction:isRTL?"rtl":"ltr" }} />
-              </div>
-            ))}
-          </div>
-          <div style={{ display:"flex", gap:10, marginTop:20 }}>
-            <button onClick={()=>onSave({name:"",job:"",interests:""})} style={{
-              flex:1, background:T.pillFill, color:T.sub, border:"none",
-              borderRadius:12, padding:"12px", fontSize:F.base, fontWeight:600,
-              cursor:"pointer", fontFamily:"inherit",
-            }}>{isRTL?"تخطي":"Skip"}</button>
-            <button onClick={()=>onSave({name,job,interests})} style={{
-              flex:2, background:"linear-gradient(135deg, #0a84ff, #bf5af2)", color:"#fff",
-              border:"none", borderRadius:12, padding:"12px", fontSize:F.base, fontWeight:700,
-              cursor:"pointer", fontFamily:"inherit",
-              boxShadow:"0 4px 14px rgba(10,132,255,0.3)",
-            }}>{isRTL?"ابدأ مع مرن ✨":"Start with Marn ✨"}</button>
-          </div>
-        </Glass>
-      </div>
-    </div>
-  );
-}
-
-/* ============ اقتراحات المتابعة ============ */
-function FollowUps({ suggestions, T, F, onSelect, thinking }) {
-  if (!suggestions || suggestions.length === 0) return null;
-  return (
-    <div style={{ display:"flex", flexWrap:"wrap", gap:7, marginTop:10, marginBottom:4 }}>
-      {suggestions.map((s,i) => (
-        <button key={i} onClick={()=>!thinking&&onSelect(s)} disabled={thinking}
-          style={{
-            background:T.pillFill, color:T.sub, border:"none",
-            borderRadius:20, padding:"7px 14px",
-            fontSize:F.base-2, fontWeight:500,
-            cursor:thinking?"default":"pointer",
-            fontFamily:"inherit", transition:"all .2s",
-            opacity:thinking?0.5:1,
-            display:"flex", alignItems:"center", gap:5,
-          }}>
-          <span style={{ fontSize:11, opacity:0.6 }}>↩</span>{s}
-        </button>
-      ))}
-    </div>
-  );
 }
 
 
 /* ============ دوال مساعدة ============ */
 function iconBtnStyle(T) {
   return {
-    background: T.pillFill, color: T.text, border: `1px solid ${T.line}`,
-    borderRadius: 8, width: 34, height: 34, cursor: "pointer",
+    background: "transparent", color: T.sub, border: `1px solid ${T.line}`,
+    borderRadius: 7, width: 32, height: 32, cursor: "pointer",
     display: "flex", alignItems: "center", justifyContent: "center",
     fontFamily: "inherit", transition: "all .15s", flexShrink: 0,
   };
