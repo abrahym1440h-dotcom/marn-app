@@ -9,10 +9,10 @@ const PROFILE_KEY = "marn_profile_v1";
 const VERSION = "3.0";
 
 const ACCENTS = {
-  sport:     null,  // يرث من الثيم
-  knowledge: null,
-  history:   null,
-  food:      null,
+  sport: "#34c759",
+  knowledge: "#0a84ff",
+  history: "#bf5af2",
+  food: "#ff9500",
 };
 
 /* ============ الثيمات الاحترافية ============ */
@@ -27,7 +27,7 @@ const THEMES = {
     glassFill: "#ffffff",
     glassEdge: "rgba(0,0,0,0.04)",
     glassBorder: "#f3f4f6",
-    glassShadow: "0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04)",
+    glassShadow: "0 1px 2px rgba(0,0,0,0.03)",
     headerBg: "rgba(255,255,255,0.98)",
     composerBg: "rgba(255,255,255,0.98)",
     userFill: "#111827",
@@ -41,37 +41,31 @@ const THEMES = {
     cardBg: "#ffffff",
     inputBg: "#ffffff",
     accent: "#111827",
-    accentBlue: "#2563eb",
-    stat: "#f9fafb",
-    statBorder: "#f3f4f6",
   },
   dark: {
     // SIGNAL — داكن
-    pageBg: "#0f0f11",
-    sidebarBg: "#0a0a0c",
+    pageBg: "#111111",
+    sidebarBg: "#0a0a0a",
     text: "#f9fafb",
     sub: "#9ca3af",
     faint: "#6b7280",
-    glassFill: "#18181b",
+    glassFill: "#1a1a1a",
     glassEdge: "rgba(255,255,255,0.04)",
-    glassBorder: "#27272a",
-    glassShadow: "0 1px 2px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.2)",
-    headerBg: "rgba(15,15,17,0.98)",
-    composerBg: "rgba(15,15,17,0.98)",
+    glassBorder: "#272727",
+    glassShadow: "0 1px 2px rgba(0,0,0,0.2)",
+    headerBg: "rgba(17,17,17,0.98)",
+    composerBg: "rgba(17,17,17,0.98)",
     userFill: "#f9fafb",
-    userText: "#0f0f11",
-    pillFill: "#18181b",
-    pillActive: "#27272a",
-    line: "#27272a",
-    hover: "#18181b",
-    dotIdle: "#3f3f46",
+    userText: "#111111",
+    pillFill: "#1a1a1a",
+    pillActive: "#272727",
+    line: "#272727",
+    hover: "#1a1a1a",
+    dotIdle: "#3f3f3f",
     modalBg: "rgba(0,0,0,0.7)",
-    cardBg: "#18181b",
-    inputBg: "#18181b",
+    cardBg: "#1a1a1a",
+    inputBg: "#1a1a1a",
     accent: "#f9fafb",
-    accentBlue: "#3b82f6",
-    stat: "#18181b",
-    statBorder: "#27272a",
   },
 };
 
@@ -92,20 +86,6 @@ function Glass({ T, children, style, radius = 12, onClick, className = "" }) {
       overflow: "hidden", ...style,
     }}>
       {children}
-    </div>
-  );
-}
-
-/* ===== مكون StatCell — خلية إحصاء نظيفة ===== */
-function StatCell({ label, value, color, T }) {
-  return (
-    <div style={{
-      background: T.stat || T.pillFill,
-      border: `1px solid ${T.statBorder || T.line}`,
-      borderRadius: 10, padding: "12px 10px", textAlign: "center",
-    }}>
-      <div style={{ fontSize: 11, color: T.faint, marginBottom: 4, fontWeight: 500 }}>{label}</div>
-      <div style={{ fontSize: 19, fontWeight: 700, color: color || T.text }}>{value}</div>
     </div>
   );
 }
@@ -458,13 +438,13 @@ export default function App() {
     <div dir={isRTL ? "rtl" : "ltr"} style={{
       height: "100dvh", display: "flex", position: "relative",
       background: T.pageBg, color: T.text,
-      fontFamily: "'Noto Sans Arabic','Inter','SF Pro Text',sans-serif",
+      fontFamily: "'Noto Sans Arabic','SF Pro Text','Segoe UI',sans-serif",
       WebkitFontSmoothing: "antialiased",
       transition: "background .5s ease, color .4s ease",
       overflow: "hidden",
       fontSize: F.base,
     }}>
-      <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
       {/* الشريط الجانبي */}
       <Sidebar
@@ -493,7 +473,7 @@ export default function App() {
           background: T.headerBg,
           borderBottom: `1px solid ${T.line}`,
         }}>
-          <div style={{ maxWidth: 860, margin: "0 auto", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ maxWidth: 820, margin: "0 auto", padding: "14px 18px", display: "flex", alignItems: "center", gap: 12 }}>
             {isMobile && (
               <button onClick={() => setSidebarOpen(true)} style={iconBtnStyle(T)}>
                 <Icon.Menu />
@@ -504,9 +484,9 @@ export default function App() {
             </div>
             <button onClick={newChat} style={{
               ...iconBtnStyle(T),
-              background: T.userFill,
-              color: T.userText,
-              border: `1px solid ${T.line}`,
+              background: T.accent || "#0a84ff",
+              color: "#fff",
+              border: "none",
               boxShadow: "none",
             }} title={t.newChat}>
               <Icon.Plus />
@@ -516,7 +496,7 @@ export default function App() {
 
         {/* خيط الرسائل */}
         <div style={{ flex: 1, overflowY: "auto", padding: "0 14px", position: "relative" }}>
-          <div style={{ maxWidth: 720, margin: "0 auto", padding: "20px 0 16px" }}>
+          <div style={{ maxWidth: 760, margin: "0 auto", padding: "18px 0 16px" }}>
             {empty && (
               <EmptyState T={T} t={t} F={F} send={send} settings={settings} userProfile={userProfile} />
             )}
@@ -538,7 +518,7 @@ export default function App() {
               <div style={{ display: "flex", gap: 6, padding: "6px 4px 20px" }}>
                 {[0, 0.16, 0.32].map((d, i) => (
                   <span key={i} style={{
-                    width: 7, height: 7, borderRadius: "50%", background: T.dotIdle,
+                    width: 8, height: 8, borderRadius: "50%", background: T.dotIdle,
                     animation: `bd 1.3s ${d}s infinite ease-in-out`,
                   }} />
                 ))}
@@ -552,8 +532,9 @@ export default function App() {
         <div style={{
           flexShrink: 0, position: "relative", zIndex: 5,
           background: T.composerBg, borderTop: `1px solid ${T.line}`,
+          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
         }}>
-          <div style={{ maxWidth: 720, margin: "0 auto", padding: "10px 14px" }}>
+          <div style={{ maxWidth: 760, margin: "0 auto", padding: "12px 14px" }}>
             {settings.showSuggestions && currentMessages.length > 0 && (
               <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 10, scrollbarWidth: "none" }}>
                 {t.suggestions.slice(0, 3).map(s => (
@@ -566,11 +547,11 @@ export default function App() {
             )}
             <div style={{
               background: T.inputBg || T.glassFill,
-              border: `1px solid ${T.line}`,
-              borderRadius: 10,
-              padding: "8px 8px 8px 14px",
+              border: `1.5px solid ${T.line}`,
+              borderRadius: 14,
+              padding: "10px 10px 10px 14px",
               display: "flex", alignItems: "center", gap: 8,
-              boxShadow: "none",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
               transition: "border-color .15s",
             }}>
               <input
@@ -594,8 +575,8 @@ export default function App() {
                 <button onClick={() => setForceSearch(s => !s)}
                   title={isRTL ? "بحث في الإنترنت" : "Search the web"}
                   style={{
-                    background: forceSearch ? T.pillFill : "transparent",
-                    color: forceSearch ? T.text : T.faint,
+                    background: forceSearch ? "rgba(10,132,255,0.1)" : "transparent",
+                    color: forceSearch ? "#0a84ff" : T.faint,
                     border: "none", borderRadius: 8,
                     width: 32, height: 32, cursor: "pointer", fontFamily: "inherit",
                     display: "flex", alignItems: "center", justifyContent: "center",
@@ -606,9 +587,9 @@ export default function App() {
                 <button onClick={() => send()} disabled={!draft.trim() || thinking}
                   style={{
                     background: draft.trim() ? T.text : T.pillFill,
-                    color: draft.trim() ? T.pageBg : T.faint,
-                    border: `1px solid ${draft.trim() ? T.text : T.line}`,
-                    borderRadius: 9, width: 34, height: 34,
+                    color: draft.trim() ? T.pageBg||"#fff" : T.faint,
+                    border: "none", borderRadius: 9,
+                    width: 34, height: 34,
                     cursor: draft.trim() ? "pointer" : "default",
                     fontFamily: "inherit", transition: "all .15s", flexShrink: 0,
                     display: "flex", alignItems: "center", justifyContent: "center",
@@ -680,21 +661,19 @@ export default function App() {
         .card-surface { transition: box-shadow .15s ease; }
         .press { transition: opacity .15s ease; }
         .press:active { opacity: 0.7; }
-        .card-in { animation: ci .28s cubic-bezier(.2,.8,.3,1) both; }
-        @keyframes ci { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-        .tab-in { animation: ti .2s ease both; }
+        .card-in { animation: ci .35s cubic-bezier(.2,.8,.3,1) both; }
+        @keyframes ci { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .tab-in { animation: ti .25s ease both; }
         @keyframes ti { from{opacity:0} to{opacity:1} }
         @keyframes toastIn { from{opacity:0;transform:translate(-50%,8px)} to{opacity:1;transform:translate(-50%,0)} }
         @keyframes micPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        input::placeholder { color: ${T.faint}; }
-        textarea::placeholder { color: ${T.faint}; }
+        input::placeholder { color: ${T.faint} }
+        textarea::placeholder { color: ${T.faint} }
         @keyframes bd { 0%,80%,100%{transform:scale(.4);opacity:.3} 40%{transform:scale(1);opacity:1} }
-        ::-webkit-scrollbar { width: 3px; height: 0; }
+        ::-webkit-scrollbar { width: 4px; height: 0; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: ${T.line}; border-radius: 2px; }
         button { -webkit-tap-highlight-color: transparent; }
-        table { border-collapse: collapse; }
-        td, th { font-family: inherit; }
       `}</style>
     </div>
   );
@@ -710,21 +689,23 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
     <aside style={{
       position: isMobile ? "fixed" : "relative",
       [isRTL ? "right" : "left"]: isMobile ? (sidebarOpen ? 0 : "-300px") : 0,
-      top: 0, bottom: 0, width: 260,
+      top: 0, bottom: 0, width: 280,
       background: T.sidebarBg,
+      backdropFilter: "blur(30px) saturate(180%)",
+      WebkitBackdropFilter: "blur(30px) saturate(180%)",
       [isRTL ? "borderLeft" : "borderRight"]: `1px solid ${T.line}`,
       zIndex: 30, display: "flex", flexDirection: "column",
-      transition: `${isRTL ? "right" : "left"} .28s ease`,
-      boxShadow: isMobile && sidebarOpen ? "0 0 40px rgba(0,0,0,0.15)" : "none",
+      transition: `${isRTL ? "right" : "left"} .3s cubic-bezier(.22,.68,.28,1)`,
+      boxShadow: isMobile && sidebarOpen ? "0 0 30px rgba(0,0,0,0.2)" : "none",
     }}>
       {/* الهيدر */}
       <div style={{ padding: "16px 14px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${T.line}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           <div style={{
             width: 30, height: 30, borderRadius: 8,
-            background: T.text,
+            background: "#0a84ff",
             display: "flex", alignItems: "center", justifyContent: "center",
-            color: T.pageBg, fontWeight: 800, fontSize: 15,
+            color: "#fff", fontWeight: 800, fontSize: 15,
             boxShadow: "none",
           }}>{t.appName.charAt(0)}</div>
           <div style={{ fontSize: F.base + 1, fontWeight: 700, color: T.text }}>{t.appName}</div>
@@ -741,7 +722,7 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
         <button onClick={newChat} style={{
           width: "100%",
           background: T.text,
-          color: T.pageBg, border: "none", borderRadius: 9,
+          color: T.pageBg||"#fff", border: "none", borderRadius: 9,
           padding: "10px 14px", fontSize: F.base - 0.5, fontWeight: 600,
           cursor: "pointer", fontFamily: "inherit",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
@@ -1061,7 +1042,7 @@ function EmptyState({ T, t, F, send, settings, userProfile }) {
         width: 52, height: 52, borderRadius: 14, margin: "0 auto 20px",
         background: T.text,
         display: "flex", alignItems: "center", justifyContent: "center",
-        color: T.pageBg, fontWeight: 800, fontSize: 24,
+        color: T.pageBg||"#fff", fontWeight: 800, fontSize: 24,
         boxShadow: "none",
       }}>{t.appName.charAt(0)}</div>
       <h1 style={{ fontSize: F.h1 + 2, fontWeight: 700, margin: "0 0 10px", color: T.text, letterSpacing: "-0.5px" }}>
@@ -1075,10 +1056,10 @@ function EmptyState({ T, t, F, send, settings, userProfile }) {
           {t.suggestions.map(s => (
             <button key={s} onClick={() => send(s)} className="press"
               style={{
-                background: T.cardBg||T.glassFill, color: T.sub,
-                border: `1px solid ${T.glassBorder||T.line}`,
-                borderRadius: 9, padding: "12px 16px",
-                fontSize: F.base - 1.5, fontWeight: 500,
+                background: T.pillFill, color: T.text,
+                border: `1px solid ${T.line}`,
+                borderRadius: 10, padding: "13px 16px",
+                fontSize: F.base - 1, fontWeight: 500,
                 cursor: "pointer", fontFamily: "inherit",
                 textAlign: "right", lineHeight: 1.5,
                 transition: "all .15s",
@@ -1137,7 +1118,7 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
               <button onClick={() => editDraft.trim() && onEditSend(editDraft)}
                 disabled={!editDraft.trim()}
                 style={{
-                  background: T.text, color: T.pageBg, border: "none",
+                  background: ACCENTS.knowledge, color: "#fff", border: "none",
                   borderRadius: 8, padding: "6px 14px", fontSize: F.label, fontWeight: 600,
                   cursor: editDraft.trim() ? "pointer" : "default", fontFamily: "inherit",
                   opacity: editDraft.trim() ? 1 : 0.5,
@@ -1169,8 +1150,8 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
         <div>
           <div style={{
             background: T.userFill, color: T.userText,
-            borderRadius: "10px 10px 3px 10px", padding: "9px 14px",
-            fontSize: F.base - 0.5, fontWeight: 400, maxWidth: "100%", lineHeight: 1.6,
+            borderRadius: "16px 16px 4px 16px", padding: "10px 15px",
+            fontSize: F.base, fontWeight: 400, maxWidth: "100%", lineHeight: 1.6,
             boxShadow: "none",
             wordBreak: "break-word",
           }}>{m.text}</div>
@@ -1213,25 +1194,19 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
   const active = tabs[activeTab] || {};
 
   return (
-    <Glass T={T} radius={12} style={{ padding: "18px 20px 16px" }}>
-      {/* خط علوي بدل الجانبي - SIGNAL */}
-      <div style={{
-        position: "absolute", top: 0, left: 0, right: 0, height: 1,
-        background: T.line,
-        pointerEvents: "none",
-      }} />
+    <Glass T={T} radius={14} style={{ padding: 20 }}>
+
 
       {/* الهيدر */}
       <div style={{ position: "relative", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 5 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-            {card.kicker && <div style={{ color: T.sub, fontSize: F.label - 1, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8 }}>{card.kicker}</div>}
+            {card.kicker && <div style={{ color: T.faint, fontSize: F.label - 1, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8 }}>{card.kicker}</div>}
             {searched && (
               <div style={{
                 fontSize: F.label - 1, fontWeight: 500, color: T.faint,
-                background: T.pillFill, padding: "2px 8px",
-                borderRadius: 4, border: `1px solid ${T.line}`,
-                display: "flex", alignItems: "center", gap: 4,
+                background: T.pillFill, padding: "2px 7px",
+                borderRadius: 4, border: `1px solid ${T.line}`, display: "flex", alignItems: "center", gap: 4,
               }}>
                 <Icon.Search /> {t.liveSearch}
               </div>
@@ -1248,7 +1223,7 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
             </button>
           </div>
         </div>
-        <h2 style={{ fontSize: F.h2 - 1, fontWeight: 700, margin: 0, letterSpacing: "-0.3px", lineHeight: 1.3, color: T.text }}>{card.title}</h2>
+        <h2 style={{ fontSize: F.h2, fontWeight: 700, margin: 0, letterSpacing: "-0.4px", lineHeight: 1.3 }}>{card.title}</h2>
         {card.sub && <div style={{ color: T.sub, fontSize: F.base - 1, marginTop: 5, lineHeight: 1.5 }}>{card.sub}</div>}
       </div>
 
@@ -1264,7 +1239,7 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
               border: "none",
               borderBottom: `1.5px solid ${i === activeTab ? T.text : "transparent"}`,
               padding: "8px 14px",
-              color: i === activeTab ? T.text : T.faint,
+              color: i === activeTab ? T.text : T.sub,
               fontSize: F.label + 0.5, fontWeight: i === activeTab ? 600 : 400,
               cursor: "pointer", fontFamily: "inherit",
               transition: "all .15s", whiteSpace: "nowrap",
@@ -1289,10 +1264,10 @@ function IBar({ v, max=100, color, label, right, T }) {
     <div style={{ marginBottom:10 }}>
       <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
         <span style={{ fontSize:12, color:T.sub }}>{label}</span>
-        <span style={{ fontSize:12, fontWeight:600, color:T.text }}>{right||v+(max===100?"/100":"")}</span>
+        <span style={{ fontSize:12, fontWeight:700, color }}>{right||v+(max===100?"/100":"")}</span>
       </div>
-      <div style={{ height:3, background:T.line, borderRadius:2 }}>
-        <div style={{ height:"100%", width:`${Math.min((v/max)*100,100)}%`, background:T.text, borderRadius:2 }}/>
+      <div style={{ height:4, background:T.line, borderRadius:2 }}>
+        <div style={{ height:"100%", width:`${Math.min((v/max)*100,100)}%`, background:color, borderRadius:2, boxShadow:`0 0 8px ${color}40` }}/>
       </div>
     </div>
   );
@@ -1300,17 +1275,17 @@ function IBar({ v, max=100, color, label, right, T }) {
 
 function ITile({ icon, label, value, color, T }) {
   return (
-    <div style={{ background:T.stat||T.pillFill, border:`1px solid ${T.statBorder||T.line}`, borderRadius:10, padding:"11px 8px", textAlign:"center" }}>
-      <div style={{ display:"flex", justifyContent:"center", marginBottom:5, opacity:0.4 }}>{icon}</div>
-      <div style={{ fontSize:16, fontWeight:700, color:T.text }}>{value}</div>
-      <div style={{ fontSize:10, color:T.faint, marginTop:2, fontWeight:500 }}>{label}</div>
+    <div style={{ background:T.pillFill, border:`1px solid ${T.line}`, borderRadius:12, padding:"12px 8px", textAlign:"center" }}>
+      <div style={{ display:"flex", justifyContent:"center", marginBottom:6 }}>{icon}</div>
+      <div style={{ fontSize:15, fontWeight:800, color:color||T.text }}>{value}</div>
+      <div style={{ fontSize:10, color:T.faint, marginTop:2 }}>{label}</div>
     </div>
   );
 }
 
-function ITag({ text, color, T }) {
+function ITag({ text, color }) {
   return (
-    <span style={{ fontSize:11, padding:"3px 9px", borderRadius:6, background: T ? (T.stat||T.pillFill) : "transparent", border:`1px solid ${T ? (T.statBorder||T.line) : "#ccc"}`, color: T ? T.sub : (color||"inherit"), fontWeight:500, whiteSpace:"nowrap" }}>{text}</span>
+    <span style={{ fontSize:11, padding:"4px 10px", borderRadius:20, background:`${color}12`, border:`1px solid ${color}22`, color, fontWeight:500, whiteSpace:"nowrap" }}>{text}</span>
   );
 }
 
@@ -2313,8 +2288,8 @@ function TabContent({ tab, a, T, F }) {
 /* ============ دوال مساعدة ============ */
 function iconBtnStyle(T) {
   return {
-    background: "transparent", color: T.sub, border: `1px solid ${T.line}`,
-    borderRadius: 7, width: 32, height: 32, cursor: "pointer",
+    background: T.pillFill, color: T.text, border: `1px solid ${T.line}`,
+    borderRadius: 8, width: 34, height: 34, cursor: "pointer",
     display: "flex", alignItems: "center", justifyContent: "center",
     fontFamily: "inherit", transition: "all .15s", flexShrink: 0,
   };
