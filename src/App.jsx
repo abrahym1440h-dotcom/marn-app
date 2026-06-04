@@ -1412,28 +1412,49 @@ function TabContent({ tab, a, T, F }) {
     case "match":
       return (
         <div>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"16px 0 12px" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"18px 0 14px" }}>
             <div style={{ textAlign:"center", flex:1 }}>
+              <div style={{ width:48, height:48, borderRadius:"50%", background:T.pillFill, border:`1px solid ${T.line}`, margin:"0 auto 8px", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, fontWeight:800, color:T.text }}>{(d.team1||"?")[0]}</div>
               <div style={{ fontSize:F.base, fontWeight:700 }}>{d.team1}</div>
             </div>
-            <div style={{ textAlign:"center", padding:"0 12px" }}>
-              <div style={{ fontSize:44, fontWeight:900, color:T.text, letterSpacing:4, lineHeight:1 }}>
-                {d.score1!=null?`${d.score1}`:"—"}<span style={{ color:T.faint, fontSize:28 }}>-</span>{d.score2!=null?`${d.score2}`:"—"}
+            <div style={{ textAlign:"center", padding:"0 8px", minWidth:110 }}>
+              <div style={{ fontSize:44, fontWeight:700, color:T.text, letterSpacing:3, lineHeight:1 }}>
+                {d.score1!=null?d.score1:"–"}<span style={{ color:T.line, fontWeight:300 }}>:</span>{d.score2!=null?d.score2:"–"}
               </div>
-              <div style={{ fontSize:10, color:a, fontWeight:600, marginTop:6, background:`${a}12`, padding:"2px 10px", borderRadius:20 }}>{d.status}</div>
-              {d.date && <div style={{ fontSize:10, color:T.faint, marginTop:4 }}>{d.date}</div>}
+              <div style={{ marginTop:6 }}>
+                <span style={{ fontSize:11, color:T.sub, background:T.pillFill, padding:"3px 10px", borderRadius:20, border:`1px solid ${T.line}` }}>{d.status}</span>
+              </div>
+              {d.date && <div style={{ fontSize:10, color:T.faint, marginTop:5 }}>{d.date}</div>}
             </div>
-            <div style={{ textAlign:"center", flex:1, opacity:0.65 }}>
+            <div style={{ textAlign:"center", flex:1, opacity:0.5 }}>
+              <div style={{ width:48, height:48, borderRadius:"50%", background:T.pillFill, border:`1px solid ${T.line}`, margin:"0 auto 8px", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, fontWeight:800, color:T.sub }}>{(d.team2||"?")[0]}</div>
               <div style={{ fontSize:F.base, fontWeight:700, color:T.sub }}>{d.team2}</div>
             </div>
           </div>
-          {d.venue && <div style={{ textAlign:"center", fontSize:F.label, color:T.sub, paddingBottom:12, borderBottom:`1px solid ${T.line}`, marginBottom:12, display:"flex", alignItems:"center", justifyContent:"center", gap:4 }}>{Si.pin("#64d2ff")} {d.venue}</div>}
-          {(d.details||[]).map((dt,i,arr) => (
-            <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:i===arr.length-1?"none":`1px solid ${T.line}`, fontSize:F.base-1 }}>
-              <span style={{ color:T.sub }}>{dt.label}</span>
-              <span style={{ fontWeight:600 }}>{dt.value}</span>
-            </div>
-          ))}
+          {d.venue && <div style={{ textAlign:"center", fontSize:11, color:T.faint, paddingBottom:12, borderBottom:`1px solid ${T.line}`, marginBottom:12 }}>📍 {d.venue}</div>}
+          {(d.details||[]).map((dt,i,arr) => {
+            const hasNums = dt.v1!=null && dt.v2!=null;
+            const total = hasNums ? (dt.v1+dt.v2)||1 : 1;
+            const p1 = hasNums ? Math.round((dt.v1/total)*100) : 50;
+            return hasNums ? (
+              <div key={i} style={{ marginBottom: i<arr.length-1?10:0 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:4, fontWeight:600 }}>
+                  <span style={{ color:T.text }}>{dt.v1}{dt.unit||""}</span>
+                  <span style={{ color:T.faint, fontWeight:400, fontSize:11 }}>{dt.label}</span>
+                  <span style={{ color:T.sub }}>{dt.v2}{dt.unit||""}</span>
+                </div>
+                <div style={{ height:4, background:T.line, borderRadius:2, display:"flex", overflow:"hidden" }}>
+                  <div style={{ width:`${p1}%`, background:T.text, borderRadius:2 }}/>
+                  <div style={{ flex:1, background:T.pillFill }}/>
+                </div>
+              </div>
+            ) : (
+              <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:`1px solid ${T.line}`, fontSize:F.base-1 }}>
+                <span style={{ color:T.sub }}>{dt.label}</span>
+                <span style={{ fontWeight:600 }}>{dt.value}</span>
+              </div>
+            );
+          })}
         </div>
       );
 
@@ -1511,68 +1532,126 @@ function TabContent({ tab, a, T, F }) {
     // ========== الطقس ==========
 
     case "weather":
+      const isDark = T.pageBg === "#0f0f11" || T.pageBg === "#111111" || T.pageBg === "#000000";
+      const skyGrad = isDark
+        ? "linear-gradient(175deg, #0f2744 0%, #1a3a5c 50%, #0d1f35 100%)"
+        : "linear-gradient(175deg, #1a6bb5 0%, #2e86de 50%, #54a0e0 100%)";
+      const weatherIcon = d.icon || (d.condition?.includes("غيم") || d.condition?.includes("cloud") ? "⛅" : d.condition?.includes("مطر") || d.condition?.includes("rain") ? "🌧" : "☀️");
       return (
-        <div>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px", background:T.pillFill, borderRadius:13, border:`1px solid ${T.line}`, marginBottom:14 }}>
-            <div>
-              <div style={{ marginBottom:4 }}>{Si.sun("currentColor")}</div>
-              <div style={{ fontSize:F.base, color:T.sub }}>{d.condition}</div>
-              {d.city && <div style={{ fontSize:F.label, color:T.faint }}>{d.city}</div>}
-            </div>
-            <div style={{ textAlign:"center" }}>
-              <div style={{ fontSize:56, fontWeight:900, color:T.text, lineHeight:1 }}>{d.temp}°</div>
-              {d.feels_like && <div style={{ fontSize:F.base-1, color:T.sub, marginTop:4 }}>يحس بـ {d.feels_like}°</div>}
+        <div style={{ margin:"-14px -20px -16px", overflow:"hidden", borderRadius:"0 0 12px 12px" }}>
+          {/* Hero الطقس */}
+          <div style={{ background: skyGrad, padding:"28px 24px 22px", color:"#fff", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", top:-40, right:-40, width:180, height:180, borderRadius:"50%", background:"rgba(255,255,255,0.04)" }}/>
+            <div style={{ position:"absolute", bottom:-30, left:-20, width:120, height:120, borderRadius:"50%", background:"rgba(255,255,255,0.03)" }}/>
+            <div style={{ position:"relative" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+                <div>
+                  {d.city && <div style={{ fontSize:13, opacity:0.75, fontWeight:500, marginBottom:4 }}>{d.city}</div>}
+                  <div style={{ fontSize:72, fontWeight:200, lineHeight:1, letterSpacing:-3 }}>{d.temp}°</div>
+                  <div style={{ fontSize:17, fontWeight:500, marginTop:6, opacity:0.9 }}>{d.condition}</div>
+                  {d.feels_like && <div style={{ fontSize:13, opacity:0.65, marginTop:3 }}>يحس بـ {d.feels_like}°</div>}
+                  {(d.high || d.low) && <div style={{ fontSize:13, opacity:0.65, marginTop:2 }}>
+                    {d.high && `أعلى ${d.high}°`}{d.high && d.low && " • "}{d.low && `أدنى ${d.low}°`}
+                  </div>}
+                </div>
+                <div style={{ fontSize:64, opacity:0.9, lineHeight:1 }}>{weatherIcon}</div>
+              </div>
             </div>
           </div>
-          {d.humidity!=null && <IBar v={d.humidity} color="#64d2ff" label="الرطوبة" right={`${d.humidity}%`} T={T}/>}
-          {d.wind!=null && <IBar v={d.wind} max={60} color="#bf5af2" label="الرياح" right={`${d.wind} km/h`} T={T}/>}
-          {d.forecast && (
-            <div style={{ display:"flex", gap:6, overflowX:"auto", marginTop:10 }}>
-              {d.forecast.map((f,i) => (
-                <div key={i} style={{ flex:"0 0 auto", textAlign:"center", padding:"10px 12px", background:T.pillFill, borderRadius:10, border:`1px solid ${T.line}` }}>
-                  <div style={{ fontSize:F.label-1, color:T.faint }}>{f.day}</div>
-                  <div style={{ margin:"6px 0" }}>{Si.sun("currentColor")}</div>
-                  <div style={{ fontSize:F.label, fontWeight:700 }}>{f.high}°</div>
-                  <div style={{ fontSize:F.label-1, color:T.faint }}>{f.low}°</div>
+          {/* التوقعات الساعية */}
+          {d.forecast && d.forecast.length > 0 && (
+            <div style={{ background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.06)", backdropFilter:"blur(10px)", borderTop:"0.5px solid rgba(255,255,255,0.1)", padding:"12px 4px" }}>
+              <div style={{ display:"flex", justifyContent:"space-around" }}>
+                {d.forecast.map((f,i) => (
+                  <div key={i} style={{ textAlign:"center", flex:1 }}>
+                    <div style={{ fontSize:12, color:"rgba(255,255,255,0.7)", fontWeight:500 }}>{f.day}</div>
+                    <div style={{ fontSize:22, margin:"6px 0" }}>{f.icon || "☀️"}</div>
+                    <div style={{ fontSize:15, fontWeight:600, color:"#fff" }}>{f.high}°</div>
+                    {f.low != null && <div style={{ fontSize:12, color:"rgba(255,255,255,0.5)", marginTop:1 }}>{f.low}°</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* تفاصيل */}
+          <div style={{ background: T.cardBg, padding:"16px 20px" }}>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+              {[
+                d.humidity != null && { label:"الرطوبة", value:`${d.humidity}%`, icon:"💧" },
+                d.wind != null && { label:"الرياح", value:`${d.wind} كم/س`, icon:"💨" },
+                d.uv != null && { label:"مؤشر UV", value:`${d.uv}`, icon:"☀️" },
+                d.visibility != null && { label:"الرؤية", value:`${d.visibility} كم`, icon:"👁" },
+              ].filter(Boolean).map((item,i) => (
+                <div key={i} style={{ background: T.pillFill, borderRadius:12, padding:"12px 14px", border:`1px solid ${T.line}` }}>
+                  <div style={{ fontSize:11, color:T.faint, display:"flex", alignItems:"center", gap:5, marginBottom:5, textTransform:"uppercase", letterSpacing:0.5 }}>
+                    <span>{item.icon}</span>{item.label}
+                  </div>
+                  <div style={{ fontSize:22, fontWeight:600, color:T.text }}>{item.value}</div>
                 </div>
               ))}
             </div>
-          )}
+          </div>
         </div>
       );
 
     // ========== مالي ==========
 
-    case "stock":
-      const isUp = (d.change_pct||0) >= 0;
+    case "stock": {
+      const isUp_s = (d.change_pct||0) >= 0;
+      const lineColor_s = isUp_s ? "#30d158" : "#ff453a";
+      const pts_s = d.chart_points && d.chart_points.length > 1 ? d.chart_points : [27,28,27.5,29,28,30,29,31,30,32,d.price||30];
+      const maxP_s = Math.max(...pts_s), minP_s = Math.min(...pts_s);
+      const W_s=320, H_s=72;
+      const pPath_s = pts_s.map((p,i)=>`${i===0?"M":"L"} ${(i/(pts_s.length-1))*W_s} ${H_s-((p-minP_s)/(maxP_s-minP_s||1))*H_s}`).join(" ");
+      const aPath_s = pPath_s + ` L ${W_s} ${H_s} L 0 ${H_s} Z`;
+      const gradId_s = "sg" + Math.random().toString(36).slice(2,6);
       return (
         <div>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
+          {/* الرقم الرئيسي */}
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", padding:"4px 0 12px" }}>
             <div>
-              <div style={{ fontSize:40, fontWeight:900, lineHeight:1 }}>{d.price}</div>
-              <div style={{ display:"flex", alignItems:"center", gap:5, marginTop:5, color:isUp?"#34c759":"#ff453a" }}>
-                {isUp?Si.up:Si.dn}
-                <span style={{ fontSize:F.base, fontWeight:600 }}>{Math.abs(d.change_pct||0)}% ({d.change>0?"+":""}{d.change})</span>
+              <div style={{ fontSize:12, color:T.faint, marginBottom:4 }}>{d.symbol} • {d.name}</div>
+              <div style={{ fontSize:44, fontWeight:700, color:T.text, lineHeight:1, letterSpacing:-1 }}>{d.price}</div>
+              <div style={{ display:"flex", alignItems:"center", gap:6, marginTop:6 }}>
+                <span style={{ fontSize:15, fontWeight:600, color:lineColor_s }}>
+                  {isUp_s?"+":""}{d.change} ({isUp_s?"+":""}{d.change_pct}%)
+                </span>
+                <span style={{ fontSize:11, color:T.faint }}>اليوم</span>
               </div>
             </div>
-            <div style={{ background:isUp?"rgba(52,199,89,0.1)":"rgba(255,69,58,0.1)", border:`1px solid ${isUp?"rgba(52,199,89,0.2)":"rgba(255,69,58,0.2)"}`, borderRadius:11, padding:"10px 14px", textAlign:"center" }}>
-              <div style={{ fontSize:F.base, color:isUp?"#34c759":"#ff453a" }}>{d.symbol}</div>
-              <div style={{ fontSize:F.label-1, color:T.faint, marginTop:2 }}>{d.name}</div>
+            <div style={{ background: isUp_s?"rgba(48,209,88,0.1)":"rgba(255,69,58,0.1)", borderRadius:10, padding:"8px 14px", textAlign:"center" }}>
+              <div style={{ fontSize:13, fontWeight:700, color:lineColor_s }}>{isUp_s?"▲":"▼"}</div>
+              <div style={{ fontSize:11, color:T.faint, marginTop:2 }}>{isUp_s?"صاعد":"هابط"}</div>
             </div>
           </div>
-          <IBar v={d.high||0} max={(d.high||0)+5} color="#34c759" label="أعلى اليوم" right={String(d.high)} T={T}/>
-          <IBar v={d.low||0} max={(d.high||0)+5} color="#ff453a" label="أدنى اليوم" right={String(d.low)} T={T}/>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginTop:4 }}>
-            {[["حجم التداول",d.volume],["الاتجاه",d.chart_direction==="up"?"صاعد":"هابط"]].filter(x=>x[1]).map(([l,v],i)=>(
-              <div key={i} style={{ padding:"10px", background:T.pillFill, borderRadius:9, border:`1px solid ${T.line}` }}>
-                <div style={{ fontSize:F.label-1, color:T.faint }}>{l}</div>
+          {/* رسم بياني */}
+          <div style={{ margin:"0 -20px", background:T.pillFill, padding:"8px 0 4px" }}>
+            <svg width="100%" height={H_s} viewBox={`0 0 ${W_s} ${H_s}`} preserveAspectRatio="none">
+              <defs>
+                <linearGradient id={gradId_s} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={lineColor_s} stopOpacity="0.2"/>
+                  <stop offset="100%" stopColor={lineColor_s} stopOpacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d={aPath_s} fill={`url(#${gradId_s})`}/>
+              <path d={pPath_s} fill="none" stroke={lineColor_s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          {/* بيانات */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginTop:12 }}>
+            {[
+              ["أعلى", d.high], ["أدنى", d.low],
+              ["الحجم", d.volume], ["الإغلاق السابق", d.prev_close||d.low],
+            ].filter(([,v])=>v!=null).map(([l,v],i)=>(
+              <div key={i} style={{ background:T.pillFill, borderRadius:10, padding:"10px 12px", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:11, color:T.faint }}>{l}</div>
                 <div style={{ fontSize:F.base, fontWeight:600, marginTop:2 }}>{v}</div>
               </div>
             ))}
           </div>
         </div>
       );
-
+    }
     case "crypto":
       const cupCrypto = (d.change_pct||0) >= 0;
       return (
