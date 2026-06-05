@@ -160,6 +160,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tab, setTab] = useState("chats");
   const [appView, setAppView] = useState("chat"); // "chat" | "groups"
+  const [showAppMenu, setShowAppMenu] = useState(false); // قائمة التطبيقات
   const [isMobile, setIsMobile] = useState(false);
   const [chats, setChats] = useState({});
   const [userProfile, setUserProfile] = useState({ name:"", job:"", interests:"" });
@@ -493,6 +494,7 @@ export default function App() {
         sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}
         tab={tab} setTab={setTab}
         onOpenGroups={() => setAppView("groups")}
+        showAppMenu={showAppMenu} setShowAppMenu={setShowAppMenu}
         sortedChats={sortedChats} activeChat={activeChat}
         openChat={openChat} deleteChat={deleteChat}
         favs={favs} send={send}
@@ -723,7 +725,7 @@ export default function App() {
 }
 
 /* ============ الشريط الجانبي ============ */
-function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, setTab, onOpenGroups,
+function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, setTab, onOpenGroups, showAppMenu, setShowAppMenu,
   sortedChats, activeChat, openChat, deleteChat, favs, send, newChat,
   settings, setSettings, effectiveMode, clearAllChats, clearAllFavs, exportChats,
   chatSearch, setChatSearch, onRename, userProfile, setUserProfile, onEditProfile }) {
@@ -762,20 +764,96 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
 
       {/* محادثة جديدة */}
       <div style={{ padding: "12px 14px 8px" }}>
-        <button onClick={newChat} style={{
-          width: "100%",
-          background: T.gradBtn||T.navy,
-          color: "#fff", border: "none", borderRadius: 9,
-          padding: "10px 14px", fontSize: F.base - 0.5, fontWeight: 600,
-          cursor: "pointer", fontFamily: "inherit",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-          boxShadow: "none",
-          transition: "opacity .15s",
-        }}
-        onMouseEnter={e => e.currentTarget.style.opacity = "0.9"}
-        onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
-          <Icon.Plus /> {t.newChat}
+        {/* زر + مع قائمة منبثقة */}
+      <div style={{ position: "relative" }}>
+        <button
+          onClick={() => setShowAppMenu(!showAppMenu)}
+          style={{
+            width: "100%",
+            background: T.gradBtn||"linear-gradient(135deg,#0F2060,#2A5ED8)",
+            color: "#fff", border: "none", borderRadius: 9,
+            padding: "10px 14px", fontSize: F.base - 0.5, fontWeight: 600,
+            cursor: "pointer", fontFamily: "inherit",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            gap: 7, boxShadow: "0 2px 12px rgba(15,32,96,0.3)",
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          {isRTL ? "جديد" : "New"}
         </button>
+
+        {/* القائمة المنبثقة */}
+        {showAppMenu && (
+          <>
+            {/* overlay لإغلاق القائمة */}
+            <div
+              onClick={() => setShowAppMenu(false)}
+              style={{ position: "fixed", inset: 0, zIndex: 30 }}
+            />
+            <div style={{
+              position: "absolute", top: "calc(100% + 6px)",
+              right: 0, left: 0, zIndex: 40,
+              background: T.cardBg || T.glassFill,
+              border: `1px solid ${T.glassBorder || T.line}`,
+              borderRadius: 12,
+              boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+              overflow: "hidden",
+            }}>
+              {/* محادثة جديدة */}
+              <button onClick={() => { newChat(); setShowAppMenu(false); }} style={{
+                width: "100%", background: "transparent", border: "none",
+                borderBottom: `1px solid ${T.line}`,
+                padding: "13px 16px", cursor: "pointer", fontFamily: "inherit",
+                display: "flex", alignItems: "center", gap: 12, color: T.text,
+                textAlign: "right",
+              }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: `${T.accentBlue||"#2A5ED8"}15`, border: `1px solid ${T.accentBlue||"#2A5ED8"}30`, display: "flex", alignItems: "center", justifyContent: "center", color: T.accentBlue||"#2A5ED8", flexShrink: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{isRTL ? "محادثة جديدة" : "New Chat"}</div>
+                  <div style={{ fontSize: 11, color: T.sub }}>{isRTL ? "ابدأ محادثة مع مرن" : "Start a conversation"}</div>
+                </div>
+              </button>
+
+              {/* المجموعات */}
+              <button onClick={() => { onOpenGroups && onOpenGroups(); setShowAppMenu(false); }} style={{
+                width: "100%", background: "transparent", border: "none",
+                borderBottom: `1px solid ${T.line}`,
+                padding: "13px 16px", cursor: "pointer", fontFamily: "inherit",
+                display: "flex", alignItems: "center", gap: 12, color: T.text,
+                textAlign: "right",
+              }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.25)", display: "flex", alignItems: "center", justifyContent: "center", color: "#34D399", flexShrink: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="7" r="3"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{isRTL ? "المجموعات" : "Groups"}</div>
+                  <div style={{ fontSize: 11, color: T.sub }}>{isRTL ? "رحلات، كشت، فعاليات" : "Trips, outings, events"}</div>
+                </div>
+              </button>
+
+              {/* البحث الحي */}
+              <button onClick={() => { setShowAppMenu(false); }} style={{
+                width: "100%", background: "transparent", border: "none",
+                padding: "13px 16px", cursor: "pointer", fontFamily: "inherit",
+                display: "flex", alignItems: "center", gap: 12, color: T.text,
+                textAlign: "right",
+              }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FBBF24", flexShrink: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{isRTL ? "بحث حي" : "Live Search"}</div>
+                  <div style={{ fontSize: 11, color: T.sub }}>{isRTL ? "ابحث في الويب الآن" : "Search the web now"}</div>
+                </div>
+              </button>
+            </div>
+          </>
+        )}
+      </div>
       </div>
 
       {/* التبويبات */}
@@ -783,7 +861,6 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
         {[
           { id: "chats", label: t.chats, icon: <Icon.Chat />, count: sortedChats.length },
           { id: "favs", label: t.favs, icon: <Icon.Star />, count: favs.length },
-          { id: "groups", label: isRTL ? "مجموعات" : "Groups", icon: <Icon.Groups /> },
           { id: "settings", label: t.settings, icon: <Icon.Settings /> },
         ].map(tt => (
           <button key={tt.id} onClick={() => { if (tt.id === "groups") { onOpenGroups && onOpenGroups(); } else { setTab(tt.id); } }} style={{
@@ -863,9 +940,6 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
           ))
         )}
 
-        {tab === "groups" && (
-{/* GroupsPanel مُزال — الآن GroupsApp يملأ الشاشة الكاملة */}
-        )}
 
         {tab === "settings" && (
           <SettingsPanel T={T} t={t} F={F}
