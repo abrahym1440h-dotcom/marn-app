@@ -142,6 +142,7 @@ const Icon = {
   Web: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
   Mic: ({ active }) => <svg width="16" height="16" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>,
   User: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  Groups: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="7" r="3"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg>,
 };
 
 /* ============ التطبيق الرئيسي ============ */
@@ -769,6 +770,7 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
         {[
           { id: "chats", label: t.chats, icon: <Icon.Chat />, count: sortedChats.length },
           { id: "favs", label: t.favs, icon: <Icon.Star />, count: favs.length },
+          { id: "groups", label: isRTL ? "مجموعات" : "Groups", icon: <Icon.Groups /> },
           { id: "settings", label: t.settings, icon: <Icon.Settings /> },
         ].map(tt => (
           <button key={tt.id} onClick={() => setTab(tt.id)} style={{
@@ -846,6 +848,10 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
               <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.q}</span>
             </div>
           ))
+        )}
+
+        {tab === "groups" && (
+          <GroupsPanel T={T} F={F} isRTL={isRTL} />
         )}
 
         {tab === "settings" && (
@@ -2492,6 +2498,266 @@ function formatRelativeTime(ts, lang) {
   if (diff < 7 * day) return lang === "ar" ? `قبل ${Math.floor(diff / day)} أيام` : `${Math.floor(diff / day)}d ago`;
 
   return d.toLocaleDateString(lang === "ar" ? "ar-SA" : "en-US", { month: "short", day: "numeric" });
+}
+
+/* ============ GroupsPanel ============ */
+function GroupsPanel({ T, F, isRTL }) {
+  const [screen, setScreen] = useState("home"); // home | create | group
+  const [activeGroup, setActiveGroup] = useState(null);
+  const [groupTab, setGroupTab] = useState(0);
+  const [groups, setGroups] = useState([
+    {
+      id:"g1", name:"رحلة أبها 🏔️", type:"سفرية", destination:"أبها، منطقة عسير",
+      dates:"15-18 يونيو", days:4, code:"ABHA2026",
+      members:[
+        {id:1,name:"خالد",avatar:"خ",budget:1500,paid:850,color:"#4A8FFF"},
+        {id:2,name:"سلطان",avatar:"س",budget:2000,paid:600,color:"#34D399"},
+        {id:3,name:"فيصل",avatar:"ف",budget:1200,paid:1200,color:"#F87171"},
+        {id:4,name:"نواف",avatar:"ن",budget:1800,paid:400,color:"#FBBF24"},
+      ],
+      tasks:[
+        {id:1,text:"حجز الفندق",done:true,owner:1},
+        {id:2,text:"حجز تذاكر الطيران",done:true,owner:2},
+        {id:3,text:"استئجار سيارة",done:false,owner:3},
+        {id:4,text:"قائمة مشتريات الكشته",done:false,owner:null},
+      ],
+      expenses:[
+        {id:1,desc:"فندق جبل القرى",amount:1200,paidBy:1,category:"إقامة"},
+        {id:2,desc:"تذاكر طيران",amount:800,paidBy:2,category:"مواصلات"},
+        {id:3,desc:"عشاء مطعم نجد",amount:280,paidBy:3,category:"طعام"},
+      ],
+      schedule:[
+        {day:1,title:"الوصول",items:[{time:"10:00",activity:"المغادرة ✈️"},{time:"14:00",activity:"تسجيل الفندق 🏨"},{time:"19:00",activity:"عشاء مطعم نجد 🍖"}]},
+        {day:2,title:"الطبيعة",items:[{time:"10:00",activity:"تلفريك أبها 🚡"},{time:"16:00",activity:"شلالات الدموع 💧"}]},
+        {day:3,title:"المدينة",items:[{time:"09:00",activity:"سوق الثلاثاء 🛍️"},{time:"18:00",activity:"كورنيش أبها 🌅"}]},
+        {day:4,title:"الوداع",items:[{time:"08:00",activity:"تجهيز وإفطار ☀️"},{time:"14:00",activity:"المطار ✈️"}]},
+      ],
+    }
+  ]);
+  const [newForm, setNewForm] = useState({name:"",type:"سفرية",dest:"",days:"3"});
+
+  const TYPES = ["سفرية","كشته","تمرين","فعالية","أخرى"];
+  const CAT_COLORS = {"إقامة":"#4A8FFF","مواصلات":"#A78BFA","طعام":"#34D399","أنشطة":"#FBBF24","أخرى":"#F87171"};
+  const GROUP_TABS = ["نظرة عامة","الجدول","المصاريف","المهام"];
+
+  const openGroup = (g) => { setActiveGroup(g); setGroupTab(0); setScreen("group"); };
+
+  // شاشة القائمة الرئيسية
+  if (screen === "home") return (
+    <div style={{padding:"16px 12px"}}>
+      <div style={{marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{fontSize:12,color:T.faint,fontWeight:600}}>مجموعاتك</div>
+        <button onClick={()=>setScreen("create")} style={{background:T.gradBtn||"linear-gradient(135deg,#0F2060,#2A5ED8)",border:"none",borderRadius:8,padding:"5px 12px",color:"#fff",fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>+ جديد</button>
+      </div>
+
+      {groups.map(g=>{
+        const done = g.tasks.filter(t=>t.done).length;
+        return (
+          <div key={g.id} onClick={()=>openGroup(g)} style={{
+            background:T.glassFill,border:`1px solid ${T.glassBorder}`,
+            borderRadius:14,padding:"12px 14px",marginBottom:10,cursor:"pointer",
+          }}>
+            <div style={{height:2,background:"linear-gradient(90deg,#0F2060,#2A5ED8,#7BB3FF)",borderRadius:1,marginBottom:12}}/>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+              <div style={{fontSize:22}}>{g.type==="سفرية"?"✈️":g.type==="كشته"?"🏕️":g.type==="تمرين"?"⚽":"🎯"}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:700,color:T.text}}>{g.name}</div>
+                <div style={{fontSize:11,color:T.sub}}>{g.destination} • {g.dates}</div>
+              </div>
+              <div style={{color:T.faint,fontSize:16}}>‹</div>
+            </div>
+            <div style={{display:"flex",gap:8}}>
+              <span style={{fontSize:10,color:T.sub,background:T.pillFill,padding:"2px 8px",borderRadius:10,border:`1px solid ${T.line}`}}>{g.members.length} أعضاء</span>
+              <span style={{fontSize:10,color:"#34D399",background:"rgba(52,211,153,0.1)",padding:"2px 8px",borderRadius:10,border:"1px solid rgba(52,211,153,0.2)"}}>{done}/{g.tasks.length} مهام</span>
+              <span style={{fontSize:10,color:T.faint,background:T.pillFill,padding:"2px 8px",borderRadius:10,border:`1px solid ${T.line}`}}>{g.days} أيام</span>
+            </div>
+          </div>
+        );
+      })}
+
+      <button onClick={()=>setScreen("join")} style={{
+        width:"100%",background:"transparent",border:`1px dashed ${T.line}`,
+        borderRadius:12,padding:"12px",color:T.faint,cursor:"pointer",
+        fontFamily:"inherit",fontSize:12,marginTop:4,
+      }}>🔗 انضم لمجموعة (رمز دعوة)</button>
+    </div>
+  );
+
+  // شاشة إنشاء
+  if (screen === "create") return (
+    <div style={{padding:"16px 12px"}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+        <button onClick={()=>setScreen("home")} style={{background:T.glassFill,border:`1px solid ${T.line}`,borderRadius:8,width:30,height:30,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:T.sub,fontSize:16}}>‹</button>
+        <div style={{fontSize:13,fontWeight:700,color:T.text}}>مجموعة جديدة</div>
+      </div>
+
+      {[{label:"الاسم",key:"name",ph:"رحلة أبها 🏔️"},{label:"الوجهة أو الحدث",key:"dest",ph:"أبها — كشته — تمرين كرة"},{label:"عدد الأيام",key:"days",ph:"3",type:"number"}].map(f=>(
+        <div key={f.key} style={{marginBottom:12}}>
+          <div style={{fontSize:11,color:T.sub,marginBottom:4}}>{f.label}</div>
+          <input value={newForm[f.key]} onChange={e=>setNewForm({...newForm,[f.key]:e.target.value})} placeholder={f.ph} type={f.type||"text"} style={{width:"100%",background:T.pillFill,border:`1px solid ${T.line}`,borderRadius:9,padding:"9px 12px",color:T.text,fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box"}}/>
+        </div>
+      ))}
+
+      <div style={{marginBottom:14}}>
+        <div style={{fontSize:11,color:T.sub,marginBottom:6}}>النوع</div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+          {TYPES.map(t=>(
+            <button key={t} onClick={()=>setNewForm({...newForm,type:t})} style={{background:newForm.type===t?"linear-gradient(135deg,#0F2060,#2A5ED8)":T.pillFill,border:`1px solid ${newForm.type===t?"#2A5ED8":T.line}`,color:newForm.type===t?"#fff":T.sub,borderRadius:20,padding:"4px 12px",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>{t}</button>
+          ))}
+        </div>
+      </div>
+
+      <button onClick={()=>{
+        const g = {id:`g${Date.now()}`,name:newForm.name||"مجموعتي",type:newForm.type,destination:newForm.dest||"",dates:"",days:parseInt(newForm.days)||3,code:`GRP${Math.random().toString(36).slice(2,6).toUpperCase()}`,members:[],tasks:[],expenses:[],schedule:[]};
+        setGroups([...groups,g]);
+        openGroup(g);
+      }} style={{width:"100%",background:"linear-gradient(135deg,#0F2060,#2A5ED8)",border:"none",borderRadius:12,padding:"12px",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:700,boxShadow:"0 2px 12px rgba(42,94,216,0.35)"}}>إنشاء ✓</button>
+    </div>
+  );
+
+  // شاشة الانضمام
+  if (screen === "join") return (
+    <div style={{padding:"16px 12px"}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
+        <button onClick={()=>setScreen("home")} style={{background:T.glassFill,border:`1px solid ${T.line}`,borderRadius:8,width:30,height:30,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:T.sub,fontSize:16}}>‹</button>
+        <div style={{fontSize:13,fontWeight:700,color:T.text}}>انضمام برمز</div>
+      </div>
+      <div style={{fontSize:11,color:T.sub,marginBottom:6}}>رمز الدعوة</div>
+      <input placeholder="ABHA2026" style={{width:"100%",background:T.pillFill,border:`1px solid ${T.line}`,borderRadius:9,padding:"10px 12px",color:T.text,fontSize:14,fontFamily:"monospace",letterSpacing:4,textAlign:"center",outline:"none",boxSizing:"border-box",marginBottom:12}}/>
+      <button onClick={()=>{openGroup(groups[0]);}} style={{width:"100%",background:"linear-gradient(135deg,#0F2060,#2A5ED8)",border:"none",borderRadius:12,padding:"12px",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>انضمام</button>
+    </div>
+  );
+
+  // شاشة المجموعة
+  if (screen === "group" && activeGroup) {
+    const g = activeGroup;
+    const totalExp = g.expenses.reduce((s,e)=>s+e.amount,0);
+    const perPerson = g.members.length ? Math.round(totalExp/g.members.length) : 0;
+
+    return (
+      <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
+        {/* هيدر */}
+        <div style={{padding:"10px 12px",borderBottom:`1px solid ${T.line}`,display:"flex",alignItems:"center",gap:8}}>
+          <button onClick={()=>setScreen("home")} style={{background:T.glassFill,border:`1px solid ${T.line}`,borderRadius:7,width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:T.sub,fontSize:14,flexShrink:0}}>‹</button>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:12,fontWeight:700,color:T.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{g.name}</div>
+            <div style={{fontSize:10,color:T.faint}}>{g.destination||g.type} • {g.days} أيام</div>
+          </div>
+          <div style={{fontSize:9,color:T.faint,fontFamily:"monospace",background:T.pillFill,padding:"2px 6px",borderRadius:5,border:`1px solid ${T.line}`,flexShrink:0}}>{g.code}</div>
+        </div>
+
+        {/* تبويبات */}
+        <div style={{display:"flex",borderBottom:`1px solid ${T.line}`,flexShrink:0}}>
+          {GROUP_TABS.map((tb,i)=>(
+            <button key={i} onClick={()=>setGroupTab(i)} style={{flex:1,background:"none",border:"none",borderBottom:`2px solid ${i===groupTab?(T.accentBlue||"#2A5ED8"):"transparent"}`,color:i===groupTab?T.text:T.faint,padding:"9px 4px",cursor:"pointer",fontFamily:"inherit",fontSize:10,fontWeight:i===groupTab?600:400,marginBottom:-1,transition:"all .15s"}}>{tb}</button>
+          ))}
+        </div>
+
+        {/* محتوى */}
+        <div style={{flex:1,overflow:"auto",padding:"12px"}}>
+
+          {/* نظرة عامة */}
+          {groupTab===0 && <div>
+            {/* إحصاء */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+              {[{l:"إجمالي المصاريف",v:`${totalExp.toLocaleString()} ر`,c:"#FBBF24"},{l:"نصيب الفرد",v:`${perPerson.toLocaleString()} ر`,c:"#34D399"},{l:"الأعضاء",v:g.members.length,c:"#4A8FFF"},{l:"المهام المنجزة",v:`${g.tasks.filter(t=>t.done).length}/${g.tasks.length}`,c:"#A78BFA"}].map((s,i)=>(
+                <div key={i} style={{background:T.glassFill,border:`1px solid ${T.line}`,borderRadius:10,padding:"10px",textAlign:"center"}}>
+                  <div style={{fontSize:16,fontWeight:800,color:s.c}}>{s.v}</div>
+                  <div style={{fontSize:10,color:T.faint,marginTop:2}}>{s.l}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* الأعضاء */}
+            <div style={{fontSize:11,color:T.faint,fontWeight:600,marginBottom:6,letterSpacing:1}}>الأعضاء</div>
+            {g.members.length === 0 ? (
+              <div style={{color:T.faint,fontSize:12,textAlign:"center",padding:"16px",background:T.pillFill,borderRadius:10,border:`1px dashed ${T.line}`}}>لا يوجد أعضاء بعد</div>
+            ) : g.members.map(m=>{
+              const owes = perPerson - m.paid;
+              return (
+                <div key={m.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 0",borderBottom:`1px solid ${T.line}`}}>
+                  <div style={{width:28,height:28,borderRadius:"50%",background:`${m.color}20`,border:`1.5px solid ${m.color}50`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:m.color,flexShrink:0}}>{m.avatar}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:12,fontWeight:600,color:T.text}}>{m.name}</div>
+                    <div style={{fontSize:10,color:T.faint}}>دفع: {m.paid.toLocaleString()} ر</div>
+                  </div>
+                  <div style={{fontSize:11,fontWeight:700,color:owes>0?"#F87171":"#34D399"}}>{owes>0?`-${owes} ر`:`+${Math.abs(owes)} ر`}</div>
+                </div>
+              );
+            })}
+            <button style={{width:"100%",marginTop:8,background:"transparent",border:`1px dashed ${T.line}`,borderRadius:8,padding:"8px",color:T.faint,cursor:"pointer",fontFamily:"inherit",fontSize:11}}>+ إضافة عضو</button>
+          </div>}
+
+          {/* الجدول */}
+          {groupTab===1 && <div>
+            {g.schedule.length === 0 ? (
+              <div style={{color:T.faint,fontSize:12,textAlign:"center",padding:"20px",background:T.pillFill,borderRadius:10,border:`1px dashed ${T.line}`}}>لا يوجد جدول بعد<br/><span style={{fontSize:10,marginTop:4,display:"block"}}>اسأل مرن AI ينظّم لكم جدولاً كاملاً</span></div>
+            ) : g.schedule.map((day,di)=>(
+              <div key={di} style={{marginBottom:14}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+                  <div style={{width:22,height:22,borderRadius:6,background:"linear-gradient(135deg,#0F2060,#2A5ED8)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,color:"#fff"}}>{day.day}</div>
+                  <div style={{fontSize:12,fontWeight:700,color:T.text}}>{day.title}</div>
+                </div>
+                <div style={{background:T.glassFill,borderRadius:10,border:`1px solid ${T.line}`,overflow:"hidden"}}>
+                  {day.items.map((item,ii)=>(
+                    <div key={ii} style={{display:"flex",gap:10,padding:"9px 12px",borderBottom:ii<day.items.length-1?`1px solid ${T.line}`:"none",alignItems:"center"}}>
+                      <div style={{fontSize:10,color:T.accentBlue||"#2A5ED8",fontWeight:700,minWidth:38,fontFamily:"monospace"}}>{item.time}</div>
+                      <div style={{fontSize:12,color:T.text}}>{item.activity}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <button style={{width:"100%",background:"linear-gradient(135deg,#0F2060,#2A5ED8)",border:"none",borderRadius:10,padding:"10px",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:12}}>+ إضافة نشاط</button>
+          </div>}
+
+          {/* المصاريف */}
+          {groupTab===2 && <div>
+            {g.expenses.map((exp,i)=>{
+              const payer = g.members.find(m=>m.id===exp.paidBy);
+              return (
+                <div key={exp.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:T.glassFill,border:`1px solid ${T.line}`,borderRadius:10,marginBottom:8}}>
+                  <div style={{width:32,height:32,borderRadius:8,background:`${CAT_COLORS[exp.category]||T.sub}18`,border:`1px solid ${CAT_COLORS[exp.category]||T.sub}30`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>
+                    {exp.category==="إقامة"?"🏨":exp.category==="مواصلات"?"✈️":exp.category==="طعام"?"🍽️":"🎯"}
+                  </div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:12,color:T.text,fontWeight:500}}>{exp.desc}</div>
+                    <div style={{fontSize:10,color:T.faint}}>دفع: {payer?.name||"—"}</div>
+                  </div>
+                  <div style={{textAlign:"center"}}>
+                    <div style={{fontSize:13,fontWeight:800,color:"#FBBF24"}}>{exp.amount.toLocaleString()} ر</div>
+                    <div style={{fontSize:9,color:CAT_COLORS[exp.category]||T.faint}}>{exp.category}</div>
+                  </div>
+                </div>
+              );
+            })}
+            <button style={{width:"100%",background:"linear-gradient(135deg,#0F2060,#2A5ED8)",border:"none",borderRadius:10,padding:"10px",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:12}}>+ إضافة مصروف</button>
+          </div>}
+
+          {/* المهام */}
+          {groupTab===3 && <div>
+            {g.tasks.map((task,i)=>{
+              const owner = g.members.find(m=>m.id===task.owner);
+              return (
+                <div key={task.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:`1px solid ${T.line}`}}>
+                  <div style={{width:20,height:20,borderRadius:"50%",flexShrink:0,background:task.done?"rgba(52,211,153,0.15)":T.pillFill,border:`1.5px solid ${task.done?"#34D399":T.line}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"#34D399",cursor:"pointer"}}>{task.done?"✓":""}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:12,color:task.done?T.faint:T.text,textDecoration:task.done?"line-through":"none"}}>{task.text}</div>
+                    {owner&&<div style={{fontSize:10,color:T.faint,marginTop:2}}>{owner.name}</div>}
+                  </div>
+                  {!task.done&&!owner&&<span style={{fontSize:9,color:T.faint,background:T.pillFill,padding:"2px 6px",borderRadius:8,border:`1px solid ${T.line}`}}>غير مُسند</span>}
+                </div>
+              );
+            })}
+            <button style={{width:"100%",marginTop:10,background:"linear-gradient(135deg,#0F2060,#2A5ED8)",border:"none",borderRadius:10,padding:"10px",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:12}}>+ إضافة مهمة</button>
+          </div>}
+
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }
 
 /* ============ MicButton ============ */
