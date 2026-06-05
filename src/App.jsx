@@ -2707,8 +2707,99 @@ function GroupsApp({ T, t, F, isRTL, dark, onBack }) {
   const [screen, setScreen] = useState("list"); // list | create | join | group
   const [activeGroup, setActiveGroup] = useState(null);
   const [groupTab, setGroupTab] = useState(0);
-  const [groups, setGroups] = useState([DEMO_G]);
+  const [groups, setGroups] = useState([]);
   const [form, setForm] = useState({name:"",type:"سفرية",dest:"",days:"3",joinCode:""});
+  const [newMember, setNewMember] = useState({name:"",budget:""});
+  const [newExpense, setNewExpense] = useState({desc:"",amount:"",paidBy:"",category:"إقامة"});
+  const [newTask, setNewTask] = useState({text:"",owner:""});
+  const [newActivity, setNewActivity] = useState({day:1,time:"",act:""});
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [showAddExpense, setShowAddExpense] = useState(false);
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [showAddActivity, setShowAddActivity] = useState(false);
+
+  // دوال التعديل
+  const updateGroup = (updatedG) => {
+    setGroups(prev => prev.map(g => g.id === updatedG.id ? updatedG : g));
+    setActiveGroup(updatedG);
+  };
+
+  const addMember = () => {
+    if (!newMember.name.trim()) return;
+    const colors = ["#4A8FFF","#34D399","#F87171","#FBBF24","#A78BFA","#38BDF8"];
+    const m = {
+      id: Date.now(), name: newMember.name.trim(),
+      initials: newMember.name.trim().slice(0,2),
+      budget: parseInt(newMember.budget)||0, paid: 0,
+      color: colors[activeGroup.members.length % colors.length],
+    };
+    const updated = {...activeGroup, members: [...activeGroup.members, m]};
+    updateGroup(updated);
+    setNewMember({name:"",budget:""});
+    setShowAddMember(false);
+  };
+
+  const addExpense = () => {
+    if (!newExpense.desc.trim() || !newExpense.amount) return;
+    const payer = activeGroup.members.find(m=>m.id===parseInt(newExpense.paidBy));
+    const exp = {
+      id: Date.now(), desc: newExpense.desc.trim(),
+      amount: parseInt(newExpense.amount)||0,
+      paidBy: parseInt(newExpense.paidBy)||0,
+      category: newExpense.category,
+    };
+    // نحدّث paid للعضو الدافع
+    const updatedMembers = activeGroup.members.map(m =>
+      m.id === exp.paidBy ? {...m, paid: m.paid + exp.amount} : m
+    );
+    const updated = {
+      ...activeGroup,
+      expenses: [...activeGroup.expenses, exp],
+      members: updatedMembers,
+    };
+    updateGroup(updated);
+    setNewExpense({desc:"",amount:"",paidBy:"",category:"إقامة"});
+    setShowAddExpense(false);
+  };
+
+  const addTask = () => {
+    if (!newTask.text.trim()) return;
+    const task = {
+      id: Date.now(), text: newTask.text.trim(),
+      done: false, owner: parseInt(newTask.owner)||null,
+    };
+    const updated = {...activeGroup, tasks: [...activeGroup.tasks, task]};
+    updateGroup(updated);
+    setNewTask({text:"",owner:""});
+    setShowAddTask(false);
+  };
+
+  const toggleTask = (taskId) => {
+    const updated = {
+      ...activeGroup,
+      tasks: activeGroup.tasks.map(t => t.id===taskId ? {...t, done:!t.done} : t)
+    };
+    updateGroup(updated);
+  };
+
+  const addActivity = () => {
+    if (!newActivity.act.trim()) return;
+    const dayIdx = activeGroup.schedule.findIndex(d=>d.day===newActivity.day);
+    let newSchedule = [...activeGroup.schedule];
+    if (dayIdx >= 0) {
+      newSchedule[dayIdx] = {
+        ...newSchedule[dayIdx],
+        items: [...newSchedule[dayIdx].items, {time:newActivity.time||"--:--",act:newActivity.act}]
+      };
+    } else {
+      newSchedule.push({day:newActivity.day, title:`اليوم ${newActivity.day}`, items:[{time:newActivity.time||"--:--",act:newActivity.act}]});
+      newSchedule.sort((a,b)=>a.day-b.day);
+    }
+    const updated = {...activeGroup, schedule: newSchedule};
+    updateGroup(updated);
+    setNewActivity({day:1,time:"",act:""});
+    setShowAddActivity(false);
+  };
 
   const S = {
     bg:       dark?"#090F22":"#F7F9FF",
@@ -2979,7 +3070,7 @@ function GroupsApp({ T, t, F, isRTL, dark, onBack }) {
               <div style={{background:S.surface,borderRadius:16,border:`1px solid ${S.border}`,padding:"14px 16px"}}>
                 <div style={{fontSize:10,color:S.faint,fontWeight:700,letterSpacing:1.2,marginBottom:12,textTransform:"uppercase",display:"flex",justifyContent:"space-between"}}>
                   الأعضاء
-                  <span style={{color:S.blue,letterSpacing:0,textTransform:"none",cursor:"pointer"}}>+ إضافة</span>
+                  <span onClick={()=>setShowAddMember(!showAddMember)} style={{color:S.blue,letterSpacing:0,textTransform:"none",cursor:"pointer",fontSize:12}}>+ إضافة</span>
                 </div>
                 {g.members.length===0 ? (
                   <div style={{textAlign:"center",padding:"16px",color:S.faint,fontSize:12}}>لا يوجد أعضاء بعد</div>
@@ -3000,6 +3091,16 @@ function GroupsApp({ T, t, F, isRTL, dark, onBack }) {
                     </div>
                   );
                 })}
+              {showAddMember && (
+                <div style={{padding:"12px",background:S.card,borderRadius:10,border:`1px solid ${S.line}`,marginTop:8}}>
+                  <input value={newMember.name} onChange={e=>setNewMember({...newMember,name:e.target.value})} placeholder="اسم العضو" style={{width:"100%",background:S.bg,border:`1px solid ${S.line}`,borderRadius:8,padding:"8px 10px",color:S.text,fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box",marginBottom:6,direction:"rtl"}}/>
+                  <input value={newMember.budget} onChange={e=>setNewMember({...newMember,budget:e.target.value})} placeholder="الميزانية (ريال)" type="number" style={{width:"100%",background:S.bg,border:`1px solid ${S.line}`,borderRadius:8,padding:"8px 10px",color:S.text,fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box",marginBottom:8}}/>
+                  <div style={{display:"flex",gap:6}}>
+                    <button onClick={()=>setShowAddMember(false)} style={{flex:1,background:"transparent",border:`1px solid ${S.line}`,borderRadius:7,padding:"7px",color:S.faint,cursor:"pointer",fontFamily:"inherit",fontSize:11}}>إلغاء</button>
+                    <button onClick={addMember} style={{flex:2,background:S.grad,border:"none",borderRadius:7,padding:"7px",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:600,fontSize:11}}>إضافة</button>
+                  </div>
+                </div>
+              )}
               </div>
 
               {/* تسوية المبالغ */}
@@ -3049,7 +3150,26 @@ function GroupsApp({ T, t, F, isRTL, dark, onBack }) {
                   </div>
                 </div>
               ))}
-              <button style={{width:"100%",background:S.grad,border:"none",borderRadius:12,padding:"12px",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:13,boxShadow:`0 2px 12px rgba(42,94,216,0.3)`}}>+ إضافة نشاط</button>
+              <button onClick={()=>setShowAddActivity(!showAddActivity)} style={{width:"100%",background:S.grad,border:"none",borderRadius:12,padding:"12px",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:13,boxShadow:`0 2px 12px rgba(42,94,216,0.3)`}}>+ إضافة نشاط</button>
+              {showAddActivity && (
+                <div style={{marginTop:10,padding:"14px",background:S.surface,border:`1px solid ${S.border}`,borderRadius:12}}>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+                    <div>
+                      <div style={{fontSize:10,color:S.faint,marginBottom:4}}>اليوم</div>
+                      <input value={newActivity.day} onChange={e=>setNewActivity({...newActivity,day:parseInt(e.target.value)||1})} type="number" min="1" max={g.days} style={{width:"100%",background:S.card,border:`1px solid ${S.line}`,borderRadius:8,padding:"8px 10px",color:S.text,fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box"}}/>
+                    </div>
+                    <div>
+                      <div style={{fontSize:10,color:S.faint,marginBottom:4}}>الوقت</div>
+                      <input value={newActivity.time} onChange={e=>setNewActivity({...newActivity,time:e.target.value})} type="time" style={{width:"100%",background:S.card,border:`1px solid ${S.line}`,borderRadius:8,padding:"8px 10px",color:S.text,fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box"}}/>
+                    </div>
+                  </div>
+                  <input value={newActivity.act} onChange={e=>setNewActivity({...newActivity,act:e.target.value})} placeholder="النشاط أو الفعالية" style={{width:"100%",background:S.card,border:`1px solid ${S.line}`,borderRadius:8,padding:"9px 12px",color:S.text,fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box",marginBottom:10}}/>
+                  <div style={{display:"flex",gap:8}}>
+                    <button onClick={()=>setShowAddActivity(false)} style={{flex:1,background:"transparent",border:`1px solid ${S.line}`,borderRadius:8,padding:"9px",color:S.faint,cursor:"pointer",fontFamily:"inherit"}}>إلغاء</button>
+                    <button onClick={addActivity} style={{flex:2,background:S.grad,border:"none",borderRadius:8,padding:"9px",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>إضافة</button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -3084,7 +3204,24 @@ function GroupsApp({ T, t, F, isRTL, dark, onBack }) {
                   </div>
                 );
               })}
-              <button style={{width:"100%",background:S.grad,border:"none",borderRadius:12,padding:"12px",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:700,marginTop:4,boxShadow:`0 2px 12px rgba(42,94,216,0.3)`}}>+ إضافة مصروف</button>
+              <button onClick={()=>setShowAddExpense(!showAddExpense)} style={{width:"100%",background:S.grad,border:"none",borderRadius:12,padding:"12px",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:700,marginTop:4,boxShadow:`0 2px 12px rgba(42,94,216,0.3)`}}>+ إضافة مصروف</button>
+              {showAddExpense && (
+                <div style={{marginTop:10,padding:"14px",background:S.surface,border:`1px solid ${S.border}`,borderRadius:12}}>
+                  <input value={newExpense.desc} onChange={e=>setNewExpense({...newExpense,desc:e.target.value})} placeholder="اسم المصروف" style={{width:"100%",background:S.card,border:`1px solid ${S.line}`,borderRadius:8,padding:"9px 12px",color:S.text,fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box",marginBottom:8}}/>
+                  <input value={newExpense.amount} onChange={e=>setNewExpense({...newExpense,amount:e.target.value})} placeholder="المبلغ (ريال)" type="number" style={{width:"100%",background:S.card,border:`1px solid ${S.line}`,borderRadius:8,padding:"9px 12px",color:S.text,fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box",marginBottom:8}}/>
+                  <select value={newExpense.paidBy} onChange={e=>setNewExpense({...newExpense,paidBy:e.target.value})} style={{width:"100%",background:S.card,border:`1px solid ${S.line}`,borderRadius:8,padding:"9px 12px",color:newExpense.paidBy?S.text:S.faint,fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box",marginBottom:8}}>
+                    <option value="">من دفع؟</option>
+                    {g.members.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}
+                  </select>
+                  <select value={newExpense.category} onChange={e=>setNewExpense({...newExpense,category:e.target.value})} style={{width:"100%",background:S.card,border:`1px solid ${S.line}`,borderRadius:8,padding:"9px 12px",color:S.text,fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box",marginBottom:10}}>
+                    {["إقامة","مواصلات","طعام","أنشطة","أخرى"].map(c=><option key={c}>{c}</option>)}
+                  </select>
+                  <div style={{display:"flex",gap:8}}>
+                    <button onClick={()=>setShowAddExpense(false)} style={{flex:1,background:"transparent",border:`1px solid ${S.line}`,borderRadius:8,padding:"9px",color:S.faint,cursor:"pointer",fontFamily:"inherit"}}>إلغاء</button>
+                    <button onClick={addExpense} style={{flex:2,background:S.grad,border:"none",borderRadius:8,padding:"9px",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>إضافة</button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -3096,7 +3233,7 @@ function GroupsApp({ T, t, F, isRTL, dark, onBack }) {
                   const owner = g.members.find(m=>m.id===task.owner);
                   return (
                     <div key={task.id} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",borderBottom:i<g.tasks.length-1?`1px solid ${S.border2}`:"none"}}>
-                      <div style={{width:22,height:22,borderRadius:"50%",flexShrink:0,background:task.done?"rgba(52,211,153,0.12)":S.card,border:`1.5px solid ${task.done?"#34D399":S.border}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#34D399"}}>
+                      <div style={{width:22,height:22,borderRadius:"50%",flexShrink:0,background:task.done?"rgba(52,211,153,0.12)":S.card,border:`1.5px solid ${task.done?"#34D399":S.border}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#34D399"}} onClick={()=>toggleTask(task.id)}>
                         {task.done&&<GIcon.Check/>}
                       </div>
                       <div style={{flex:1}}>
@@ -3112,7 +3249,20 @@ function GroupsApp({ T, t, F, isRTL, dark, onBack }) {
                   );
                 })}
               </div>
-              <button style={{width:"100%",background:S.grad,border:"none",borderRadius:12,padding:"12px",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:700,boxShadow:`0 2px 12px rgba(42,94,216,0.3)`}}>+ إضافة مهمة</button>
+              <button onClick={()=>setShowAddTask(!showAddTask)} style={{width:"100%",background:S.grad,border:"none",borderRadius:12,padding:"12px",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:700,boxShadow:`0 2px 12px rgba(42,94,216,0.3)`}}>+ إضافة مهمة</button>
+              {showAddTask && (
+                <div style={{marginTop:10,padding:"14px",background:S.surface,border:`1px solid ${S.border}`,borderRadius:12}}>
+                  <input value={newTask.text} onChange={e=>setNewTask({...newTask,text:e.target.value})} placeholder="المهمة..." style={{width:"100%",background:S.card,border:`1px solid ${S.line}`,borderRadius:8,padding:"9px 12px",color:S.text,fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box",marginBottom:8}}/>
+                  <select value={newTask.owner} onChange={e=>setNewTask({...newTask,owner:e.target.value})} style={{width:"100%",background:S.card,border:`1px solid ${S.line}`,borderRadius:8,padding:"9px 12px",color:newTask.owner?S.text:S.faint,fontSize:12,fontFamily:"inherit",outline:"none",boxSizing:"border-box",marginBottom:10}}>
+                    <option value="">أسند لـ... (اختياري)</option>
+                    {g.members.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}
+                  </select>
+                  <div style={{display:"flex",gap:8}}>
+                    <button onClick={()=>setShowAddTask(false)} style={{flex:1,background:"transparent",border:`1px solid ${S.line}`,borderRadius:8,padding:"9px",color:S.faint,cursor:"pointer",fontFamily:"inherit"}}>إلغاء</button>
+                    <button onClick={addTask} style={{flex:2,background:S.grad,border:"none",borderRadius:8,padding:"9px",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>إضافة</button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
