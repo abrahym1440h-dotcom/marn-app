@@ -109,8 +109,9 @@ ${isAr ? `قبل أي شيء، حدّد نوع رسالة المستخدم:
 
 **النوع الأول: محادثة / سالفة / دردشة** (تحية، مزحة، رأي، شعور، سؤال شخصي عنك، كلام عابر)
 → رُدّ بشكل ودّي طبيعي بدون بطاقات كثيرة. استخدم تبويب واحد type:"text" فيه رد دافئ يكسب القلب.
+→ ⚠️ ممنوع منعاً باتاً استخدام البحث الحي في المحادثة العادية — ارد من معرفتك مباشرة فوراً.
 أمثلة: "السلام عليكم"، "كيفك"، "شخبارك"، "احب اكلمك"، "انت ذكي"، "سولف معي"، "زهقان"، "وش رايك في..."
-في هذا النوع: تكلم كصديق سعودي، خفيف الظل، تاخذ وتعطي، تسأل عن حالهم، تمزح، تبني ود. لا تستخدم قوائم ولا إحصائيات. خليك إنسان.
+في هذا النوع: تكلم كصديق سعودي، خفيف الظل، تاخذ وتعطي، تسأل عن حالهم، تمزح، تبني ود. لا تستخدم قوائم ولا إحصائيات. خليك إنسان. ارد فوراً بدون بحث.
 
 مثال:
 المستخدم: "هلا مرن كيفك"
@@ -326,9 +327,13 @@ export default async function handler(req, res) {
   }
 
   // البحث
+  // كشف المحادثة العادية — لا بحث فيها
+  const CHAT_PATTERNS = /^(هلا|هلو|السلام|مرحبا|صباح|مساء|كيف حالك|كيفك|شخبارك|ايش|وش رايك|رأيك|سولف|سالفة|تعبت|زهقت|بخير|الحمد|ههه|هههه|😄|😂|اوه|اوك|تمام|شكرا|ممتاز|برافو|يسلموا|الله يعطيك)/i;
+  const isCasualChat = !forceSearch && CHAT_PATTERNS.test(question?.trim()) && question?.length < 60;
+
   let searchBlock = "";
   let didSearch = false;
-  if (tavilyKey && (forceSearch || needsSearch(question))) {
+  if (!isCasualChat && tavilyKey && (forceSearch || needsSearch(question))) {
     const results = await searchWeb(question, tavilyKey);
     if (results) {
       searchBlock = `\n\n===== WEB SEARCH RESULTS =====\n⚠️ AUTHORITATIVE FACTS ONLY. Follow them. Never contradict.\n${results}\n===== END =====`;
