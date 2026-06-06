@@ -312,6 +312,8 @@ export default async function handler(req, res) {
     lang = body?.lang === "en" ? "en" : "ar";
     forceSearch = body?.forceSearch === true;
     userProfile = body?.userProfile || null;
+    const imageBase64 = body?.imageBase64 || null;
+    const imageMimeType = body?.imageMimeType || "image/jpeg";
   } catch { return res.status(400).json({ error: "Bad request" }); }
   if (!question) return res.status(400).json({ error: "Question missing" });
 
@@ -336,19 +338,34 @@ export default async function handler(req, res) {
 
   // ملف المستخدم
   let profileBlock = "";
-  if (userProfile?.name || userProfile?.job || userProfile?.interests) {
-    profileBlock = `\n\n# ${lang === "ar" ? "ملف المستخدم" : "User Profile"}\n`;
+  const hasProfile = userProfile && (userProfile.name || userProfile.job || userProfile.interests || userProfile.likes || userProfile.goals);
+  if (hasProfile) {
+    profileBlock = `\n\n# ${lang === "ar" ? "ملف المستخدم — فهم حياتي" : "User Profile"}\n`;
     if (userProfile.name) profileBlock += `- ${lang === "ar" ? "الاسم" : "Name"}: ${userProfile.name}\n`;
     if (userProfile.job) profileBlock += `- ${lang === "ar" ? "المهنة" : "Job"}: ${userProfile.job}\n`;
     if (userProfile.interests) profileBlock += `- ${lang === "ar" ? "الاهتمامات" : "Interests"}: ${userProfile.interests}\n`;
+    if (userProfile.likes) profileBlock += `- ${lang === "ar" ? "يحب" : "Likes"}: ${userProfile.likes}\n`;
+    if (userProfile.dislikes) profileBlock += `- ${lang === "ar" ? "يكره" : "Dislikes"}: ${userProfile.dislikes}\n`;
+    if (userProfile.goals) profileBlock += `- ${lang === "ar" ? "أهدافه" : "Goals"}: ${userProfile.goals}\n`;
+    if (userProfile.city) profileBlock += `- ${lang === "ar" ? "مدينته" : "City"}: ${userProfile.city}\n`;
+    if (userProfile.age) profileBlock += `- ${lang === "ar" ? "عمره" : "Age"}: ${userProfile.age}\n`;
+    if (userProfile.personality) profileBlock += `- ${lang === "ar" ? "شخصيته" : "Personality"}: ${userProfile.personality}\n`;
+    if (hasProfile) profileBlock += `\n${lang === "ar" ? "استخدم هذا الملف الشخصي لتخصيص إجاباتك — خاطب المستخدم باسمه، واذكر اهتماماته عند الملاءمة، وخصّص الأمثلة لحياته." : "Use this profile to personalize your responses."}\n`;
   }
 
   const systemPrompt = buildSystemPrompt(lang, searchBlock, profileBlock, didSearch);
 
+  const userContent = imageBase64
+    ? [
+        { type: "image", source: { type: "base64", media_type: imageMimeType, data: imageBase64 } },
+        { type: "text", text: question }
+      ]
+    : question;
+
   const messages = [
     { role: "system", content: systemPrompt },
     ...history.map(h => ({ role: h.role === "user" ? "user" : "assistant", content: String(h.content || "") })),
-    { role: "user", content: question },
+    { role: "user", content: userContent },
   ];
 
   let lastError = "";
