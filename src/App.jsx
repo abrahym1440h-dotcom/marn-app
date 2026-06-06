@@ -3570,60 +3570,6 @@ function ProfileSetup({ T, F, isRTL, onSave, initial }) {
       </button>
     </div>
   );
-}) {
-  const [name, setName] = React.useState("");
-  const [job, setJob] = React.useState("");
-  const [interests, setInterests] = React.useState("");
-
-  const inputStyle = {
-    width: "100%", background: T.inputBg || T.glassFill,
-    border: `1px solid ${T.line}`, borderRadius: 9,
-    padding: "10px 13px", fontSize: F.base, color: T.text,
-    fontFamily: "inherit", outline: "none", boxSizing: "border-box",
-    direction: isRTL ? "rtl" : "ltr",
-  };
-  const labelStyle = { fontSize: F.base - 1, color: T.sub, marginBottom: 5, display: "block" };
-
-  return (
-    <div style={{
-      position: "fixed", inset: 0, background: T.modalBg,
-      zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center",
-      padding: 20,
-    }}>
-      <div style={{
-        background: T.cardBg || T.glassFill,
-        border: `1px solid ${T.glassBorder || T.line}`,
-        borderRadius: 18, padding: 28, width: "100%", maxWidth: 400,
-        boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
-      }}>
-        <div style={{ fontSize: F.h2, fontWeight: 700, color: T.text, marginBottom: 6 }}>
-          {isRTL ? "مرحباً بك في مرن" : "Welcome to Marn"}
-        </div>
-        <div style={{ fontSize: F.base - 1, color: T.sub, marginBottom: 22 }}>
-          {isRTL ? "أخبرنا عنك لنخصص تجربتك" : "Tell us about yourself"}
-        </div>
-        <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>{isRTL ? "الاسم" : "Name"}</label>
-          <input value={name} onChange={e => setName(e.target.value)} style={inputStyle} placeholder={isRTL ? "اسمك..." : "Your name..."} />
-        </div>
-        <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>{isRTL ? "المهنة" : "Job"}</label>
-          <input value={job} onChange={e => setJob(e.target.value)} style={inputStyle} placeholder={isRTL ? "مهنتك..." : "Your job..."} />
-        </div>
-        <div style={{ marginBottom: 22 }}>
-          <label style={labelStyle}>{isRTL ? "اهتماماتك" : "Interests"}</label>
-          <input value={interests} onChange={e => setInterests(e.target.value)} style={inputStyle} placeholder={isRTL ? "رياضة، تقنية، طبخ..." : "Sports, tech, cooking..."} />
-        </div>
-        <button onClick={() => onSave({ name: name.trim(), job: job.trim(), interests: interests.trim() })}
-          style={{
-            width: "100%", background: T.text, color: T.pageBg || "#fff",
-            border: "none", borderRadius: 11, padding: 13,
-            fontSize: F.base, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-          }}
-        >{isRTL ? "ابدأ الآن" : "Get Started"}</button>
-      </div>
-    </div>
-  );
 }
 
 
