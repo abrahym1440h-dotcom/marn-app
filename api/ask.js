@@ -305,7 +305,7 @@ export default async function handler(req, res) {
   if (!apiKey.startsWith("csk-")) return res.status(500).json({ error: "Invalid key" });
   const tavilyKey = (process.env.TAVILY_API_KEY || "").trim();
 
-  let question, history, lang, forceSearch, userProfile;
+  let question, history, lang, forceSearch, userProfile, imageBase64 = null, imageMimeType = "image/jpeg";
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     question = body?.question;
@@ -313,8 +313,8 @@ export default async function handler(req, res) {
     lang = body?.lang === "en" ? "en" : "ar";
     forceSearch = body?.forceSearch === true;
     userProfile = body?.userProfile || null;
-    const imageBase64 = body?.imageBase64 || null;
-    const imageMimeType = body?.imageMimeType || "image/jpeg";
+    imageBase64 = body?.imageBase64 || null;
+    imageMimeType = body?.imageMimeType || "image/jpeg";
   } catch { return res.status(400).json({ error: "Bad request" }); }
   if (!question) return res.status(400).json({ error: "Question missing" });
 
