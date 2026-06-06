@@ -3579,7 +3579,24 @@ function ProfileSetup({ T, F, isRTL, onSave, initial }) {
 /* ============ فهم حياتي — ProfileSetup المحسّن ============ */
 /* (يُستخدم ProfileSetup الحالي لكنّنا نُضيف بيانات للـ ask.js) */
 
-/* ============ OrganizerApp — المنظّم الشخصي ============ */
+/* ============ OrganizerApp — المنظّم الشخصي (نسخة محسّنة) ============ */
+
+// قوالب العادات الذكية — كل قالب يولّد عادات جاهزة
+const HABIT_TEMPLATES = [
+  { id:"prayers", name:"الصلوات الخمس", color:"#34D399", multi:["الفجر","الظهر","العصر","المغرب","العشاء"],
+    icon:(c)=><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M12 2L8 7H3l3.5 3-1.5 5L12 12l7 3-1.5-5L21 7h-5L12 2z"/></svg> },
+  { id:"quran", name:"ورد القرآن", color:"#4A8FFF", multi:null,
+    icon:(c)=><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> },
+  { id:"sport", name:"الرياضة", color:"#FBBF24", multi:null,
+    icon:(c)=><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 0 1 0 20"/></svg> },
+  { id:"water", name:"شرب الماء", color:"#38BDF8", multi:null,
+    icon:(c)=><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M12 2.7l5.7 5.6a8 8 0 1 1-11.3 0z"/></svg> },
+  { id:"read", name:"القراءة", color:"#A78BFA", multi:null,
+    icon:(c)=><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> },
+  { id:"custom", name:"عادة مخصصة", color:"#F87171", multi:null,
+    icon:(c)=><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> },
+];
+
 function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, onBack }) {
   const [tab, setTab] = useState(0);
   const [modal, setModal] = useState(null);
@@ -3587,45 +3604,59 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
   const today = new Date();
   const todayStr = today.toISOString().slice(0,10);
   const todayDay = today.getDay();
-  const WEEK_DAYS = ["أحد","اثن","ثلث","أرب","خمس","جمع","سبت"];
+  const WEEK_DAYS = ["أحد","اثنين","ثلاثاء","أربعاء","خميس","جمعة","سبت"];
+  const WEEK_SHORT = ["ح","ن","ث","ر","خ","ج","س"];
   const font = "'Noto Sans Arabic',-apple-system,sans-serif";
 
   const C = {
-    bg: dark?"#070C1A":"#F5F8FF", bg2: dark?"#0A1228":"#FFFFFF",
-    surface: dark?"#0E1832":"#FFFFFF", card: dark?"#13203F":"#F7FAFF",
-    border: dark?"#1C2C52":"#E0E8FA", border2: dark?"#152141":"#EEF2FB",
-    text: dark?"#F0F5FF":"#0A1733", sub: dark?"#8AA6D0":"#5A78A8",
-    faint: dark?"#465f8a":"#A8BFE0", blue: dark?"#5598FF":"#2A5ED8",
-    grad: "linear-gradient(135deg,#0F2060,#2A5ED8)",
-    green:"#34D399", red:"#F87171", amber:"#FBBF24", purple:"#A78BFA",
+    bg: dark?"#070C1A":"#F4F7FE", bg2: dark?"#0B1326":"#FFFFFF",
+    surface: dark?"#101B38":"#FFFFFF", card: dark?"#16244A":"#F4F8FF",
+    raised: dark?"#1C2D58":"#EAF1FF",
+    border: dark?"#22335E":"#DDE7FA", border2: dark?"#1A2848":"#EDF2FC",
+    text: dark?"#F2F6FF":"#0A1733", sub: dark?"#90ACD6":"#5A78A8",
+    faint: dark?"#54719e":"#A8BFE0", faint2: dark?"#3A5580":"",
+    blue: dark?"#5EA0FF":"#2A5ED8",
+    grad: "linear-gradient(135deg,#1A3A8F,#3B6FE5)",
+    green:"#34D399", red:"#F87171", amber:"#FBBF24", purple:"#A78BFA", cyan:"#38BDF8",
+    shadow: dark?"0 6px 28px rgba(0,0,0,0.45)":"0 6px 28px rgba(27,47,107,0.09)",
+    shadowSm: dark?"0 2px 12px rgba(0,0,0,0.35)":"0 2px 10px rgba(27,47,107,0.06)",
   };
-  const card = { background:C.surface, borderRadius:16, border:`1px solid ${C.border}` };
-  const inp = { width:"100%", background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"11px 14px", color:C.text, fontSize:14, fontFamily:font, outline:"none", boxSizing:"border-box", direction:isRTL?"rtl":"ltr" };
-  const pri = { background:C.grad, border:"none", borderRadius:12, padding:"13px", color:"#fff", cursor:"pointer", fontFamily:font, fontWeight:700, fontSize:14 };
-  const PRIORITY_COLORS = { "عاجل":C.red, "مهم":C.amber, "عادي":C.blue };
-  const HABIT_COLORS = ["#4A8FFF","#34D399","#F87171","#FBBF24","#A78BFA","#38BDF8"];
-  const HABIT_NAMES = ["الصلاة","القرآن","الرياضة","القراءة","الماء","النوم","أخرى"];
+  // إصلاح أخطاء مطبعية في الألوان
+  C.faint = dark?"#54719e":"#A8BFE0";
+
+  const card = { background:C.surface, borderRadius:18, border:`1px solid ${C.border}`, boxShadow:C.shadowSm };
+  const inp = { width:"100%", background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"13px 15px", color:C.text, fontSize:15, fontFamily:font, outline:"none", boxSizing:"border-box", direction:isRTL?"rtl":"ltr" };
+  const pri = { background:C.grad, border:"none", borderRadius:13, padding:"14px", color:"#fff", cursor:"pointer", fontFamily:font, fontWeight:700, fontSize:15, boxShadow:"0 4px 16px rgba(42,94,216,0.35)" };
+  const PRIORITY = { "عاجل":{c:C.red,bg:"rgba(248,113,113,0.12)"}, "مهم":{c:C.amber,bg:"rgba(251,191,36,0.12)"}, "عادي":{c:C.blue,bg:"rgba(74,143,255,0.12)"} };
+  const MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
 
   const update = (key, val) => setOrganizer(prev => ({...prev, [key]: val}));
 
   const openModal = (type) => {
-    setMForm({ priority:"عادي", icon:"أخرى", color:HABIT_COLORS[0], date:todayStr });
+    setMForm({ priority:"عادي", date:todayStr, template:"prayers", color:C.green });
     setModal(type);
   };
 
-  const saveModal = () => {
-    if (modal === "task") {
-      if (!mForm.text?.trim()) return;
-      update("tasks", [...(organizer.tasks||[]), { id:Date.now(), text:mForm.text.trim(), done:false, priority:mForm.priority||"عادي", date:mForm.date||todayStr }]);
-    }
-    if (modal === "habit") {
-      if (!mForm.name?.trim()) return;
-      update("habits", [...(organizer.habits||[]), { id:Date.now(), name:mForm.name.trim(), icon:mForm.icon||"أخرى", days:Array(7).fill(false), color:mForm.color||HABIT_COLORS[0], log:{} }]);
-    }
-    if (modal === "event") {
-      if (!mForm.title?.trim()) return;
-      update("events", [...(organizer.events||[]), { id:Date.now(), title:mForm.title.trim(), date:mForm.date||todayStr, time:mForm.time||"", note:mForm.note||"" }]);
-    }
+  const addTask = () => {
+    if (!mForm.text?.trim()) return;
+    update("tasks", [...(organizer.tasks||[]), { id:Date.now(), text:mForm.text.trim(), done:false, priority:mForm.priority||"عادي", date:mForm.date||todayStr }]);
+    setModal(null);
+  };
+
+  const addHabit = () => {
+    const tmpl = HABIT_TEMPLATES.find(t=>t.id===mForm.template) || HABIT_TEMPLATES[0];
+    const name = tmpl.id==="custom" ? (mForm.customName?.trim()||"عادة") : tmpl.name;
+    if (tmpl.id==="custom" && !mForm.customName?.trim()) return;
+    update("habits", [...(organizer.habits||[]), {
+      id:Date.now(), name, templateId:tmpl.id, color:tmpl.color,
+      multi: tmpl.multi || null, log:{},
+    }]);
+    setModal(null);
+  };
+
+  const addEvent = () => {
+    if (!mForm.title?.trim()) return;
+    update("events", [...(organizer.events||[]), { id:Date.now(), title:mForm.title.trim(), date:mForm.date||todayStr, time:mForm.time||"", note:mForm.note||"" }]);
     setModal(null);
   };
 
@@ -3634,146 +3665,266 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
   const delHabit = (id) => update("habits", (organizer.habits||[]).filter(h => h.id!==id));
   const delEvent = (id) => update("events", (organizer.events||[]).filter(e => e.id!==id));
 
-  const toggleHabitToday = (hId) => {
+  // تبديل عادة بسيطة (يوم كامل)
+  const toggleHabit = (hId, subKey) => {
     update("habits", (organizer.habits||[]).map(h => {
       if (h.id !== hId) return h;
-      const log = {...(h.log||{})};
-      log[todayStr] = {...(log[todayStr]||{}), [todayDay]: !(log[todayStr]||{})[todayDay] };
+      const log = JSON.parse(JSON.stringify(h.log||{}));
+      if (!log[todayStr]) log[todayStr] = h.multi ? {} : false;
+      if (h.multi) {
+        log[todayStr][subKey] = !log[todayStr][subKey];
+      } else {
+        log[todayStr] = !log[todayStr];
+      }
       return {...h, log};
     }));
   };
 
   const tasks = organizer.tasks || [];
   const habits = organizer.habits || [];
-  const events = [...(organizer.events||[])].sort((a,b)=>a.date.localeCompare(b.date));
+  const events = [...(organizer.events||[])].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
   const pending = tasks.filter(t=>!t.done);
   const done = tasks.filter(t=>t.done);
   const todayEvents = events.filter(e=>e.date===todayStr);
   const upcoming = events.filter(e=>e.date>todayStr);
   const past = events.filter(e=>e.date<todayStr);
 
-  const MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
-
   const DelBtn = ({onClick}) => (
-    <button onClick={onClick} style={{ background:"none", border:"none", color:C.faint, cursor:"pointer", padding:"4px", display:"flex", alignItems:"center" }}>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>
+    <button onClick={onClick} style={{ background:"none", border:"none", color:C.faint, cursor:"pointer", padding:"6px", display:"flex", alignItems:"center", borderRadius:8 }}>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>
     </button>
   );
 
-  const TABS = ["المهام","العادات","المواعيد"];
+  const TABS = [
+    { l:"المهام", icon:(a)=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={a} strokeWidth="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> },
+    { l:"العادات", icon:(a)=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={a} strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> },
+    { l:"المواعيد", icon:(a)=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={a} strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
+  ];
+
+  // مكوّن بطاقة الموعد
+  const EventCard = ({e, dim}) => (
+    <div style={{ display:"flex", gap:14, padding:"14px 16px", alignItems:"center", opacity:dim?0.55:1 }}>
+      <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minWidth:48, height:52, background:dim?C.card:C.grad, borderRadius:13, flexShrink:0, color:dim?C.faint:"#fff" }}>
+        <div style={{ fontSize:20, fontWeight:800, lineHeight:1 }}>{e.date.slice(8)}</div>
+        <div style={{ fontSize:9, opacity:0.9, marginTop:2 }}>{MONTHS[parseInt(e.date.slice(5,7))-1]?.slice(0,3)}</div>
+      </div>
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ fontSize:15, color:C.text, fontWeight:600 }}>{e.title}</div>
+        <div style={{ display:"flex", gap:12, marginTop:3 }}>
+          {e.time && <span style={{ fontSize:12, color:C.blue, display:"flex", alignItems:"center", gap:4, fontWeight:600 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{e.time}
+          </span>}
+          {e.note && <span style={{ fontSize:12, color:C.faint }}>{e.note}</span>}
+        </div>
+      </div>
+      <DelBtn onClick={()=>delEvent(e.id)}/>
+    </div>
+  );
 
   return (
     <div style={{ display:"flex", flexDirection:"column", height:"100dvh", background:C.bg, fontFamily:font, direction:isRTL?"rtl":"ltr", position:"relative" }}>
       {/* Header */}
-      <div style={{ height:62, display:"flex", alignItems:"center", gap:12, padding:"0 18px", borderBottom:`1px solid ${C.border}`, background:C.bg2, flexShrink:0 }}>
-        <button onClick={onBack} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:C.sub }}>
+      <div style={{ height:64, display:"flex", alignItems:"center", gap:13, padding:"0 18px", borderBottom:`1px solid ${C.border}`, background:C.bg2, flexShrink:0 }}>
+        <button onClick={onBack} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:11, width:38, height:38, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:C.sub }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
         <div style={{ flex:1 }}>
-          <div style={{ fontSize:17, fontWeight:800, color:C.text }}>المنظّم الشخصي</div>
-          {userProfile?.name && <div style={{ fontSize:11, color:C.faint }}>أهلاً {userProfile.name}</div>}
+          <div style={{ fontSize:18, fontWeight:800, color:C.text, letterSpacing:-0.3 }}>المنظّم الشخصي</div>
+          <div style={{ fontSize:11.5, color:C.faint }}>{userProfile?.name ? `أهلاً ${userProfile.name} · ` : ""}{WEEK_DAYS[todayDay]} {today.getDate()} {MONTHS[today.getMonth()]}</div>
         </div>
-        <button onClick={()=>openModal(tab===0?"task":tab===1?"habit":"event")} style={{ ...pri, padding:"9px 14px", fontSize:13, display:"flex", alignItems:"center", gap:6, borderRadius:10 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <button onClick={()=>openModal(tab===0?"task":tab===1?"habit":"event")} style={{ ...pri, padding:"10px 16px", fontSize:13.5, display:"flex", alignItems:"center", gap:7, borderRadius:12 }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           {tab===0?"مهمة":tab===1?"عادة":"موعد"}
         </button>
       </div>
 
       {/* Tabs */}
-      <div style={{ display:"flex", borderBottom:`1px solid ${C.border}`, background:C.bg2, flexShrink:0 }}>
-        {TABS.map((tb,i)=>(
-          <button key={i} onClick={()=>setTab(i)} style={{
-            flex:1, background:"none", border:"none",
-            borderBottom:`2.5px solid ${i===tab?C.blue:"transparent"}`,
-            color:i===tab?C.text:C.faint, padding:"13px 4px",
-            cursor:"pointer", fontFamily:font, fontSize:13,
-            fontWeight:i===tab?700:500, marginBottom:-1,
-          }}>{tb}</button>
-        ))}
+      <div style={{ display:"flex", padding:"10px 16px", gap:8, background:C.bg2, borderBottom:`1px solid ${C.border}`, flexShrink:0 }}>
+        {TABS.map((tb,i)=>{
+          const active = i===tab;
+          return (
+            <button key={i} onClick={()=>setTab(i)} style={{
+              flex:1, background:active?C.grad:C.card,
+              border:`1px solid ${active?"transparent":C.border}`,
+              color:active?"#fff":C.sub, padding:"11px 8px",
+              cursor:"pointer", fontFamily:font, fontSize:13, fontWeight:active?700:600,
+              borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center", gap:7,
+              transition:"all .15s", boxShadow:active?"0 3px 12px rgba(42,94,216,0.3)":"none",
+            }}>
+              {tb.icon(active?"#fff":C.faint)}{tb.l}
+            </button>
+          );
+        })}
       </div>
 
       {/* Content */}
-      <div style={{ flex:1, overflow:"auto", padding:"20px", maxWidth:640, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
+      <div style={{ flex:1, overflow:"auto", padding:"18px 16px 30px", maxWidth:660, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
 
-        {/* المهام */}
+        {/* ===== المهام ===== */}
         {tab===0 && (
           <div>
+            {/* ملخص */}
+            {tasks.length>0 && (
+              <div style={{ display:"flex", gap:10, marginBottom:16 }}>
+                <div style={{ flex:1, ...card, padding:"14px", textAlign:"center" }}>
+                  <div style={{ fontSize:24, fontWeight:800, color:C.amber }}>{pending.length}</div>
+                  <div style={{ fontSize:11, color:C.faint, marginTop:2 }}>معلّقة</div>
+                </div>
+                <div style={{ flex:1, ...card, padding:"14px", textAlign:"center" }}>
+                  <div style={{ fontSize:24, fontWeight:800, color:C.green }}>{done.length}</div>
+                  <div style={{ fontSize:11, color:C.faint, marginTop:2 }}>منجزة</div>
+                </div>
+                <div style={{ flex:1, ...card, padding:"14px", textAlign:"center" }}>
+                  <div style={{ fontSize:24, fontWeight:800, color:C.blue }}>{tasks.length?Math.round(done.length/tasks.length*100):0}%</div>
+                  <div style={{ fontSize:11, color:C.faint, marginTop:2 }}>الإنجاز</div>
+                </div>
+              </div>
+            )}
+
             {tasks.length===0 ? (
-              <div style={{ ...card, padding:"40px 24px", textAlign:"center" }}>
-                <div style={{ fontSize:15, fontWeight:600, color:C.sub, marginBottom:6 }}>لا توجد مهام بعد</div>
-                <div style={{ fontSize:12, color:C.faint }}>اضغط + مهمة لإضافة مهمتك الأولى</div>
+              <div style={{ ...card, padding:"50px 24px", textAlign:"center" }}>
+                <div style={{ width:60, height:60, borderRadius:16, background:C.card, border:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", color:C.blue }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                </div>
+                <div style={{ fontSize:16, fontWeight:700, color:C.text, marginBottom:6 }}>لا توجد مهام</div>
+                <div style={{ fontSize:13, color:C.faint }}>اضغط زر + مهمة لإضافة مهمتك الأولى</div>
               </div>
             ) : (
               <div>
-                {pending.length > 0 && (
-                  <div style={{ ...card, overflow:"hidden", marginBottom:12 }}>
-                    <div style={{ padding:"10px 16px", borderBottom:`1px solid ${C.border2}`, fontSize:10, color:C.faint, fontWeight:700, letterSpacing:1 }}>المعلقة ({pending.length})</div>
-                    {pending.map((t,i)=>(
-                      <div key={t.id} style={{ display:"flex", alignItems:"center", gap:11, padding:"12px 16px", borderBottom:i<pending.length-1?`1px solid ${C.border2}`:"none" }}>
-                        <div onClick={()=>toggleTask(t.id)} style={{ width:22, height:22, borderRadius:"50%", border:`2px solid ${C.border}`, background:C.card, cursor:"pointer", flexShrink:0 }}/>
-                        <div style={{ flex:1 }}>
-                          <div style={{ fontSize:14, color:C.text }}>{t.text}</div>
-                          <div style={{ fontSize:11, color:C.faint, marginTop:2 }}>{t.date===todayStr?"اليوم":t.date}</div>
+                {pending.length>0 && (
+                  <>
+                    <div style={{ fontSize:11, color:C.faint, fontWeight:700, letterSpacing:1, marginBottom:10, paddingRight:4 }}>المعلّقة</div>
+                    {pending.map(t=>{
+                      const pr = PRIORITY[t.priority]||PRIORITY["عادي"];
+                      return (
+                        <div key={t.id} style={{ ...card, display:"flex", alignItems:"center", gap:13, padding:"15px 16px", marginBottom:9, borderRight:`3px solid ${pr.c}` }}>
+                          <div onClick={()=>toggleTask(t.id)} style={{ width:24, height:24, borderRadius:8, border:`2px solid ${C.border}`, background:C.card, cursor:"pointer", flexShrink:0 }}/>
+                          <div style={{ flex:1 }}>
+                            <div style={{ fontSize:15, color:C.text, fontWeight:500 }}>{t.text}</div>
+                            <div style={{ fontSize:12, color:C.faint, marginTop:3 }}>{t.date===todayStr?"اليوم":t.date}</div>
+                          </div>
+                          <span style={{ fontSize:11, color:pr.c, background:pr.bg, padding:"4px 11px", borderRadius:9, fontWeight:700, flexShrink:0 }}>{t.priority}</span>
+                          <DelBtn onClick={()=>delTask(t.id)}/>
                         </div>
-                        <span style={{ fontSize:10, color:PRIORITY_COLORS[t.priority]||C.blue, background:`${PRIORITY_COLORS[t.priority]||C.blue}15`, padding:"3px 9px", borderRadius:8, flexShrink:0 }}>{t.priority}</span>
-                        <DelBtn onClick={()=>delTask(t.id)}/>
-                      </div>
-                    ))}
-                  </div>
+                      );
+                    })}
+                  </>
                 )}
-                {done.length > 0 && (
-                  <div style={{ ...card, overflow:"hidden", opacity:0.65 }}>
-                    <div style={{ padding:"10px 16px", borderBottom:`1px solid ${C.border2}`, fontSize:10, color:C.faint, fontWeight:700, letterSpacing:1 }}>منجزة ({done.length})</div>
-                    {done.map((t,i)=>(
-                      <div key={t.id} style={{ display:"flex", alignItems:"center", gap:11, padding:"12px 16px", borderBottom:i<done.length-1?`1px solid ${C.border2}`:"none" }}>
-                        <div onClick={()=>toggleTask(t.id)} style={{ width:22, height:22, borderRadius:"50%", border:"2px solid #34D399", background:"rgba(52,211,153,0.15)", cursor:"pointer", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", color:"#34D399" }}>
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {done.length>0 && (
+                  <>
+                    <div style={{ fontSize:11, color:C.faint, fontWeight:700, letterSpacing:1, margin:"18px 0 10px", paddingRight:4 }}>المنجزة</div>
+                    {done.map(t=>(
+                      <div key={t.id} style={{ ...card, display:"flex", alignItems:"center", gap:13, padding:"15px 16px", marginBottom:9, opacity:0.6 }}>
+                        <div onClick={()=>toggleTask(t.id)} style={{ width:24, height:24, borderRadius:8, border:"2px solid #34D399", background:"rgba(52,211,153,0.18)", cursor:"pointer", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", color:"#34D399" }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
                         </div>
-                        <div style={{ flex:1, fontSize:13, color:C.faint, textDecoration:"line-through" }}>{t.text}</div>
+                        <div style={{ flex:1, fontSize:14, color:C.faint, textDecoration:"line-through" }}>{t.text}</div>
                         <DelBtn onClick={()=>delTask(t.id)}/>
                       </div>
                     ))}
-                  </div>
+                  </>
                 )}
               </div>
             )}
           </div>
         )}
 
-        {/* العادات */}
+        {/* ===== العادات ===== */}
         {tab===1 && (
           <div>
             {habits.length===0 ? (
-              <div style={{ ...card, padding:"40px 24px", textAlign:"center" }}>
-                <div style={{ fontSize:15, fontWeight:600, color:C.sub, marginBottom:6 }}>لا توجد عادات بعد</div>
-                <div style={{ fontSize:12, color:C.faint }}>تتبّع صلاتك، قراءتك، رياضتك يومياً</div>
+              <div style={{ ...card, padding:"50px 24px", textAlign:"center" }}>
+                <div style={{ width:60, height:60, borderRadius:16, background:C.card, border:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", color:C.green }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                </div>
+                <div style={{ fontSize:16, fontWeight:700, color:C.text, marginBottom:6 }}>لا توجد عادات</div>
+                <div style={{ fontSize:13, color:C.faint }}>تتبّع صلواتك وقراءتك ورياضتك يومياً</div>
               </div>
             ) : habits.map(h => {
-              const todayDone = (h.log||{})[todayStr]?.[todayDay] || false;
-              const totalDone = Object.values(h.log||{}).filter(d=>d[todayDay]).length;
+              const log = h.log||{};
+              const todayLog = log[todayStr];
+              // حساب نسبة الإنجاز اليوم
+              let todayDone, todayTotal, pct;
+              if (h.multi) {
+                todayTotal = h.multi.length;
+                todayDone = h.multi.filter(s => todayLog?.[s]).length;
+                pct = Math.round(todayDone/todayTotal*100);
+              } else {
+                todayTotal = 1;
+                todayDone = todayLog ? 1 : 0;
+                pct = todayDone*100;
+              }
+              // streak — أيام متتالية
+              const streak = Object.keys(log).filter(d => {
+                const v = log[d];
+                return h.multi ? Object.values(v||{}).filter(Boolean).length>0 : v;
+              }).length;
+
               return (
-                <div key={h.id} style={{ ...card, padding:"16px 18px", marginBottom:10 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
-                    <div style={{ width:40, height:40, borderRadius:11, background:`${h.color}18`, border:`1px solid ${h.color}35`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                      <span style={{ fontSize:18, color:h.color, fontWeight:700 }}>{h.icon.slice(0,1)}</span>
+                <div key={h.id} style={{ ...card, padding:"18px", marginBottom:12 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:13, marginBottom:h.multi?16:14 }}>
+                    <div style={{ width:46, height:46, borderRadius:13, background:`${h.color}1A`, border:`1px solid ${h.color}40`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                      {(HABIT_TEMPLATES.find(t=>t.id===h.templateId)||HABIT_TEMPLATES[5]).icon(h.color)}
                     </div>
                     <div style={{ flex:1 }}>
-                      <div style={{ fontSize:14, fontWeight:600, color:C.text }}>{h.name}</div>
-                      <div style={{ fontSize:11, color:C.faint }}>التزمت {totalDone} يوم</div>
+                      <div style={{ fontSize:16, fontWeight:700, color:C.text }}>{h.name}</div>
+                      <div style={{ fontSize:12, color:C.faint, marginTop:2 }}>
+                        {streak>0 ? `${streak} يوم نشاط` : "ابدأ اليوم"}
+                        {h.multi && ` · ${todayDone}/${todayTotal} اليوم`}
+                      </div>
                     </div>
-                    <div onClick={()=>toggleHabitToday(h.id)} style={{ width:36, height:36, borderRadius:"50%", background:todayDone?`${h.color}20`:C.card, border:`2px solid ${todayDone?h.color:C.border}`, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:h.color }}>
-                      {todayDone && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>}
-                    </div>
+                    {!h.multi && (
+                      <div onClick={()=>toggleHabit(h.id)} style={{ width:42, height:42, borderRadius:"50%", background:todayDone?h.color:C.card, border:`2px solid ${todayDone?h.color:C.border}`, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"#fff", flexShrink:0, transition:"all .2s" }}>
+                        {todayDone ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg> : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.faint} strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>}
+                      </div>
+                    )}
                     <DelBtn onClick={()=>delHabit(h.id)}/>
                   </div>
-                  <div style={{ display:"flex", gap:5 }}>
-                    {WEEK_DAYS.map((d,i)=>{
-                      const isDone = (h.log||{})[todayStr]?.[i] || false;
-                      const isToday = i===todayDay;
+
+                  {/* للعادات المتعددة (الصلوات) — أزرار فرعية */}
+                  {h.multi && (
+                    <div style={{ display:"flex", gap:7, marginBottom:14 }}>
+                      {h.multi.map(sub => {
+                        const checked = todayLog?.[sub];
+                        return (
+                          <button key={sub} onClick={()=>toggleHabit(h.id, sub)} style={{
+                            flex:1, background:checked?h.color:C.card,
+                            border:`1.5px solid ${checked?h.color:C.border}`,
+                            borderRadius:11, padding:"10px 4px", cursor:"pointer", fontFamily:font,
+                            color:checked?"#fff":C.sub, fontSize:11.5, fontWeight:checked?700:500,
+                            transition:"all .15s", display:"flex", flexDirection:"column", alignItems:"center", gap:4,
+                          }}>
+                            {checked ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg> : <div style={{ width:13, height:13, borderRadius:"50%", border:`1.5px solid ${C.faint}` }}/>}
+                            {sub}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* شريط التقدم */}
+                  <div style={{ height:8, background:C.card, borderRadius:4, overflow:"hidden" }}>
+                    <div style={{ height:"100%", width:`${pct}%`, background:h.color, borderRadius:4, transition:"width .4s" }}/>
+                  </div>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginTop:8 }}>
+                    <span style={{ fontSize:11, color:C.faint }}>تقدّم اليوم</span>
+                    <span style={{ fontSize:11, color:h.color, fontWeight:700 }}>{pct}%</span>
+                  </div>
+
+                  {/* آخر 7 أيام */}
+                  <div style={{ display:"flex", gap:5, marginTop:14 }}>
+                    {Array.from({length:7}).map((_,i)=>{
+                      const d = new Date(today); d.setDate(d.getDate()-(6-i));
+                      const ds = d.toISOString().slice(0,10);
+                      const v = log[ds];
+                      const dayDone = h.multi ? Object.values(v||{}).filter(Boolean).length>0 : !!v;
+                      const isToday = ds===todayStr;
                       return (
                         <div key={i} style={{ flex:1, textAlign:"center" }}>
-                          <div style={{ fontSize:9, color:isToday?C.blue:C.faint, marginBottom:4, fontWeight:isToday?700:400 }}>{d}</div>
-                          <div style={{ height:6, borderRadius:3, background:isDone?h.color:isToday?`${h.color}30`:C.card, border:`1px solid ${isToday?h.color:C.border}` }}/>
+                          <div style={{ fontSize:9, color:isToday?h.color:C.faint, marginBottom:5, fontWeight:isToday?700:400 }}>{WEEK_SHORT[d.getDay()]}</div>
+                          <div style={{ height:24, borderRadius:7, background:dayDone?h.color:C.card, border:`1px solid ${isToday?h.color:C.border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                            {dayDone && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                          </div>
                         </div>
                       );
                     })}
@@ -3784,70 +3935,42 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
           </div>
         )}
 
-        {/* المواعيد */}
+        {/* ===== المواعيد ===== */}
         {tab===2 && (
           <div>
             {events.length===0 ? (
-              <div style={{ ...card, padding:"40px 24px", textAlign:"center" }}>
-                <div style={{ fontSize:15, fontWeight:600, color:C.sub, marginBottom:6 }}>لا توجد مواعيد</div>
-                <div style={{ fontSize:12, color:C.faint }}>أضف مواعيدك وأحداثك القادمة</div>
+              <div style={{ ...card, padding:"50px 24px", textAlign:"center" }}>
+                <div style={{ width:60, height:60, borderRadius:16, background:C.card, border:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", color:C.blue }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+                <div style={{ fontSize:16, fontWeight:700, color:C.text, marginBottom:6 }}>لا توجد مواعيد</div>
+                <div style={{ fontSize:13, color:C.faint }}>أضف مواعيدك وأحداثك القادمة</div>
               </div>
             ) : (
               <div>
                 {todayEvents.length>0 && (
-                  <div style={{ ...card, overflow:"hidden", marginBottom:12 }}>
-                    <div style={{ padding:"10px 16px", borderBottom:`1px solid ${C.border2}`, fontSize:10, color:C.green, fontWeight:700, letterSpacing:1 }}>اليوم</div>
-                    {todayEvents.map((e,i)=>(
-                      <div key={e.id} style={{ display:"flex", gap:13, padding:"13px 16px", borderBottom:i<todayEvents.length-1?`1px solid ${C.border2}`:"none", alignItems:"center" }}>
-                        <div style={{ textAlign:"center", minWidth:34, flexShrink:0 }}>
-                          <div style={{ fontSize:18, fontWeight:800, color:C.blue, lineHeight:1 }}>{e.date.slice(8)}</div>
-                          <div style={{ fontSize:9, color:C.faint }}>{MONTHS[parseInt(e.date.slice(5,7))-1]?.slice(0,3)}</div>
-                        </div>
-                        <div style={{ flex:1 }}>
-                          <div style={{ fontSize:14, color:C.text, fontWeight:600 }}>{e.title}</div>
-                          {e.time && <div style={{ fontSize:11, color:C.blue, marginTop:2 }}>{e.time}</div>}
-                          {e.note && <div style={{ fontSize:11, color:C.faint, marginTop:2 }}>{e.note}</div>}
-                        </div>
-                        <DelBtn onClick={()=>delEvent(e.id)}/>
-                      </div>
-                    ))}
-                  </div>
+                  <>
+                    <div style={{ fontSize:11, color:C.green, fontWeight:700, letterSpacing:1, marginBottom:10, paddingRight:4 }}>اليوم</div>
+                    <div style={{ ...card, overflow:"hidden", marginBottom:16 }}>
+                      {todayEvents.map((e,i)=><div key={e.id} style={{ borderBottom:i<todayEvents.length-1?`1px solid ${C.border2}`:"none" }}><EventCard e={e}/></div>)}
+                    </div>
+                  </>
                 )}
                 {upcoming.length>0 && (
-                  <div style={{ ...card, overflow:"hidden", marginBottom:12 }}>
-                    <div style={{ padding:"10px 16px", borderBottom:`1px solid ${C.border2}`, fontSize:10, color:C.blue, fontWeight:700, letterSpacing:1 }}>القادمة</div>
-                    {upcoming.map((e,i)=>(
-                      <div key={e.id} style={{ display:"flex", gap:13, padding:"13px 16px", borderBottom:i<upcoming.length-1?`1px solid ${C.border2}`:"none", alignItems:"center" }}>
-                        <div style={{ textAlign:"center", minWidth:34, flexShrink:0 }}>
-                          <div style={{ fontSize:18, fontWeight:800, color:C.blue, lineHeight:1 }}>{e.date.slice(8)}</div>
-                          <div style={{ fontSize:9, color:C.faint }}>{MONTHS[parseInt(e.date.slice(5,7))-1]?.slice(0,3)}</div>
-                        </div>
-                        <div style={{ flex:1 }}>
-                          <div style={{ fontSize:14, color:C.text, fontWeight:600 }}>{e.title}</div>
-                          {e.time && <div style={{ fontSize:11, color:C.blue, marginTop:2 }}>{e.time}</div>}
-                          {e.note && <div style={{ fontSize:11, color:C.faint, marginTop:2 }}>{e.note}</div>}
-                        </div>
-                        <DelBtn onClick={()=>delEvent(e.id)}/>
-                      </div>
-                    ))}
-                  </div>
+                  <>
+                    <div style={{ fontSize:11, color:C.blue, fontWeight:700, letterSpacing:1, marginBottom:10, paddingRight:4 }}>القادمة</div>
+                    <div style={{ ...card, overflow:"hidden", marginBottom:16 }}>
+                      {upcoming.map((e,i)=><div key={e.id} style={{ borderBottom:i<upcoming.length-1?`1px solid ${C.border2}`:"none" }}><EventCard e={e}/></div>)}
+                    </div>
+                  </>
                 )}
                 {past.length>0 && (
-                  <div style={{ ...card, overflow:"hidden", opacity:0.6 }}>
-                    <div style={{ padding:"10px 16px", borderBottom:`1px solid ${C.border2}`, fontSize:10, color:C.faint, fontWeight:700, letterSpacing:1 }}>الماضية</div>
-                    {past.map((e,i)=>(
-                      <div key={e.id} style={{ display:"flex", gap:13, padding:"12px 16px", borderBottom:i<past.length-1?`1px solid ${C.border2}`:"none", alignItems:"center" }}>
-                        <div style={{ textAlign:"center", minWidth:34, flexShrink:0 }}>
-                          <div style={{ fontSize:18, fontWeight:800, color:C.faint, lineHeight:1 }}>{e.date.slice(8)}</div>
-                          <div style={{ fontSize:9, color:C.faint }}>{MONTHS[parseInt(e.date.slice(5,7))-1]?.slice(0,3)}</div>
-                        </div>
-                        <div style={{ flex:1 }}>
-                          <div style={{ fontSize:14, color:C.faint, fontWeight:500 }}>{e.title}</div>
-                        </div>
-                        <DelBtn onClick={()=>delEvent(e.id)}/>
-                      </div>
-                    ))}
-                  </div>
+                  <>
+                    <div style={{ fontSize:11, color:C.faint, fontWeight:700, letterSpacing:1, marginBottom:10, paddingRight:4 }}>الماضية</div>
+                    <div style={{ ...card, overflow:"hidden" }}>
+                      {past.map((e,i)=><div key={e.id} style={{ borderBottom:i<past.length-1?`1px solid ${C.border2}`:"none" }}><EventCard e={e} dim/></div>)}
+                    </div>
+                  </>
                 )}
               </div>
             )}
@@ -3855,59 +3978,85 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
         )}
       </div>
 
-      {/* Modal — bottom sheet */}
+      {/* ===== Modal ===== */}
       {modal && (
-        <div style={{ position:"fixed", inset:0, zIndex:200 }}>
-          <div onClick={()=>setModal(null)} style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.6)", backdropFilter:"blur(2px)" }}/>
-          <div style={{ position:"absolute", left:"50%", bottom:0, transform:"translateX(-50%)", width:"100%", maxWidth:500, background:C.bg2, borderRadius:"20px 20px 0 0", border:`1px solid ${C.border}`, borderBottom:"none", padding:"22px 20px 30px", boxSizing:"border-box" }}>
-            <div style={{ width:40, height:4, background:C.border, borderRadius:2, margin:"0 auto 18px" }}/>
-            <div style={{ fontSize:16, fontWeight:700, color:C.text, marginBottom:18 }}>
+        <div style={{ position:"fixed", inset:0, zIndex:300 }}>
+          <div onClick={()=>setModal(null)} style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.65)", backdropFilter:"blur(3px)" }}/>
+          <div style={{ position:"absolute", left:"50%", bottom:0, transform:"translateX(-50%)", width:"100%", maxWidth:520, background:C.bg2, borderRadius:"24px 24px 0 0", border:`1px solid ${C.border}`, borderBottom:"none", padding:"24px 22px 32px", boxSizing:"border-box", boxShadow:"0 -10px 40px rgba(0,0,0,0.4)" }}>
+            <div style={{ width:44, height:5, background:C.border, borderRadius:3, margin:"0 auto 22px" }}/>
+            <div style={{ fontSize:18, fontWeight:800, color:C.text, marginBottom:20 }}>
               {modal==="task"?"مهمة جديدة":modal==="habit"?"عادة جديدة":"موعد جديد"}
             </div>
 
             {modal==="task" && (
               <div>
-                <input autoFocus value={mForm.text||""} onChange={e=>setMForm({...mForm,text:e.target.value})} placeholder="المهمة..." style={{ ...inp, marginBottom:10 }}/>
-                <input value={mForm.date||""} onChange={e=>setMForm({...mForm,date:e.target.value})} type="date" style={{ ...inp, marginBottom:12 }}/>
-                <div style={{ display:"flex", gap:7 }}>
-                  {["عاجل","مهم","عادي"].map(p=>(
-                    <button key={p} onClick={()=>setMForm({...mForm,priority:p})} style={{ flex:1, background:mForm.priority===p?`${PRIORITY_COLORS[p]}20`:C.card, border:`1.5px solid ${mForm.priority===p?PRIORITY_COLORS[p]:C.border}`, color:mForm.priority===p?PRIORITY_COLORS[p]:C.sub, borderRadius:9, padding:"9px", fontSize:12, cursor:"pointer", fontFamily:font, fontWeight:600 }}>{p}</button>
+                <input autoFocus value={mForm.text||""} onChange={e=>setMForm({...mForm,text:e.target.value})} placeholder="ما المهمة؟" style={{ ...inp, marginBottom:12 }}/>
+                <div style={{ fontSize:12, color:C.faint, marginBottom:7, fontWeight:600 }}>التاريخ</div>
+                <input value={mForm.date||""} onChange={e=>setMForm({...mForm,date:e.target.value})} type="date" style={{ ...inp, marginBottom:16 }}/>
+                <div style={{ fontSize:12, color:C.faint, marginBottom:7, fontWeight:600 }}>الأولوية</div>
+                <div style={{ display:"flex", gap:9 }}>
+                  {Object.keys(PRIORITY).map(p=>(
+                    <button key={p} onClick={()=>setMForm({...mForm,priority:p})} style={{ flex:1, background:mForm.priority===p?PRIORITY[p].bg:C.card, border:`1.5px solid ${mForm.priority===p?PRIORITY[p].c:C.border}`, color:mForm.priority===p?PRIORITY[p].c:C.sub, borderRadius:11, padding:"11px", fontSize:13, cursor:"pointer", fontFamily:font, fontWeight:700 }}>{p}</button>
                   ))}
+                </div>
+                <div style={{ display:"flex", gap:11, marginTop:22 }}>
+                  <button onClick={()=>setModal(null)} style={{ flex:1, background:"transparent", border:`1px solid ${C.border}`, borderRadius:13, padding:"14px", color:C.sub, cursor:"pointer", fontFamily:font, fontWeight:600 }}>إلغاء</button>
+                  <button onClick={addTask} style={{ ...pri, flex:2 }}>حفظ المهمة</button>
                 </div>
               </div>
             )}
 
             {modal==="habit" && (
               <div>
-                <input autoFocus value={mForm.name||""} onChange={e=>setMForm({...mForm,name:e.target.value})} placeholder="اسم العادة" style={{ ...inp, marginBottom:10 }}/>
-                <div style={{ display:"flex", gap:7, flexWrap:"wrap", marginBottom:12 }}>
-                  {HABIT_NAMES.map(n=>(
-                    <button key={n} onClick={()=>setMForm({...mForm,icon:n,name:mForm.name||n})} style={{ background:mForm.icon===n?`${C.blue}20`:C.card, border:`1px solid ${mForm.icon===n?C.blue:C.border}`, color:mForm.icon===n?C.blue:C.sub, borderRadius:9, padding:"7px 12px", fontSize:12, cursor:"pointer", fontFamily:font }}>{n}</button>
-                  ))}
+                <div style={{ fontSize:12, color:C.faint, marginBottom:10, fontWeight:600 }}>اختر العادة</div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:9, marginBottom:16 }}>
+                  {HABIT_TEMPLATES.map(tmpl=>{
+                    const sel = mForm.template===tmpl.id;
+                    return (
+                      <button key={tmpl.id} onClick={()=>setMForm({...mForm,template:tmpl.id,color:tmpl.color})} style={{
+                        background:sel?`${tmpl.color}18`:C.card, border:`1.5px solid ${sel?tmpl.color:C.border}`,
+                        borderRadius:13, padding:"14px 10px", cursor:"pointer", fontFamily:font,
+                        display:"flex", alignItems:"center", gap:10, transition:"all .15s",
+                      }}>
+                        <div style={{ flexShrink:0 }}>{tmpl.icon(sel?tmpl.color:C.faint)}</div>
+                        <div style={{ textAlign:"right" }}>
+                          <div style={{ fontSize:13, fontWeight:700, color:sel?C.text:C.sub }}>{tmpl.name}</div>
+                          {tmpl.multi && <div style={{ fontSize:10, color:C.faint }}>{tmpl.multi.length} أوقات</div>}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
-                <div style={{ display:"flex", gap:8, marginBottom:4 }}>
-                  {HABIT_COLORS.map(cl=>(
-                    <div key={cl} onClick={()=>setMForm({...mForm,color:cl})} style={{ width:28, height:28, borderRadius:"50%", background:cl, cursor:"pointer", border:mForm.color===cl?"3px solid white":"2px solid transparent", boxShadow:mForm.color===cl?`0 0 0 2px ${cl}83`:""  }}/>
-                  ))}
+                {mForm.template==="custom" && (
+                  <input autoFocus value={mForm.customName||""} onChange={e=>setMForm({...mForm,customName:e.target.value})} placeholder="اسم العادة المخصصة" style={{ ...inp, marginBottom:8 }}/>
+                )}
+                <div style={{ display:"flex", gap:11, marginTop:14 }}>
+                  <button onClick={()=>setModal(null)} style={{ flex:1, background:"transparent", border:`1px solid ${C.border}`, borderRadius:13, padding:"14px", color:C.sub, cursor:"pointer", fontFamily:font, fontWeight:600 }}>إلغاء</button>
+                  <button onClick={addHabit} style={{ ...pri, flex:2 }}>إضافة العادة</button>
                 </div>
               </div>
             )}
 
             {modal==="event" && (
               <div>
-                <input autoFocus value={mForm.title||""} onChange={e=>setMForm({...mForm,title:e.target.value})} placeholder="عنوان الموعد" style={{ ...inp, marginBottom:10 }}/>
-                <div style={{ display:"flex", gap:10, marginBottom:10 }}>
-                  <input value={mForm.date||""} onChange={e=>setMForm({...mForm,date:e.target.value})} type="date" style={{ ...inp, flex:1 }}/>
-                  <input value={mForm.time||""} onChange={e=>setMForm({...mForm,time:e.target.value})} type="time" style={{ ...inp, flex:1 }}/>
+                <input autoFocus value={mForm.title||""} onChange={e=>setMForm({...mForm,title:e.target.value})} placeholder="عنوان الموعد" style={{ ...inp, marginBottom:12 }}/>
+                <div style={{ display:"flex", gap:11, marginBottom:12 }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:12, color:C.faint, marginBottom:7, fontWeight:600 }}>التاريخ</div>
+                    <input value={mForm.date||""} onChange={e=>setMForm({...mForm,date:e.target.value})} type="date" style={inp}/>
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:12, color:C.faint, marginBottom:7, fontWeight:600 }}>الوقت</div>
+                    <input value={mForm.time||""} onChange={e=>setMForm({...mForm,time:e.target.value})} type="time" style={inp}/>
+                  </div>
                 </div>
                 <input value={mForm.note||""} onChange={e=>setMForm({...mForm,note:e.target.value})} placeholder="ملاحظة (اختياري)" style={inp}/>
+                <div style={{ display:"flex", gap:11, marginTop:22 }}>
+                  <button onClick={()=>setModal(null)} style={{ flex:1, background:"transparent", border:`1px solid ${C.border}`, borderRadius:13, padding:"14px", color:C.sub, cursor:"pointer", fontFamily:font, fontWeight:600 }}>إلغاء</button>
+                  <button onClick={addEvent} style={{ ...pri, flex:2 }}>حفظ الموعد</button>
+                </div>
               </div>
             )}
-
-            <div style={{ display:"flex", gap:10, marginTop:18 }}>
-              <button onClick={()=>setModal(null)} style={{ flex:1, background:"transparent", border:`1px solid ${C.border}`, borderRadius:12, padding:"13px", color:C.sub, cursor:"pointer", fontFamily:font, fontWeight:600 }}>إلغاء</button>
-              <button onClick={saveModal} style={{ ...pri, flex:2 }}>حفظ</button>
-            </div>
           </div>
         </div>
       )}
