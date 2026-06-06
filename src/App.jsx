@@ -159,13 +159,21 @@ export default function App() {
   const [systemDark, setSystemDark] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tab, setTab] = useState("chats");
-  const [appView, setAppView] = useState("chat"); // "chat" | "groups"
+  const [appView, setAppView] = useState("chat"); // "chat" | "groups" | "organizer" | "scanner"
   const [showAppMenu, setShowAppMenu] = useState(false); // قائمة التطبيقات
   const [isMobile, setIsMobile] = useState(false);
   const [chats, setChats] = useState({});
-  const [userProfile, setUserProfile] = useState({ name:"", job:"", interests:"" });
+  const [userProfile, setUserProfile] = useState({
+    name:"", job:"", interests:"",
+    likes:"", dislikes:"", goals:"",
+    city:"", age:"", personality:"",
+  });
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [activeChat, setActiveChat] = useState(null);
+  const [organizer, setOrganizer] = useState(() => {
+    try { const s = localStorage.getItem("marn_organizer_v1"); if(s) return JSON.parse(s); } catch {}
+    return { tasks:[], habits:[], events:[], notes:[] };
+  });
   const [favs, setFavs] = useState([]);
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
@@ -206,6 +214,7 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(chats)); } catch {} }, [chats]);
   useEffect(() => { try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); } catch {} }, [favs]);
   useEffect(() => { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(userProfile)); } catch {} }, [userProfile]);
+  useEffect(() => { try { localStorage.setItem("marn_organizer_v1", JSON.stringify(organizer)); } catch {} }, [organizer]);
 
   /* ===== تحديث html element ===== */
   useEffect(() => {
@@ -403,6 +412,7 @@ export default function App() {
           history,
           lang: settings.lang,
           forceSearch: forceWebSearch === true,
+          userProfile: userProfile.name || userProfile.interests ? userProfile : null,
         }),
       });
       let data = null;
@@ -476,6 +486,25 @@ export default function App() {
     );
   }
 
+  if (appView === "organizer") {
+    return (
+      <OrganizerApp
+        T={T} isRTL={isRTL} dark={effectiveMode === "dark"}
+        organizer={organizer} setOrganizer={setOrganizer}
+        userProfile={userProfile} onBack={() => setAppView("chat")}
+      />
+    );
+  }
+
+  if (appView === "scanner") {
+    return (
+      <ScannerApp
+        T={T} isRTL={isRTL} dark={effectiveMode === "dark"}
+        onBack={() => setAppView("chat")}
+      />
+    );
+  }
+
   return (
     <div dir={isRTL ? "rtl" : "ltr"} style={{
       height: "100dvh", display: "flex", position: "relative",
@@ -494,6 +523,7 @@ export default function App() {
         sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}
         tab={tab} setTab={setTab}
         onOpenGroups={() => setAppView("groups")}
+        onOpenView={(v) => setAppView(v)}
         showAppMenu={showAppMenu} setShowAppMenu={setShowAppMenu}
         sortedChats={sortedChats} activeChat={activeChat}
         openChat={openChat} deleteChat={deleteChat}
@@ -725,7 +755,7 @@ export default function App() {
 }
 
 /* ============ الشريط الجانبي ============ */
-function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, setTab, onOpenGroups, showAppMenu, setShowAppMenu,
+function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, setTab, onOpenGroups, onOpenView, showAppMenu, setShowAppMenu,
   sortedChats, activeChat, openChat, deleteChat, favs, send, newChat,
   settings, setSettings, effectiveMode, clearAllChats, clearAllFavs, exportChats,
   chatSearch, setChatSearch, onRename, userProfile, setUserProfile, onEditProfile }) {
@@ -838,6 +868,7 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
               {/* البحث الحي */}
               <button onClick={() => { setShowAppMenu(false); }} style={{
                 width: "100%", background: "transparent", border: "none",
+                borderBottom: `1px solid ${T.line}`,
                 padding: "13px 16px", cursor: "pointer", fontFamily: "inherit",
                 display: "flex", alignItems: "center", gap: 12, color: T.text,
                 textAlign: "right",
@@ -848,6 +879,39 @@ function Sidebar({ T, t, F, isMobile, isRTL, sidebarOpen, setSidebarOpen, tab, s
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{isRTL ? "بحث حي" : "Live Search"}</div>
                   <div style={{ fontSize: 11, color: T.sub }}>{isRTL ? "ابحث في الويب الآن" : "Search the web now"}</div>
+                </div>
+              </button>
+
+              {/* المنظّم الشخصي */}
+              <button onClick={() => { onOpenView("organizer"); setShowAppMenu(false); }} style={{
+                width: "100%", background: "transparent", border: "none",
+                borderBottom: `1px solid ${T.line}`,
+                padding: "13px 16px", cursor: "pointer", fontFamily: "inherit",
+                display: "flex", alignItems: "center", gap: 12, color: T.text,
+                textAlign: "right",
+              }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.25)", display: "flex", alignItems: "center", justifyContent: "center", color: "#A78BFA", flexShrink: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{isRTL ? "المنظّم الشخصي" : "Organizer"}</div>
+                  <div style={{ fontSize: 11, color: T.sub }}>{isRTL ? "مهام، مواعيد، عادات" : "Tasks, events, habits"}</div>
+                </div>
+              </button>
+
+              {/* المصوّر الذكي */}
+              <button onClick={() => { onOpenView("scanner"); setShowAppMenu(false); }} style={{
+                width: "100%", background: "transparent", border: "none",
+                padding: "13px 16px", cursor: "pointer", fontFamily: "inherit",
+                display: "flex", alignItems: "center", gap: 12, color: T.text,
+                textAlign: "right",
+              }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.25)", display: "flex", alignItems: "center", justifyContent: "center", color: "#38BDF8", flexShrink: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{isRTL ? "المصوّر الذكي" : "Smart Scanner"}</div>
+                  <div style={{ fontSize: 11, color: T.sub }}>{isRTL ? "صوّر أكلة أو فاتورة" : "Scan food or receipts"}</div>
                 </div>
               </button>
             </div>
@@ -3434,7 +3498,79 @@ function FollowUps({ suggestions, T, F, onSelect, thinking }) {
 }
 
 /* ============ ProfileSetup ============ */
-function ProfileSetup({ T, F, isRTL, onSave }) {
+function ProfileSetup({ T, F, isRTL, onSave, initial }) {
+  const [form, setForm] = React.useState({
+    name: initial?.name || "",
+    job: initial?.job || "",
+    city: initial?.city || "",
+    age: initial?.age || "",
+    interests: initial?.interests || "",
+    likes: initial?.likes || "",
+    dislikes: initial?.dislikes || "",
+    goals: initial?.goals || "",
+    personality: initial?.personality || "",
+  });
+
+  const inp = {
+    width: "100%", background: T.inputBg || T.glassFill,
+    border: `1px solid ${T.line}`, borderRadius: 10,
+    padding: "11px 13px", fontSize: F.base, color: T.text,
+    fontFamily: "inherit", outline: "none", boxSizing: "border-box",
+    direction: isRTL ? "rtl" : "ltr",
+  };
+  const label = { fontSize: 11, color: T.faint, fontWeight: 700, letterSpacing: 1.1, marginBottom: 5, display: "block", textTransform: "uppercase" };
+
+  const PERSONALITIES = ["اجتماعي", "هادئ", "مبدع", "تحليلي", "رياضي", "ديني"];
+
+  return (
+    <div style={{ padding: "20px", maxWidth: 480, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <div style={{ width: 56, height: 56, borderRadius: 16, background: T.gradBtn || "linear-gradient(135deg,#0F2060,#2A5ED8)", margin: "0 auto 14px", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", boxShadow: "0 6px 22px rgba(42,94,216,0.4)" }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="7" r="5"/><path d="M3 21v-2a7 7 0 0 1 14 0v2"/><circle cx="19" cy="7" r="3"/><path d="M19 10v1"/></svg>
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: T.text, marginBottom: 6 }}>فهم حياتي</div>
+        <div style={{ fontSize: 13, color: T.sub, lineHeight: 1.6 }}>مرن يبني ملفك الشخصي ليخصّص كل إجابة لك</div>
+      </div>
+
+      {[
+        { key:"name", label:"اسمك", ph:"ما اسمك؟" },
+        { key:"job", label:"مهنتك أو دراستك", ph:"مثال: مهندس، طالب، موظف..." },
+        { key:"city", label:"مدينتك", ph:"مثال: الرياض، جدة، أبها..." },
+        { key:"age", label:"عمرك", ph:"مثال: 25", type:"number" },
+      ].map(f => (
+        <div key={f.key} style={{ marginBottom: 12 }}>
+          <label style={label}>{f.label}</label>
+          <input value={form[f.key]} onChange={e=>setForm({...form,[f.key]:e.target.value})} placeholder={f.ph} type={f.type||"text"} style={inp}/>
+        </div>
+      ))}
+
+      <div style={{ marginBottom: 12 }}>
+        <label style={label}>شخصيتك</label>
+        <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+          {PERSONALITIES.map(p => (
+            <button key={p} onClick={()=>setForm({...form, personality:form.personality===p?"":p})} style={{ background: form.personality===p?(T.gradBtn||"linear-gradient(135deg,#0F2060,#2A5ED8)"):(T.inputBg||T.glassFill), border: `1px solid ${form.personality===p?T.accentBlue||"#2A5ED8":T.line}`, color: form.personality===p?"#fff":T.sub, borderRadius: 20, padding: "7px 14px", fontSize: 12, cursor: "pointer", fontFamily: "inherit", fontWeight: 500, transition: "all .15s" }}>{p}</button>
+          ))}
+        </div>
+      </div>
+
+      {[
+        { key:"interests", label:"اهتماماتك", ph:"مثال: كرة القدم، الطبخ، التقنية..." },
+        { key:"likes", label:"ما تحبه", ph:"مثال: القهوة، السفر، العمل ليلاً..." },
+        { key:"dislikes", label:"ما تكرهه", ph:"مثال: الضوضاء، التأخير..." },
+        { key:"goals", label:"أهدافك", ph:"مثال: خسارة وزن، ادخار مال، تعلم لغة..." },
+      ].map(f => (
+        <div key={f.key} style={{ marginBottom: 12 }}>
+          <label style={label}>{f.label}</label>
+          <input value={form[f.key]} onChange={e=>setForm({...form,[f.key]:e.target.value})} placeholder={f.ph} style={inp}/>
+        </div>
+      ))}
+
+      <button onClick={()=>onSave(form)} style={{ width: "100%", background: T.gradBtn || "linear-gradient(135deg,#0F2060,#2A5ED8)", border: "none", borderRadius: 12, padding: "14px", color: "#fff", cursor: "pointer", fontFamily: "inherit", fontWeight: 700, fontSize: 14, marginTop: 6, boxShadow: "0 4px 16px rgba(42,94,216,0.35)" }}>
+        {isRTL ? "حفظ ملفي الشخصي" : "Save Profile"}
+      </button>
+    </div>
+  );
+}) {
   const [name, setName] = React.useState("");
   const [job, setJob] = React.useState("");
   const [interests, setInterests] = React.useState("");
@@ -3485,6 +3621,535 @@ function ProfileSetup({ T, F, isRTL, onSave }) {
             fontSize: F.base, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
           }}
         >{isRTL ? "ابدأ الآن" : "Get Started"}</button>
+      </div>
+    </div>
+  );
+}
+
+
+/* ============ فهم حياتي — ProfileSetup المحسّن ============ */
+/* (يُستخدم ProfileSetup الحالي لكنّنا نُضيف بيانات للـ ask.js) */
+
+/* ============ OrganizerApp — المنظّم الشخصي ============ */
+const ORG_HABIT_ICONS = {
+  "الصلاة": () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L8 7H3l3.5 3-1.5 5L12 12l7 3-1.5-5L21 7h-5L12 2z"/></svg>,
+  "القرآن": () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
+  "الرياضة": () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 0 1 0 20"/></svg>,
+  "القراءة": () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
+  "الماء": () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>,
+  "النوم": () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
+  "عادة": () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>,
+};
+
+function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, onBack }) {
+  const [tab, setTab] = useState(0);
+  const [modal, setModal] = useState(null);
+  const [mForm, setMForm] = useState({});
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  const todayDay = today.getDay(); // 0=أحد
+
+  const C = {
+    bg:      dark ? "#070C1A" : "#F5F8FF",
+    bg2:     dark ? "#0A1228" : "#FFFFFF",
+    surface: dark ? "#0E1832" : "#FFFFFF",
+    card:    dark ? "#13203F" : "#F7FAFF",
+    border:  dark ? "#1C2C52" : "#E0E8FA",
+    border2: dark ? "#152141" : "#EEF2FB",
+    text:    dark ? "#F0F5FF" : "#0A1733",
+    sub:     dark ? "#8AA6D0" : "#5A78A8",
+    faint:   dark ? "#465f8a" : "#A8BFE0",
+    blue:    dark ? "#5598FF" : "#2A5ED8",
+    grad:    "linear-gradient(135deg,#0F2060,#2A5ED8)",
+    green:   "#34D399", red:"#F87171", amber:"#FBBF24", purple:"#A78BFA",
+    shadow:  dark ? "0 4px 24px rgba(0,0,0,0.4)" : "0 4px 24px rgba(27,47,107,0.07)",
+  };
+
+  const font = "'Noto Sans Arabic',-apple-system,sans-serif";
+  const card = { background:C.surface, borderRadius:16, border:`1px solid ${C.border}`, boxShadow:C.shadow };
+  const inp = { width:"100%", background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:"11px 14px", color:C.text, fontSize:14, fontFamily:font, outline:"none", boxSizing:"border-box", direction:isRTL?"rtl":"ltr" };
+  const pri = { background:C.grad, border:"none", borderRadius:12, padding:"13px", color:"#fff", cursor:"pointer", fontFamily:font, fontWeight:700, fontSize:14 };
+
+  const WEEK_DAYS = ["أحد","اثن","ثلث","أرب","خمس","جمع","سبت"];
+
+  const update = (key, val) => setOrganizer(prev => ({...prev, [key]: val}));
+
+  const saveModal = () => {
+    if (modal === "task") {
+      if (!mForm.text?.trim()) return;
+      update("tasks", [...(organizer.tasks||[]), { id:Date.now(), text:mForm.text.trim(), done:false, priority:mForm.priority||"عادي", date:mForm.date||todayStr }]);
+    }
+    if (modal === "habit") {
+      if (!mForm.name?.trim()) return;
+      const days = [false,false,false,false,false,false,false];
+      update("habits", [...(organizer.habits||[]), { id:Date.now(), name:mForm.name.trim(), icon:mForm.icon||"عادة", days, color:mForm.color||C.blue, target:parseInt(mForm.target)||1, log:{} }]);
+    }
+    if (modal === "event") {
+      if (!mForm.title?.trim()) return;
+      update("events", [...(organizer.events||[]), { id:Date.now(), title:mForm.title.trim(), date:mForm.date||todayStr, time:mForm.time||"", note:mForm.note||"" }]);
+    }
+    setModal(null);
+  };
+
+  const toggleTask = (id) => update("tasks", (organizer.tasks||[]).map(t => t.id===id?{...t,done:!t.done}:t));
+  const delTask = (id) => update("tasks", (organizer.tasks||[]).filter(t=>t.id!==id));
+  const delHabit = (id) => update("habits", (organizer.habits||[]).filter(h=>h.id!==id));
+  const delEvent = (id) => update("events", (organizer.events||[]).filter(e=>e.id!==id));
+  const toggleHabitDay = (hId, dayIdx) => {
+    const today_key = todayStr;
+    update("habits", (organizer.habits||[]).map(h => {
+      if (h.id !== hId) return h;
+      const log = {...(h.log||{})};
+      const dayLogs = [...(log[today_key]||Array(7).fill(false))];
+      dayLogs[dayIdx] = !dayLogs[dayIdx];
+      return {...h, log:{...log,[today_key]:dayLogs}};
+    }));
+  };
+
+  const TABS = [
+    { label:"المهام", icon:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> },
+    { label:"العادات", icon:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z"/><path d="M12 6v6l4 2"/></svg> },
+    { label:"المواعيد", icon:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
+  ];
+
+  const PRIORITY_COLORS = { "عاجل":"#F87171", "مهم":"#FBBF24", "عادي":C.blue };
+  const HABIT_COLORS = ["#4A8FFF","#34D399","#F87171","#FBBF24","#A78BFA","#38BDF8"];
+  const HABIT_NAMES = ["الصلاة","القرآن","الرياضة","القراءة","الماء","النوم","عادة"];
+
+  return (
+    <div style={{ display:"flex", flexDirection:"column", height:"100dvh", background:C.bg, fontFamily:font, direction:isRTL?"rtl":"ltr" }}>
+      {/* Header */}
+      <div style={{ height:62, display:"flex", alignItems:"center", gap:12, padding:"0 18px", borderBottom:`1px solid ${C.border}`, background:C.bg2, flexShrink:0 }}>
+        <button onClick={onBack} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:C.sub }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:17, fontWeight:800, color:C.text }}>المنظّم الشخصي</div>
+          {userProfile?.name && <div style={{ fontSize:11, color:C.faint }}>مرحباً {userProfile.name}</div>}
+        </div>
+        <button onClick={()=>{ setModal(tab===0?"task":tab===1?"habit":"event"); setMForm({priority:"عادي",icon:"عادة",color:C.blue,date:todayStr}); }} style={{ ...pri, padding:"9px 14px", fontSize:13, display:"flex", alignItems:"center", gap:6, borderRadius:10 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          {tab===0?"مهمة":tab===1?"عادة":"موعد"}
+        </button>
+      </div>
+
+      {/* Tab Bar */}
+      <div style={{ display:"flex", borderBottom:`1px solid ${C.border}`, background:C.bg2, flexShrink:0 }}>
+        {TABS.map((tb,i)=>(
+          <button key={i} onClick={()=>setTab(i)} style={{
+            flex:1, background:"none", border:"none",
+            borderBottom:`2.5px solid ${i===tab?C.blue:"transparent"}`,
+            color:i===tab?C.text:C.faint, padding:"13px 4px",
+            cursor:"pointer", fontFamily:font, fontSize:12, fontWeight:i===tab?700:500,
+            marginBottom:-1, display:"flex", alignItems:"center", justifyContent:"center", gap:6,
+          }}>
+            <span style={{ color:i===tab?C.blue:C.faint }}>{tb.icon}</span>{tb.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div style={{ flex:1, overflow:"auto", padding:"20px", maxWidth:640, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
+
+        {/* ===== المهام ===== */}
+        {tab===0 && (() => {
+          const tasks = organizer.tasks || [];
+          const pending = tasks.filter(t=>!t.done);
+          const done = tasks.filter(t=>t.done);
+          return (
+            <div>
+              {tasks.length===0 ? (
+                <div style={{ textAlign:"center", padding:"60px 24px", ...card }}>
+                  <div style={{ fontSize:15, fontWeight:600, color:C.sub, marginBottom:6 }}>لا توجد مهام بعد</div>
+                  <div style={{ fontSize:12, color:C.faint }}>أضف مهامك اليومية وتابع إنجازها</div>
+                </div>
+              ) : (
+                <>
+                  {pending.length > 0 && (
+                    <div style={{ ...card, overflow:"hidden", marginBottom:14 }}>
+                      <div style={{ padding:"12px 16px", borderBottom:`1px solid ${C.border2}`, fontSize:10, color:C.faint, fontWeight:700, letterSpacing:1.2 }}>المعلقة ({pending.length})</div>
+                      {pending.map((t,i)=>(
+                        <div key={t.id} style={{ display:"flex", alignItems:"center", gap:11, padding:"13px 16px", borderBottom:i<pending.length-1?`1px solid ${C.border2}`:"none" }}>
+                          <div onClick={()=>toggleTask(t.id)} style={{ width:22, height:22, borderRadius:"50%", background:C.card, border:`2px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", flexShrink:0 }}/>
+                          <div style={{ flex:1 }}>
+                            <div style={{ fontSize:14, color:C.text }}>{t.text}</div>
+                            {t.date && <div style={{ fontSize:11, color:C.faint, marginTop:2 }}>{t.date===todayStr?"اليوم":t.date}</div>}
+                          </div>
+                          <div style={{ fontSize:10, color:PRIORITY_COLORS[t.priority]||C.blue, background:`${PRIORITY_COLORS[t.priority]||C.blue}15`, padding:"3px 9px", borderRadius:8, border:`1px solid ${PRIORITY_COLORS[t.priority]||C.blue}25`, flexShrink:0 }}>{t.priority}</div>
+                          <button onClick={()=>delTask(t.id)} style={{ background:"none", border:"none", color:C.faint, cursor:"pointer", padding:4, display:"flex" }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {done.length > 0 && (
+                    <div style={{ ...card, overflow:"hidden" }}>
+                      <div style={{ padding:"12px 16px", borderBottom:`1px solid ${C.border2}`, fontSize:10, color:C.faint, fontWeight:700, letterSpacing:1.2 }}>منجزة ({done.length})</div>
+                      {done.map((t,i)=>(
+                        <div key={t.id} style={{ display:"flex", alignItems:"center", gap:11, padding:"12px 16px", borderBottom:i<done.length-1?`1px solid ${C.border2}`:"none", opacity:0.6 }}>
+                          <div onClick={()=>toggleTask(t.id)} style={{ width:22, height:22, borderRadius:"50%", background:"rgba(52,211,153,0.15)", border:"2px solid #34D399", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:"#34D399", flexShrink:0 }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          </div>
+                          <div style={{ fontSize:13, color:C.faint, textDecoration:"line-through", flex:1 }}>{t.text}</div>
+                          <button onClick={()=>delTask(t.id)} style={{ background:"none", border:"none", color:C.faint, cursor:"pointer", padding:4, display:"flex" }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* ===== العادات ===== */}
+        {tab===1 && (() => {
+          const habits = organizer.habits || [];
+          return (
+            <div>
+              <div style={{ ...card, padding:"14px 16px", marginBottom:14 }}>
+                <div style={{ fontSize:11, color:C.faint, fontWeight:700, letterSpacing:1.2, marginBottom:12 }}>أيام الأسبوع</div>
+                <div style={{ display:"flex", gap:6, justifyContent:"space-between" }}>
+                  {WEEK_DAYS.map((d,i)=>(
+                    <div key={i} style={{ textAlign:"center", flex:1 }}>
+                      <div style={{ fontSize:10, color:i===todayDay?C.blue:C.faint, fontWeight:i===todayDay?700:400, marginBottom:5 }}>{d}</div>
+                      <div style={{ width:8, height:8, borderRadius:"50%", background:i===todayDay?C.blue:C.card, border:`1px solid ${i===todayDay?C.blue:C.border}`, margin:"0 auto" }}/>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {habits.length===0 ? (
+                <div style={{ textAlign:"center", padding:"50px 24px", ...card }}>
+                  <div style={{ fontSize:15, fontWeight:600, color:C.sub, marginBottom:6 }}>لا توجد عادات بعد</div>
+                  <div style={{ fontSize:12, color:C.faint }}>تتبّع عاداتك اليومية كالصلاة والقرآن والرياضة</div>
+                </div>
+              ) : habits.map(h => {
+                const todayLog = (h.log||{})[todayStr] || Array(7).fill(false);
+                const doneCount = Object.values(h.log||{}).filter(l=>l[todayDay]).length;
+                const HIcon = ORG_HABIT_ICONS[h.icon] || ORG_HABIT_ICONS["عادة"];
+                return (
+                  <div key={h.id} style={{ ...card, padding:"16px 18px", marginBottom:10 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
+                      <div style={{ width:38, height:38, borderRadius:11, background:`${h.color}1A`, border:`1px solid ${h.color}35`, display:"flex", alignItems:"center", justifyContent:"center", color:h.color, flexShrink:0 }}><HIcon/></div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:14, fontWeight:600, color:C.text }}>{h.name}</div>
+                        <div style={{ fontSize:11, color:C.faint }}>أيام التزمت: {doneCount}</div>
+                      </div>
+                      <button onClick={()=>delHabit(h.id)} style={{ background:"none", border:"none", color:C.faint, cursor:"pointer", padding:4, display:"flex" }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                      </button>
+                    </div>
+                    <div style={{ display:"flex", gap:5, justifyContent:"space-between" }}>
+                      {WEEK_DAYS.map((d,i)=>{
+                        const checked = todayLog[i]||false;
+                        return (
+                          <div key={i} style={{ flex:1, textAlign:"center" }}>
+                            <div style={{ fontSize:9, color:i===todayDay?C.blue:C.faint, marginBottom:5, fontWeight:i===todayDay?700:400 }}>{d}</div>
+                            <div onClick={()=>i===todayDay&&toggleHabitDay(h.id,i)} style={{ width:"100%", aspectRatio:"1", borderRadius:7, background:checked?`${h.color}20`:C.card, border:`1.5px solid ${checked?h.color:C.border}`, display:"flex", alignItems:"center", justifyContent:"center", cursor:i===todayDay?"pointer":"default", margin:"0 auto", maxWidth:32 }}>
+                              {checked && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={h.color} strokeWidth="3.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+
+        {/* ===== المواعيد ===== */}
+        {tab===2 && (() => {
+          const events = [...(organizer.events||[])].sort((a,b)=>a.date.localeCompare(b.date));
+          const todayEvents = events.filter(e=>e.date===todayStr);
+          const upcoming = events.filter(e=>e.date>todayStr);
+          const past = events.filter(e=>e.date<todayStr);
+          const EventCard = ({e}) => (
+            <div style={{ display:"flex", gap:13, padding:"13px 16px" }}>
+              <div style={{ textAlign:"center", minWidth:38, flexShrink:0 }}>
+                <div style={{ fontSize:18, fontWeight:800, color:C.blue, lineHeight:1 }}>{e.date.slice(8)}</div>
+                <div style={{ fontSize:10, color:C.faint }}>{["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"][parseInt(e.date.slice(5,7))-1]?.slice(0,3)}</div>
+              </div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:14, color:C.text, fontWeight:600 }}>{e.title}</div>
+                {e.time && <div style={{ fontSize:11, color:C.blue, marginTop:2, display:"flex", alignItems:"center", gap:4 }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{e.time}</div>}
+                {e.note && <div style={{ fontSize:11, color:C.faint, marginTop:2 }}>{e.note}</div>}
+              </div>
+              <button onClick={()=>delEvent(e.id)} style={{ background:"none", border:"none", color:C.faint, cursor:"pointer", padding:4, display:"flex", alignSelf:"flex-start" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              </button>
+            </div>
+          );
+          return (
+            <div>
+              {events.length===0 ? (
+                <div style={{ textAlign:"center", padding:"60px 24px", ...card }}>
+                  <div style={{ fontSize:15, fontWeight:600, color:C.sub, marginBottom:6 }}>لا توجد مواعيد</div>
+                  <div style={{ fontSize:12, color:C.faint }}>أضف مواعيدك وأحداثك القادمة</div>
+                </div>
+              ) : (
+                <>
+                  {todayEvents.length>0 && (
+                    <div style={{ ...card, overflow:"hidden", marginBottom:14 }}>
+                      <div style={{ padding:"10px 16px", borderBottom:`1px solid ${C.border2}`, fontSize:10, color:C.green, fontWeight:700, letterSpacing:1.2 }}>اليوم</div>
+                      {todayEvents.map((e,i)=><div key={e.id} style={{ borderBottom:i<todayEvents.length-1?`1px solid ${C.border2}`:"none" }}><EventCard e={e}/></div>)}
+                    </div>
+                  )}
+                  {upcoming.length>0 && (
+                    <div style={{ ...card, overflow:"hidden", marginBottom:14 }}>
+                      <div style={{ padding:"10px 16px", borderBottom:`1px solid ${C.border2}`, fontSize:10, color:C.blue, fontWeight:700, letterSpacing:1.2 }}>القادمة</div>
+                      {upcoming.map((e,i)=><div key={e.id} style={{ borderBottom:i<upcoming.length-1?`1px solid ${C.border2}`:"none" }}><EventCard e={e}/></div>)}
+                    </div>
+                  )}
+                  {past.length>0 && (
+                    <div style={{ ...card, overflow:"hidden", opacity:0.6 }}>
+                      <div style={{ padding:"10px 16px", borderBottom:`1px solid ${C.border2}`, fontSize:10, color:C.faint, fontWeight:700, letterSpacing:1.2 }}>الماضية</div>
+                      {past.map((e,i)=><div key={e.id} style={{ borderBottom:i<past.length-1?`1px solid ${C.border2}`:"none" }}><EventCard e={e}/></div>)}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })()}
+      </div>
+
+      {/* Modal */}
+      {modal && (
+        <>
+          <div onClick={()=>setModal(null)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.55)", zIndex:200, backdropFilter:"blur(2px)" }}/>
+          <div style={{ position:"fixed", left:"50%", bottom:0, transform:"translateX(-50%)", width:"100%", maxWidth:480, background:C.bg2, borderRadius:"20px 20px 0 0", border:`1px solid ${C.border}`, borderBottom:"none", zIndex:201, padding:"22px 20px", fontFamily }}>
+            <div style={{ width:40, height:4, background:C.border, borderRadius:2, margin:"0 auto 18px" }}/>
+            <div style={{ fontSize:16, fontWeight:700, color:C.text, marginBottom:18 }}>{modal==="task"?"مهمة جديدة":modal==="habit"?"عادة جديدة":"موعد جديد"}</div>
+
+            {modal==="task" && (<>
+              <input autoFocus value={mForm.text||""} onChange={e=>setMForm({...mForm,text:e.target.value})} placeholder="المهمة" style={{ ...inp, marginBottom:10 }}/>
+              <input value={mForm.date||""} onChange={e=>setMForm({...mForm,date:e.target.value})} type="date" style={{ ...inp, marginBottom:10 }}/>
+              <div style={{ display:"flex", gap:7 }}>
+                {["عاجل","مهم","عادي"].map(p=>(
+                  <button key={p} onClick={()=>setMForm({...mForm,priority:p})} style={{ flex:1, background:mForm.priority===p?`${PRIORITY_COLORS[p]}20`:C.card, border:`1.5px solid ${mForm.priority===p?PRIORITY_COLORS[p]:C.border}`, color:mForm.priority===p?PRIORITY_COLORS[p]:C.sub, borderRadius:9, padding:"8px", fontSize:12, cursor:"pointer", fontFamily:font, fontWeight:600 }}>{p}</button>
+                ))}
+              </div>
+            </>)}
+
+            {modal==="habit" && (<>
+              <input autoFocus value={mForm.name||""} onChange={e=>setMForm({...mForm,name:e.target.value})} placeholder="اسم العادة" style={{ ...inp, marginBottom:10 }}/>
+              <div style={{ marginBottom:10 }}>
+                <div style={{ fontSize:11, color:C.faint, marginBottom:6 }}>اختر</div>
+                <div style={{ display:"flex", gap:7, flexWrap:"wrap" }}>
+                  {HABIT_NAMES.map(n=>(
+                    <button key={n} onClick={()=>setMForm({...mForm,icon:n,name:n==="عادة"?mForm.name:n})} style={{ background:mForm.icon===n?`${C.blue}20`:C.card, border:`1px solid ${mForm.icon===n?C.blue:C.border}`, color:mForm.icon===n?C.blue:C.sub, borderRadius:9, padding:"7px 12px", fontSize:12, cursor:"pointer", fontFamily:font }}>{n}</button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display:"flex", gap:7 }}>
+                {HABIT_COLORS.map(cl=>(
+                  <div key={cl} onClick={()=>setMForm({...mForm,color:cl})} style={{ width:28, height:28, borderRadius:"50%", background:cl, cursor:"pointer", border:mForm.color===cl?"3px solid white":"2px solid transparent", boxShadow:mForm.color===cl?`0 0 0 2px ${cl}`:""}}/>
+                ))}
+              </div>
+            </>)}
+
+            {modal==="event" && (<>
+              <input autoFocus value={mForm.title||""} onChange={e=>setMForm({...mForm,title:e.target.value})} placeholder="العنوان" style={{ ...inp, marginBottom:10 }}/>
+              <div style={{ display:"flex", gap:10, marginBottom:10 }}>
+                <input value={mForm.date||""} onChange={e=>setMForm({...mForm,date:e.target.value})} type="date" style={{ ...inp, flex:1 }}/>
+                <input value={mForm.time||""} onChange={e=>setMForm({...mForm,time:e.target.value})} type="time" style={{ ...inp, flex:1 }}/>
+              </div>
+              <input value={mForm.note||""} onChange={e=>setMForm({...mForm,note:e.target.value})} placeholder="ملاحظة (اختياري)" style={inp}/>
+            </>)}
+
+            <div style={{ display:"flex", gap:10, marginTop:18 }}>
+              <button onClick={()=>setModal(null)} style={{ flex:1, background:"transparent", border:`1px solid ${C.border}`, borderRadius:12, padding:"13px", color:C.sub, cursor:"pointer", fontFamily:font, fontWeight:600 }}>إلغاء</button>
+              <button onClick={saveModal} style={{ ...pri, flex:2 }}>حفظ</button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ============ ScannerApp — المصوّر الذكي ============ */
+function ScannerApp({ T, isRTL, dark, onBack }) {
+  const [mode, setMode] = useState(null); // "food" | "receipt"
+  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const fileRef = useRef(null);
+
+  const C = {
+    bg:      dark ? "#070C1A" : "#F5F8FF",
+    bg2:     dark ? "#0A1228" : "#FFFFFF",
+    surface: dark ? "#0E1832" : "#FFFFFF",
+    card:    dark ? "#13203F" : "#F7FAFF",
+    border:  dark ? "#1C2C52" : "#E0E8FA",
+    border2: dark ? "#152141" : "#EEF2FB",
+    text:    dark ? "#F0F5FF" : "#0A1733",
+    sub:     dark ? "#8AA6D0" : "#5A78A8",
+    faint:   dark ? "#465f8a" : "#A8BFE0",
+    blue:    dark ? "#5598FF" : "#2A5ED8",
+    grad:    "linear-gradient(135deg,#0F2060,#2A5ED8)",
+    green:   "#34D399", amber:"#FBBF24", red:"#F87171", teal:"#38BDF8",
+    shadow:  dark ? "0 4px 24px rgba(0,0,0,0.4)" : "0 4px 24px rgba(27,47,107,0.07)",
+  };
+  const font = "'Noto Sans Arabic',-apple-system,sans-serif";
+  const card = { background:C.surface, borderRadius:16, border:`1px solid ${C.border}`, boxShadow:C.shadow };
+  const pri = { background:C.grad, border:"none", borderRadius:12, padding:"13px", color:"#fff", cursor:"pointer", fontFamily:font, fontWeight:700, fontSize:14 };
+
+  const toBase64 = (file) => new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = ()=>res(r.result.split(",")[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+
+  const analyze = async () => {
+    if (!image) return;
+    setLoading(true); setResult(null);
+    try {
+      const base64 = await toBase64(image);
+      const prompt = mode === "food"
+        ? "هذه صورة أكلة. حللها وأعطني: 1) اسم الأكلة. 2) السعرات الحرارية التقريبية. 3) البروتين (جرام). 4) الكربوهيدرات. 5) الدهون. 6) هل مناسبة للتنشيف أو التضخيم أو الحمية؟ 7) تقييم صحي من 10. 8) نصيحة سريعة."
+        : "هذه صورة فاتورة. حللها وأعطني: 1) قائمة المشتريات مع أسعارها. 2) إجمالي المبلغ. 3) تصنيف المصاريف (طعام، منزل، كماليات). 4) اقتراح لتوفير المال في الشراء القادم.";
+      const resp = await fetch("/api/ask", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          question: prompt,
+          history: [],
+          lang: "ar",
+          forceSearch: false,
+          imageBase64: base64,
+          imageMimeType: image.type,
+        }),
+      });
+      const data = await resp.json().catch(()=>null);
+      if (data?.card) setResult(data.card);
+      else setResult({ title:"تحليل الصورة", tabs:[{ label:"النتيجة", type:"text", data:{ body: data?.error||"تعذّر التحليل. حاول مرة أخرى." }}]});
+    } catch(e) {
+      setResult({ title:"خطأ", tabs:[{ label:"الخطأ", type:"text", data:{ body:"تعذّر الاتصال. تأكد من اتصالك وحاول مجدداً." }}]});
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ display:"flex", flexDirection:"column", height:"100dvh", background:C.bg, fontFamily:font, direction:isRTL?"rtl":"ltr" }}>
+      <div style={{ height:62, display:"flex", alignItems:"center", gap:12, padding:"0 18px", borderBottom:`1px solid ${C.border}`, background:C.bg2, flexShrink:0 }}>
+        <button onClick={onBack} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:C.sub }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div style={{ fontSize:17, fontWeight:800, color:C.text }}>المصوّر الذكي</div>
+      </div>
+
+      <div style={{ flex:1, overflow:"auto", padding:"20px", maxWidth:560, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
+
+        {/* اختيار النوع */}
+        {!mode ? (
+          <div>
+            <div style={{ textAlign:"center", padding:"30px 0 28px" }}>
+              <div style={{ width:64, height:64, borderRadius:20, background:C.grad, margin:"0 auto 16px", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", boxShadow:"0 8px 28px rgba(42,94,216,0.4)" }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </div>
+              <div style={{ fontSize:18, fontWeight:700, color:C.text, marginBottom:8 }}>صوّر وحلّل</div>
+              <div style={{ fontSize:13, color:C.sub }}>صوّر أكلة أو فاتورة ومرن يحللها لك فوراً</div>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+              {[
+                { id:"food", label:"أكلة", sub:"سعرات، بروتين، دهون، تقييم صحي", color:"#34D399", grad:"linear-gradient(135deg,#065F46,#10B981)", icon:<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 2v7c0 1.1.9 2 2 2h0a2 2 0 0 0 2-2V2M5 2v20M16 2c-1.7 0-3 2-3 5s1.3 5 3 5 3-2 3-5-1.3-5-3-5zM16 12v10"/></svg> },
+                { id:"receipt", label:"فاتورة", sub:"تصنيف المصاريف واقتراحات التوفير", color:"#FBBF24", grad:"linear-gradient(135deg,#92400E,#F59E0B)", icon:<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
+              ].map(opt=>(
+                <button key={opt.id} onClick={()=>setMode(opt.id)} style={{ background:opt.grad, border:"none", borderRadius:18, padding:"22px 16px", cursor:"pointer", color:"#fff", textAlign:"center", boxShadow:"0 6px 24px rgba(0,0,0,0.25)", transition:"transform .15s" }}>
+                  <div style={{ marginBottom:10 }}>{opt.icon}</div>
+                  <div style={{ fontSize:16, fontWeight:700, marginBottom:5 }}>{opt.label}</div>
+                  <div style={{ fontSize:11, opacity:0.85, lineHeight:1.4 }}>{opt.sub}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div>
+            <button onClick={()=>{ setMode(null); setImage(null); setResult(null); }} style={{ background:"transparent", border:"none", color:C.sub, cursor:"pointer", fontFamily:font, fontSize:12, display:"flex", alignItems:"center", gap:5, marginBottom:16, padding:0 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+              {mode==="food"?"تحليل أكلة":"تحليل فاتورة"}
+            </button>
+
+            {/* منطقة رفع الصورة */}
+            <div onClick={()=>!image&&fileRef.current?.click()} style={{ ...card, padding:"24px", textAlign:"center", cursor:image?"default":"pointer", marginBottom:14, overflow:"hidden" }}>
+              {image ? (
+                <div>
+                  <img src={URL.createObjectURL(image)} alt="" style={{ maxWidth:"100%", maxHeight:280, borderRadius:12, objectFit:"cover" }}/>
+                  <button onClick={(e)=>{e.stopPropagation();setImage(null);setResult(null);}} style={{ marginTop:12, background:"transparent", border:`1px solid ${C.border}`, borderRadius:8, padding:"7px 16px", color:C.faint, cursor:"pointer", fontFamily:font, fontSize:12 }}>تغيير الصورة</button>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ width:56, height:56, borderRadius:16, background:C.card, border:`1.5px dashed ${C.border}`, margin:"0 auto 14px", display:"flex", alignItems:"center", justifyContent:"center", color:C.faint }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  </div>
+                  <div style={{ fontSize:14, color:C.sub, fontWeight:500, marginBottom:4 }}>اضغط لرفع صورة</div>
+                  <div style={{ fontSize:12, color:C.faint }}>أو صوّر مباشرة من الكاميرا</div>
+                </div>
+              )}
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" style={{ display:"none" }} onChange={e=>e.target.files[0]&&setImage(e.target.files[0])}/>
+
+            {image && !loading && !result && (
+              <button onClick={analyze} style={{ ...pri, width:"100%", marginBottom:14 }}>
+                {mode==="food"?"تحليل الأكلة":"تحليل الفاتورة"}
+              </button>
+            )}
+
+            {loading && (
+              <div style={{ textAlign:"center", padding:"30px", ...card }}>
+                <div style={{ display:"flex", gap:6, justifyContent:"center", marginBottom:12 }}>
+                  {[0,1,2].map(d=><div key={d} style={{ width:9, height:9, borderRadius:"50%", background:C.blue, animation:`gPulse 1.2s ${d*0.2}s infinite` }}/>)}
+                </div>
+                <div style={{ fontSize:13, color:C.sub }}>مرن يحلل الصورة...</div>
+                <style>{`@keyframes gPulse{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}`}</style>
+              </div>
+            )}
+
+            {result && (
+              <div style={{ ...card, overflow:"hidden" }}>
+                <div style={{ height:3, background:C.grad }}/>
+                <div style={{ padding:"16px 18px" }}>
+                  <div style={{ fontSize:16, fontWeight:700, color:C.text, marginBottom:4 }}>{result.title}</div>
+                  {result.sub && <div style={{ fontSize:12, color:C.sub, marginBottom:12 }}>{result.sub}</div>}
+
+                  {/* تبويبات النتيجة */}
+                  {result.tabs?.map((tab,i)=>(
+                    <div key={i} style={{ marginBottom:12 }}>
+                      <div style={{ fontSize:10, color:C.faint, fontWeight:700, letterSpacing:1.1, marginBottom:6, textTransform:"uppercase" }}>{tab.label}</div>
+                      {tab.type==="text" && <div style={{ fontSize:13, color:C.text, lineHeight:1.7, background:C.card, borderRadius:10, padding:"11px 13px", border:`1px solid ${C.border2}` }}>{tab.data?.body}</div>}
+                      {tab.type==="list" && (
+                        <div style={{ background:C.card, borderRadius:10, border:`1px solid ${C.border2}`, overflow:"hidden" }}>
+                          {tab.data?.items?.map((it,j)=>(
+                            <div key={j} style={{ padding:"9px 13px", borderBottom:j<tab.data.items.length-1?`1px solid ${C.border2}`:"none", fontSize:13, color:C.text }}>{it}</div>
+                          ))}
+                        </div>
+                      )}
+                      {tab.type==="stats" && (
+                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+                          {tab.data?.items?.map((it,j)=>(
+                            <div key={j} style={{ background:C.card, borderRadius:10, padding:"11px", border:`1px solid ${C.border2}`, textAlign:"center" }}>
+                              <div style={{ fontSize:16, fontWeight:800, color:C.blue }}>{it.value}</div>
+                              <div style={{ fontSize:11, color:C.faint, marginTop:3 }}>{it.label}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  <button onClick={()=>{ setImage(null); setResult(null); }} style={{ width:"100%", background:"transparent", border:`1px solid ${C.border}`, borderRadius:12, padding:"11px", color:C.sub, cursor:"pointer", fontFamily:font, marginTop:4 }}>تحليل صورة أخرى</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
