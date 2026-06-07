@@ -205,7 +205,7 @@ export default function App() {
       if (f) setFavs(JSON.parse(f));
       const p = localStorage.getItem(PROFILE_KEY);
       if (p) { const parsed = JSON.parse(p); setUserProfile(parsed); }
-      else { setTimeout(() => setShowProfileSetup(true), 800); }
+      else { setTimeout(() => setAppView("profile"), 800); }
     } catch {}
   }, []);
 
@@ -505,6 +505,20 @@ export default function App() {
     );
   }
 
+  if (appView === "profile") {
+    return (
+      <ProfileSetup
+        T={T} F={F} isRTL={isRTL} dark={effectiveMode === "dark"}
+        initial={userProfile}
+        onBack={() => setAppView("chat")}
+        onSave={(profile) => {
+          setUserProfile(profile);
+          setAppView("chat");
+        }}
+      />
+    );
+  }
+
   return (
     <div dir={isRTL ? "rtl" : "ltr"} style={{
       height: "100dvh", display: "flex", position: "relative",
@@ -536,7 +550,7 @@ export default function App() {
         chatSearch={chatSearch} setChatSearch={setChatSearch}
         onRename={(id) => setRenameDialog({ id, currentTitle: chats[id]?.title || "" })}
         userProfile={userProfile} setUserProfile={setUserProfile}
-        onEditProfile={() => setShowProfileSetup(true)}
+        onEditProfile={() => setAppView("profile")}
       />
 
       {/* المنطقة الرئيسية */}
@@ -708,15 +722,6 @@ export default function App() {
       )}
 
       {/* نافذة إعداد الملف الشخصي */}
-      {showProfileSetup && (
-        <ProfileSetup T={T} F={F} isRTL={isRTL}
-          onSave={(profile) => {
-            setUserProfile(profile);
-            setShowProfileSetup(false);
-          }}
-        />
-      )}
-
       {/* Toast */}
       {toast && (
         <div style={{
@@ -3501,7 +3506,102 @@ function FollowUps({ suggestions, T, F, onSelect, thinking }) {
 }
 
 /* ============ ProfileSetup ============ */
-function ProfileSetup({ T, F, isRTL, onSave, initial }) {
+function ProfileSetup({ T, F, isRTL, dark, initial, onSave, onBack }) {
+  const [form, setForm] = React.useState({
+    name: initial?.name || "", job: initial?.job || "",
+    city: initial?.city || "", age: initial?.age || "",
+    interests: initial?.interests || "", likes: initial?.likes || "",
+    dislikes: initial?.dislikes || "", goals: initial?.goals || "",
+    personality: initial?.personality || "",
+  });
+
+  const C = {
+    bg: dark?"#070C1A":"#F4F7FE", bg2: dark?"#0B1326":"#FFFFFF",
+    surface: dark?"#101B38":"#FFFFFF", card: dark?"#16244A":"#F4F8FF",
+    border: dark?"#22335E":"#DDE7FA",
+    text: dark?"#F2F6FF":"#0A1733", sub: dark?"#90ACD6":"#5A78A8",
+    faint: dark?"#54719e":"#A8BFE0", blue: dark?"#5EA0FF":"#2A5ED8",
+    grad: "linear-gradient(135deg,#1A3A8F,#3B6FE5)",
+    shadowSm: dark?"0 2px 12px rgba(0,0,0,0.35)":"0 2px 10px rgba(27,47,107,0.06)",
+  };
+  const font = "'Noto Sans Arabic',-apple-system,sans-serif";
+  const inp = { width:"100%", background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"13px 15px", color:C.text, fontSize:15, fontFamily:font, outline:"none", boxSizing:"border-box", direction:isRTL?"rtl":"ltr" };
+  const dateInp = { width:"100%", background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"13px 15px", color:C.text, fontSize:14, fontFamily:font, outline:"none", boxSizing:"border-box", direction:"ltr", textAlign:"center", WebkitAppearance:"none", appearance:"none", minHeight:48 };
+  const label = { fontSize:12, color:C.faint, fontWeight:700, letterSpacing:0.8, marginBottom:7, display:"block" };
+  const PERSONALITIES = ["اجتماعي","هادئ","مبدع","تحليلي","رياضي","ديني","طموح","عملي"];
+
+  return (
+    <div style={{ display:"flex", flexDirection:"column", height:"100dvh", background:C.bg, fontFamily:font, direction:isRTL?"rtl":"ltr" }}>
+      {/* Header */}
+      <div style={{ height:64, display:"flex", alignItems:"center", gap:13, padding:"0 18px", borderBottom:`1px solid ${C.border}`, background:C.bg2, flexShrink:0 }}>
+        <button onClick={onBack} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:11, width:38, height:38, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:C.sub }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:18, fontWeight:800, color:C.text }}>فهم حياتي</div>
+          <div style={{ fontSize:11.5, color:C.faint }}>مرن يبني ملفك ليخصّص كل إجابة لك</div>
+        </div>
+      </div>
+
+      {/* Scrollable content */}
+      <div style={{ flex:1, overflow:"auto", padding:"22px 18px 30px", maxWidth:560, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
+        <div style={{ textAlign:"center", marginBottom:24 }}>
+          <div style={{ width:60, height:60, borderRadius:17, background:C.grad, margin:"0 auto 14px", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", boxShadow:"0 6px 22px rgba(42,94,216,0.4)" }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="7" r="5"/><path d="M3 21v-2a7 7 0 0 1 14 0v2"/><circle cx="19" cy="6" r="2.5"/></svg>
+          </div>
+          <div style={{ fontSize:15, color:C.sub, lineHeight:1.7, maxWidth:340, margin:"0 auto" }}>كل ما عرّفت مرن أكثر عنك، صارت إجاباته أدق وأقرب لك</div>
+        </div>
+
+        {[
+          { key:"name", label:"اسمك", ph:"ما اسمك؟" },
+          { key:"job", label:"مهنتك أو دراستك", ph:"مهندس، طالب، موظف..." },
+          { key:"city", label:"مدينتك", ph:"الرياض، جدة، أبها..." },
+          { key:"age", label:"عمرك", ph:"25", type:"number" },
+        ].map(f=>(
+          <div key={f.key} style={{ marginBottom:16 }}>
+            <label style={label}>{f.label}</label>
+            <input value={form[f.key]} onChange={e=>setForm({...form,[f.key]:e.target.value})} placeholder={f.ph} type={f.type||"text"} style={inp}/>
+          </div>
+        ))}
+
+        <div style={{ marginBottom:16 }}>
+          <label style={label}>شخصيتك</label>
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+            {PERSONALITIES.map(p=>(
+              <button key={p} onClick={()=>setForm({...form,personality:form.personality===p?"":p})} style={{
+                background:form.personality===p?C.grad:C.card,
+                border:`1.5px solid ${form.personality===p?"transparent":C.border}`,
+                color:form.personality===p?"#fff":C.sub, borderRadius:20, padding:"9px 16px",
+                fontSize:13, cursor:"pointer", fontFamily:font, fontWeight:600,
+                boxShadow:form.personality===p?C.shadowSm:"none",
+              }}>{p}</button>
+            ))}
+          </div>
+        </div>
+
+        {[
+          { key:"interests", label:"اهتماماتك", ph:"كرة القدم، الطبخ، التقنية..." },
+          { key:"likes", label:"ما تحبه", ph:"القهوة، السفر، العمل ليلاً..." },
+          { key:"dislikes", label:"ما تكرهه", ph:"الضوضاء، التأخير..." },
+          { key:"goals", label:"أهدافك", ph:"خسارة وزن، ادخار، تعلم لغة..." },
+        ].map(f=>(
+          <div key={f.key} style={{ marginBottom:16 }}>
+            <label style={label}>{f.label}</label>
+            <input value={form[f.key]} onChange={e=>setForm({...form,[f.key]:e.target.value})} placeholder={f.ph} style={inp}/>
+          </div>
+        ))}
+      </div>
+
+      {/* Fixed save button */}
+      <div style={{ padding:"14px 18px", borderTop:`1px solid ${C.border}`, background:C.bg2, flexShrink:0 }}>
+        <div style={{ maxWidth:560, margin:"0 auto", display:"flex", gap:11 }}>
+          <button onClick={onBack} style={{ flex:1, background:"transparent", border:`1px solid ${C.border}`, borderRadius:13, padding:"15px", color:C.sub, cursor:"pointer", fontFamily:font, fontWeight:600, fontSize:15 }}>إلغاء</button>
+          <button onClick={()=>onSave(form)} style={{ flex:2, background:C.grad, border:"none", borderRadius:13, padding:"15px", color:"#fff", cursor:"pointer", fontFamily:font, fontWeight:700, fontSize:15, boxShadow:"0 4px 16px rgba(42,94,216,0.35)" }}>حفظ ملفي</button>
+        </div>
+      </div>
+    </div>
+  );
+}) {
   const [form, setForm] = React.useState({
     name: initial?.name || "",
     job: initial?.job || "",
@@ -3626,6 +3726,7 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
 
   const card = { background:C.surface, borderRadius:18, border:`1px solid ${C.border}`, boxShadow:C.shadowSm };
   const inp = { width:"100%", background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"13px 15px", color:C.text, fontSize:15, fontFamily:font, outline:"none", boxSizing:"border-box", direction:isRTL?"rtl":"ltr" };
+  const dateInp = { width:"100%", background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"13px 15px", color:C.text, fontSize:14, fontFamily:font, outline:"none", boxSizing:"border-box", direction:"ltr", textAlign:"center", WebkitAppearance:"none", appearance:"none", minHeight:48 };
   const pri = { background:C.grad, border:"none", borderRadius:13, padding:"14px", color:"#fff", cursor:"pointer", fontFamily:font, fontWeight:700, fontSize:15, boxShadow:"0 4px 16px rgba(42,94,216,0.35)" };
   const PRIORITY = { "عاجل":{c:C.red,bg:"rgba(248,113,113,0.12)"}, "مهم":{c:C.amber,bg:"rgba(251,191,36,0.12)"}, "عادي":{c:C.blue,bg:"rgba(74,143,255,0.12)"} };
   const MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
@@ -3643,14 +3744,47 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
     setModal(null);
   };
 
-  const addHabit = () => {
-    const tmpl = HABIT_TEMPLATES.find(t=>t.id===mForm.template) || HABIT_TEMPLATES[0];
-    const name = tmpl.id==="custom" ? (mForm.customName?.trim()||"عادة") : tmpl.name;
-    if (tmpl.id==="custom" && !mForm.customName?.trim()) return;
+  const [habitLoading, setHabitLoading] = useState(false);
+
+  const addHabit = async () => {
+    const name = mForm.habitName?.trim();
+    if (!name) return;
+    setHabitLoading(true);
+    const colors = ["#34D399","#4A8FFF","#FBBF24","#38BDF8","#A78BFA","#F87171"];
+    const color = colors[(organizer.habits||[]).length % colors.length];
+
+    // مرن يحلل العادة ويقسّمها ويعطي نصيحة
+    let multi = null, advice = "";
+    try {
+      const prompt = `المستخدم يبي يتتبّع عادة اسمها: "${name}".
+حلّل هذه العادة وأرجع JSON فقط بدون أي نص آخر بهذا الشكل:
+{"parts":["جزء1","جزء2"],"advice":"نصيحة قصيرة عملية"}
+- إذا كانت العادة تتكرر عدة مرات في اليوم بأوقات محددة (مثل الصلوات الخمس: الفجر، الظهر، العصر، المغرب، العشاء)، ضع كل وقت في parts.
+- إذا كانت عادة واحدة في اليوم (مثل قراءة، رياضة، شرب ماء)، اجعل parts مصفوفة فارغة [].
+- advice: نصيحة قصيرة (سطر واحد) تساعد المستخدم يلتزم بهذه العادة.
+أرجع JSON فقط.`;
+      const r = await fetch("/api/ask", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ question: prompt, history:[], lang:"ar", forceSearch:false }),
+      });
+      const data = await r.json().catch(()=>null);
+      let raw = "";
+      if (data?.card) {
+        (data.card.tabs||[]).forEach(t=>{ if(t.data?.body) raw += t.data.body; });
+        if (!raw && data.card.sub) raw = data.card.sub;
+      }
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (Array.isArray(parsed.parts) && parsed.parts.length > 0) multi = parsed.parts;
+        advice = parsed.advice || "";
+      }
+    } catch {}
+
     update("habits", [...(organizer.habits||[]), {
-      id:Date.now(), name, templateId:tmpl.id, color:tmpl.color,
-      multi: tmpl.multi || null, log:{},
+      id:Date.now(), name, color, multi, advice, log:{},
     }]);
+    setHabitLoading(false);
     setModal(null);
   };
 
@@ -3701,25 +3835,45 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
     { l:"المواعيد", icon:(a)=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={a} strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
   ];
 
+  // حساب كم تبقّى على الموعد
+  const daysUntil = (dateStr) => {
+    const d = new Date(dateStr + "T00:00:00");
+    const t = new Date(todayStr + "T00:00:00");
+    return Math.round((d - t) / 86400000);
+  };
+  const remainLabel = (dateStr) => {
+    const n = daysUntil(dateStr);
+    if (n === 0) return "اليوم";
+    if (n === 1) return "غداً";
+    if (n === -1) return "أمس";
+    if (n > 1) return `بعد ${n} يوم`;
+    return `قبل ${Math.abs(n)} يوم`;
+  };
+
   // مكوّن بطاقة الموعد
-  const EventCard = ({e, dim}) => (
-    <div style={{ display:"flex", gap:14, padding:"14px 16px", alignItems:"center", opacity:dim?0.55:1 }}>
-      <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minWidth:48, height:52, background:dim?C.card:C.grad, borderRadius:13, flexShrink:0, color:dim?C.faint:"#fff" }}>
-        <div style={{ fontSize:20, fontWeight:800, lineHeight:1 }}>{e.date.slice(8)}</div>
-        <div style={{ fontSize:9, opacity:0.9, marginTop:2 }}>{MONTHS[parseInt(e.date.slice(5,7))-1]?.slice(0,3)}</div>
-      </div>
-      <div style={{ flex:1, minWidth:0 }}>
-        <div style={{ fontSize:15, color:C.text, fontWeight:600 }}>{e.title}</div>
-        <div style={{ display:"flex", gap:12, marginTop:3 }}>
-          {e.time && <span style={{ fontSize:12, color:C.blue, display:"flex", alignItems:"center", gap:4, fontWeight:600 }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{e.time}
-          </span>}
-          {e.note && <span style={{ fontSize:12, color:C.faint }}>{e.note}</span>}
+  const EventCard = ({e, dim}) => {
+    const dayName = WEEK_DAYS[new Date(e.date+"T00:00:00").getDay()];
+    return (
+      <div style={{ display:"flex", gap:14, padding:"15px 16px", alignItems:"center", opacity:dim?0.55:1 }}>
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minWidth:52, height:56, background:dim?C.card:C.grad, borderRadius:14, flexShrink:0, color:dim?C.faint:"#fff" }}>
+          <div style={{ fontSize:22, fontWeight:800, lineHeight:1 }}>{parseInt(e.date.slice(8))}</div>
+          <div style={{ fontSize:9, opacity:0.9, marginTop:2 }}>{MONTHS[parseInt(e.date.slice(5,7))-1]?.slice(0,3)}</div>
         </div>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontSize:15, color:C.text, fontWeight:700, marginBottom:4 }}>{e.title}</div>
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
+            <span style={{ fontSize:11, color:dim?C.faint:C.blue, background:dim?C.card:`${C.blue}15`, padding:"3px 9px", borderRadius:7, fontWeight:700 }}>{remainLabel(e.date)}</span>
+            <span style={{ fontSize:12, color:C.faint }}>{dayName} {parseInt(e.date.slice(8))} {MONTHS[parseInt(e.date.slice(5,7))-1]}</span>
+            {e.time && <span style={{ fontSize:12, color:C.sub, display:"flex", alignItems:"center", gap:3, fontWeight:600 }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{e.time}
+            </span>}
+          </div>
+          {e.note && <div style={{ fontSize:12, color:C.faint, marginTop:4 }}>{e.note}</div>}
+        </div>
+        <DelBtn onClick={()=>delEvent(e.id)}/>
       </div>
-      <DelBtn onClick={()=>delEvent(e.id)}/>
-    </div>
-  );
+    );
+  };
 
   return (
     <div style={{ display:"flex", flexDirection:"column", height:"100dvh", background:C.bg, fontFamily:font, direction:isRTL?"rtl":"ltr", position:"relative" }}>
@@ -3863,8 +4017,8 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
               return (
                 <div key={h.id} style={{ ...card, padding:"18px", marginBottom:12 }}>
                   <div style={{ display:"flex", alignItems:"center", gap:13, marginBottom:h.multi?16:14 }}>
-                    <div style={{ width:46, height:46, borderRadius:13, background:`${h.color}1A`, border:`1px solid ${h.color}40`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                      {(HABIT_TEMPLATES.find(t=>t.id===h.templateId)||HABIT_TEMPLATES[5]).icon(h.color)}
+                    <div style={{ width:46, height:46, borderRadius:13, background:`${h.color}1A`, border:`1px solid ${h.color}40`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, color:h.color }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
                     </div>
                     <div style={{ flex:1 }}>
                       <div style={{ fontSize:16, fontWeight:700, color:C.text }}>{h.name}</div>
@@ -3929,6 +4083,16 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
                       );
                     })}
                   </div>
+
+                  {/* نصيحة مرن */}
+                  {h.advice && (
+                    <div style={{ display:"flex", gap:9, marginTop:14, padding:"11px 13px", background:`${h.color}10`, border:`1px solid ${h.color}25`, borderRadius:11 }}>
+                      <div style={{ color:h.color, flexShrink:0, marginTop:1 }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2h6c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z"/></svg>
+                      </div>
+                      <div style={{ fontSize:12.5, color:C.sub, lineHeight:1.6 }}>{h.advice}</div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -3992,7 +4156,7 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
               <div>
                 <input autoFocus value={mForm.text||""} onChange={e=>setMForm({...mForm,text:e.target.value})} placeholder="ما المهمة؟" style={{ ...inp, marginBottom:12 }}/>
                 <div style={{ fontSize:12, color:C.faint, marginBottom:7, fontWeight:600 }}>التاريخ</div>
-                <input value={mForm.date||""} onChange={e=>setMForm({...mForm,date:e.target.value})} type="date" style={{ ...inp, marginBottom:16 }}/>
+                <input value={mForm.date||""} onChange={e=>setMForm({...mForm,date:e.target.value})} type="date" style={{ ...dateInp, marginBottom:16 }}/>
                 <div style={{ fontSize:12, color:C.faint, marginBottom:7, fontWeight:600 }}>الأولوية</div>
                 <div style={{ display:"flex", gap:9 }}>
                   {Object.keys(PRIORITY).map(p=>(
@@ -4008,32 +4172,26 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
 
             {modal==="habit" && (
               <div>
-                <div style={{ fontSize:12, color:C.faint, marginBottom:10, fontWeight:600 }}>اختر العادة</div>
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:9, marginBottom:16 }}>
-                  {HABIT_TEMPLATES.map(tmpl=>{
-                    const sel = mForm.template===tmpl.id;
-                    return (
-                      <button key={tmpl.id} onClick={()=>setMForm({...mForm,template:tmpl.id,color:tmpl.color})} style={{
-                        background:sel?`${tmpl.color}18`:C.card, border:`1.5px solid ${sel?tmpl.color:C.border}`,
-                        borderRadius:13, padding:"14px 10px", cursor:"pointer", fontFamily:font,
-                        display:"flex", alignItems:"center", gap:10, transition:"all .15s",
-                      }}>
-                        <div style={{ flexShrink:0 }}>{tmpl.icon(sel?tmpl.color:C.faint)}</div>
-                        <div style={{ textAlign:"right" }}>
-                          <div style={{ fontSize:13, fontWeight:700, color:sel?C.text:C.sub }}>{tmpl.name}</div>
-                          {tmpl.multi && <div style={{ fontSize:10, color:C.faint }}>{tmpl.multi.length} أوقات</div>}
-                        </div>
-                      </button>
-                    );
-                  })}
+                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14, padding:"11px 14px", background:`${C.blue}12`, border:`1px solid ${C.blue}25`, borderRadius:12 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3"/></svg>
+                  <div style={{ fontSize:12.5, color:C.sub, lineHeight:1.5 }}>اكتب أي عادة، ومرن يقسّمها لك تلقائياً ويعطيك نصيحة للالتزام</div>
                 </div>
-                {mForm.template==="custom" && (
-                  <input autoFocus value={mForm.customName||""} onChange={e=>setMForm({...mForm,customName:e.target.value})} placeholder="اسم العادة المخصصة" style={{ ...inp, marginBottom:8 }}/>
-                )}
-                <div style={{ display:"flex", gap:11, marginTop:14 }}>
+                <input autoFocus value={mForm.habitName||""} onChange={e=>setMForm({...mForm,habitName:e.target.value})} onKeyDown={e=>e.key==="Enter"&&!habitLoading&&addHabit()} placeholder="مثال: الصلوات الخمس، قراءة القرآن، رياضة..." style={{ ...inp, marginBottom:8 }}/>
+                <div style={{ display:"flex", gap:7, flexWrap:"wrap", marginBottom:4 }}>
+                  {["الصلوات الخمس","قراءة القرآن","الرياضة","شرب الماء","المذاكرة"].map(s=>(
+                    <button key={s} onClick={()=>setMForm({...mForm,habitName:s})} style={{ background:C.card, border:`1px solid ${C.border}`, color:C.sub, borderRadius:9, padding:"7px 12px", fontSize:12, cursor:"pointer", fontFamily:font }}>{s}</button>
+                  ))}
+                </div>
+                <div style={{ display:"flex", gap:11, marginTop:18 }}>
                   <button onClick={()=>setModal(null)} style={{ flex:1, background:"transparent", border:`1px solid ${C.border}`, borderRadius:13, padding:"14px", color:C.sub, cursor:"pointer", fontFamily:font, fontWeight:600 }}>إلغاء</button>
-                  <button onClick={addHabit} style={{ ...pri, flex:2 }}>إضافة العادة</button>
+                  <button onClick={addHabit} disabled={habitLoading} style={{ ...pri, flex:2, opacity:habitLoading?0.7:1, display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
+                    {habitLoading ? <>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" style={{ animation:"spin 0.8s linear infinite" }}><path d="M21 12a9 9 0 1 1-6.2-8.5"/></svg>
+                      مرن يحلّل...
+                    </> : "إضافة العادة"}
+                  </button>
                 </div>
+                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
               </div>
             )}
 
@@ -4043,11 +4201,11 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
                 <div style={{ display:"flex", gap:11, marginBottom:12 }}>
                   <div style={{ flex:1 }}>
                     <div style={{ fontSize:12, color:C.faint, marginBottom:7, fontWeight:600 }}>التاريخ</div>
-                    <input value={mForm.date||""} onChange={e=>setMForm({...mForm,date:e.target.value})} type="date" style={inp}/>
+                    <input value={mForm.date||""} onChange={e=>setMForm({...mForm,date:e.target.value})} type="date" style={dateInp}/>
                   </div>
                   <div style={{ flex:1 }}>
                     <div style={{ fontSize:12, color:C.faint, marginBottom:7, fontWeight:600 }}>الوقت</div>
-                    <input value={mForm.time||""} onChange={e=>setMForm({...mForm,time:e.target.value})} type="time" style={inp}/>
+                    <input value={mForm.time||""} onChange={e=>setMForm({...mForm,time:e.target.value})} type="time" style={dateInp}/>
                   </div>
                 </div>
                 <input value={mForm.note||""} onChange={e=>setMForm({...mForm,note:e.target.value})} placeholder="ملاحظة (اختياري)" style={inp}/>
