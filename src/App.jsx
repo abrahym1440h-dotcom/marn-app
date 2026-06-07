@@ -157,9 +157,12 @@ export default function App() {
 
   // الحالة
   const [systemDark, setSystemDark] = useState(false);
+  const [onboarded, setOnboarded] = useState(() => {
+    try { return localStorage.getItem(ONBOARDING_KEY) === "1"; } catch { return false; }
+  });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tab, setTab] = useState("chats");
-  const [appView, setAppView] = useState("chat"); // "chat" | "groups" | "organizer" | "scanner"
+  const [appView, setAppView] = useState("chat"); // "chat" | "groups" | "organizer" | "profile"
   const [showAppMenu, setShowAppMenu] = useState(false); // قائمة التطبيقات
   const [isMobile, setIsMobile] = useState(false);
   const [chats, setChats] = useState({});
@@ -475,6 +478,24 @@ export default function App() {
   };
 
   /* ===== العرض ===== */
+  // Onboarding — أول مرة
+  if (!onboarded) {
+    return (
+      <OnboardingScreen
+        dark={effectiveMode === "dark"}
+        onDone={() => {
+          try { localStorage.setItem(ONBOARDING_KEY, "1"); } catch {}
+          setOnboarded(true);
+          setAppView("profile");
+        }}
+        onSkip={() => {
+          try { localStorage.setItem(ONBOARDING_KEY, "1"); } catch {}
+          setOnboarded(true);
+        }}
+      />
+    );
+  }
+
   // لو في وضع المجموعات، نعرض GroupsApp كاملاً
   if (appView === "groups") {
     return (
@@ -496,14 +517,6 @@ export default function App() {
     );
   }
 
-  if (appView === "scanner") {
-    return (
-      <ScannerApp
-        T={T} isRTL={isRTL} dark={effectiveMode === "dark"}
-        onBack={() => setAppView("chat")}
-      />
-    );
-  }
 
   if (appView === "profile") {
     return (
@@ -1202,9 +1215,7 @@ function EmptyState({ T, t, F, send, settings, userProfile, onOpenView }) {
     { label:"المنظّم الشخصي", sub:"مهام، مواعيد، عادات", view:"organizer",
       color:"#A78BFA", grad:"linear-gradient(135deg,rgba(167,139,250,0.12),rgba(167,139,250,0.04))",
       icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
-    { label:"المصوّر الذكي", sub:"صوّر أكلة أو فاتورة", view:"scanner",
-      color:"#38BDF8", grad:"linear-gradient(135deg,rgba(56,189,248,0.12),rgba(56,189,248,0.04))",
-      icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> },
+
     { label:"المجموعات", sub:"رحلات، كشت، فعاليات", view:"groups",
       color:"#34D399", grad:"linear-gradient(135deg,rgba(52,211,153,0.12),rgba(52,211,153,0.04))",
       icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="7" r="3"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg> },
@@ -3505,6 +3516,115 @@ function FollowUps({ suggestions, T, F, onSelect, thinking }) {
   );
 }
 
+/* ============ OnboardingScreen ============ */
+function OnboardingScreen({ dark, onDone, onSkip }) {
+  const [step, setStep] = useState(0);
+  const font = "'Noto Sans Arabic',-apple-system,sans-serif";
+
+  const C = {
+    bg: dark?"#070C1A":"#F4F7FE",
+    text: dark?"#F2F6FF":"#0A1733",
+    sub: dark?"#8AA6D0":"#5A78A8",
+    faint: dark?"#54719e":"#A8BFE0",
+    card: dark?"#101B38":"#FFFFFF",
+    border: dark?"#1C2C52":"#DDE7FA",
+    grad: "linear-gradient(135deg,#1A3A8F,#3B6FE5)",
+  };
+
+  const STEPS = [
+    {
+      icon: (
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+          <rect width="56" height="56" rx="16" fill="url(#g1)"/>
+          <defs><linearGradient id="g1" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse"><stop stopColor="#1A3A8F"/><stop offset="1" stopColor="#3B6FE5"/></linearGradient></defs>
+          <text x="28" y="36" textAnchor="middle" fontSize="28" fontWeight="800" fill="white" fontFamily="Arial">م</text>
+        </svg>
+      ),
+      title: "أهلاً بك في مرن",
+      sub: "مساعدك الذكي السعودي — إجابة واحدة تجمع لك كل شيء بدل عشرة أسئلة",
+      color: "#4A8FFF",
+    },
+    {
+      icon: (
+        <div style={{ width:80, height:80, borderRadius:22, background:"linear-gradient(135deg,rgba(52,211,153,0.2),rgba(52,211,153,0.05))", border:"1.5px solid rgba(52,211,153,0.3)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="1.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            <line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/>
+          </svg>
+        </div>
+      ),
+      title: "اسأل عن أي شيء",
+      sub: "رياضة، صحة، دين، سفر، طبخ، تقنية — مرن يبحث ويلخّص لك في بطاقة واحدة منظّمة",
+      color: "#34D399",
+    },
+    {
+      icon: (
+        <div style={{ width:80, height:80, borderRadius:22, background:"linear-gradient(135deg,rgba(167,139,250,0.2),rgba(167,139,250,0.05))", border:"1.5px solid rgba(167,139,250,0.3)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="1.5">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+      ),
+      title: "نظّم حياتك",
+      sub: "مهام بأولوية، تتبّع عادات يومية كالصلوات، ومواعيد مرتّبة — كل شيء في مكان واحد",
+      color: "#A78BFA",
+    },
+    {
+      icon: (
+        <div style={{ width:80, height:80, borderRadius:22, background:"linear-gradient(135deg,rgba(74,143,255,0.2),rgba(74,143,255,0.05))", border:"1.5px solid rgba(74,143,255,0.3)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4A8FFF" strokeWidth="1.5">
+            <circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="7" r="3"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/>
+          </svg>
+        </div>
+      ),
+      title: "خطّط مع أصحابك",
+      sub: "أنشئ مجموعات للرحلات والكشتات والفعاليات — جدول، مصاريف، مهام، وشات مرن مدمج",
+      color: "#4A8FFF",
+    },
+  ];
+
+  const s = STEPS[step];
+  const isLast = step === STEPS.length - 1;
+
+  return (
+    <div style={{ display:"flex", flexDirection:"column", height:"100dvh", background:C.bg, fontFamily:font, direction:"rtl", position:"relative", overflow:"hidden" }}>
+      {/* Skip */}
+      <div style={{ display:"flex", justifyContent:"flex-start", padding:"16px 20px", flexShrink:0 }}>
+        <button onClick={onSkip} style={{ background:"transparent", border:"none", color:C.faint, fontSize:14, cursor:"pointer", fontFamily:font }}>تخطّي</button>
+      </div>
+
+      {/* Content */}
+      <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"0 32px", textAlign:"center" }}>
+        <div style={{ marginBottom:32 }}>{s.icon}</div>
+        <h1 style={{ fontSize:26, fontWeight:800, color:C.text, margin:"0 0 14px", letterSpacing:-0.5 }}>{s.title}</h1>
+        <p style={{ fontSize:16, color:C.sub, lineHeight:1.8, margin:0, maxWidth:340 }}>{s.sub}</p>
+      </div>
+
+      {/* Dots */}
+      <div style={{ display:"flex", justifyContent:"center", gap:8, marginBottom:28 }}>
+        {STEPS.map((_,i)=>(
+          <div key={i} onClick={()=>setStep(i)} style={{ width:i===step?24:8, height:8, borderRadius:4, background:i===step?s.color:C.border, cursor:"pointer", transition:"all .3s" }}/>
+        ))}
+      </div>
+
+      {/* Button */}
+      <div style={{ padding:"0 24px 40px" }}>
+        <button onClick={()=>{ isLast ? onDone() : setStep(step+1); }} style={{
+          width:"100%", background:C.grad, border:"none", borderRadius:16,
+          padding:"17px", color:"#fff", cursor:"pointer", fontFamily:font,
+          fontWeight:700, fontSize:17, boxShadow:"0 6px 22px rgba(42,94,216,0.4)",
+        }}>
+          {isLast ? "ابدأ — أخبر مرن عنك" : "التالي"}
+        </button>
+        {!isLast && (
+          <button onClick={onSkip} style={{ width:"100%", background:"transparent", border:"none", color:C.faint, fontSize:14, cursor:"pointer", fontFamily:font, marginTop:12, padding:"8px" }}>تخطّي الآن</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
 /* ============ ProfileSetup ============ */
 function ProfileSetup({ T, F, isRTL, dark, initial, onSave, onBack }) {
   const [form, setForm] = React.useState({
@@ -4150,183 +4270,3 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
   );
 }
 
-/* ============ ScannerApp — المصوّر الذكي ============ */
-function ScannerApp({ T, isRTL, dark, onBack }) {
-  const [mode, setMode] = useState(null); // "food" | "receipt"
-  const [image, setImage] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const fileRef = useRef(null);
-
-  const C = {
-    bg:      dark ? "#070C1A" : "#F5F8FF",
-    bg2:     dark ? "#0A1228" : "#FFFFFF",
-    surface: dark ? "#0E1832" : "#FFFFFF",
-    card:    dark ? "#13203F" : "#F7FAFF",
-    border:  dark ? "#1C2C52" : "#E0E8FA",
-    border2: dark ? "#152141" : "#EEF2FB",
-    text:    dark ? "#F0F5FF" : "#0A1733",
-    sub:     dark ? "#8AA6D0" : "#5A78A8",
-    faint:   dark ? "#465f8a" : "#A8BFE0",
-    blue:    dark ? "#5598FF" : "#2A5ED8",
-    grad:    "linear-gradient(135deg,#0F2060,#2A5ED8)",
-    green:   "#34D399", amber:"#FBBF24", red:"#F87171", teal:"#38BDF8",
-    shadow:  dark ? "0 4px 24px rgba(0,0,0,0.4)" : "0 4px 24px rgba(27,47,107,0.07)",
-  };
-  const font = "'Noto Sans Arabic',-apple-system,sans-serif";
-  const card = { background:C.surface, borderRadius:16, border:`1px solid ${C.border}`, boxShadow:C.shadow };
-  const pri = { background:C.grad, border:"none", borderRadius:12, padding:"13px", color:"#fff", cursor:"pointer", fontFamily:font, fontWeight:700, fontSize:14 };
-
-  const toBase64 = (file) => new Promise((res,rej)=>{
-    const r = new FileReader();
-    r.onload = ()=>res(r.result.split(",")[1]);
-    r.onerror = rej;
-    r.readAsDataURL(file);
-  });
-
-  const analyze = async () => {
-    if (!image) return;
-    setLoading(true); setResult(null);
-    try {
-      const base64 = await toBase64(image);
-      const prompt = mode === "food"
-        ? "هذه صورة أكلة. حللها وأعطني: 1) اسم الأكلة. 2) السعرات الحرارية التقريبية. 3) البروتين (جرام). 4) الكربوهيدرات. 5) الدهون. 6) هل مناسبة للتنشيف أو التضخيم أو الحمية؟ 7) تقييم صحي من 10. 8) نصيحة سريعة."
-        : "هذه صورة فاتورة. حللها وأعطني: 1) قائمة المشتريات مع أسعارها. 2) إجمالي المبلغ. 3) تصنيف المصاريف (طعام، منزل، كماليات). 4) اقتراح لتوفير المال في الشراء القادم.";
-      const resp = await fetch("/api/ask", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
-          question: prompt,
-          history: [],
-          lang: "ar",
-          forceSearch: false,
-          imageBase64: base64,
-          imageMimeType: image.type,
-        }),
-      });
-      const data = await resp.json().catch(()=>null);
-      if (data?.card) setResult(data.card);
-      else setResult({ title:"تحليل الصورة", tabs:[{ label:"النتيجة", type:"text", data:{ body: data?.error||"تعذّر التحليل. حاول مرة أخرى." }}]});
-    } catch(e) {
-      setResult({ title:"خطأ", tabs:[{ label:"الخطأ", type:"text", data:{ body:"تعذّر الاتصال. تأكد من اتصالك وحاول مجدداً." }}]});
-    }
-    setLoading(false);
-  };
-
-  return (
-    <div style={{ display:"flex", flexDirection:"column", height:"100dvh", background:C.bg, fontFamily:font, direction:isRTL?"rtl":"ltr" }}>
-      <div style={{ height:62, display:"flex", alignItems:"center", gap:12, padding:"0 18px", borderBottom:`1px solid ${C.border}`, background:C.bg2, flexShrink:0 }}>
-        <button onClick={onBack} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:C.sub }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <div style={{ fontSize:17, fontWeight:800, color:C.text }}>المصوّر الذكي</div>
-      </div>
-
-      <div style={{ flex:1, overflow:"auto", padding:"20px", maxWidth:560, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
-
-        {/* اختيار النوع */}
-        {!mode ? (
-          <div>
-            <div style={{ textAlign:"center", padding:"30px 0 28px" }}>
-              <div style={{ width:64, height:64, borderRadius:20, background:C.grad, margin:"0 auto 16px", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", boxShadow:"0 8px 28px rgba(42,94,216,0.4)" }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-              </div>
-              <div style={{ fontSize:18, fontWeight:700, color:C.text, marginBottom:8 }}>صوّر وحلّل</div>
-              <div style={{ fontSize:13, color:C.sub }}>صوّر أكلة أو فاتورة ومرن يحللها لك فوراً</div>
-            </div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
-              {[
-                { id:"food", label:"أكلة", sub:"سعرات، بروتين، دهون، تقييم صحي", color:"#34D399", grad:"linear-gradient(135deg,#065F46,#10B981)", icon:<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 2v7c0 1.1.9 2 2 2h0a2 2 0 0 0 2-2V2M5 2v20M16 2c-1.7 0-3 2-3 5s1.3 5 3 5 3-2 3-5-1.3-5-3-5zM16 12v10"/></svg> },
-                { id:"receipt", label:"فاتورة", sub:"تصنيف المصاريف واقتراحات التوفير", color:"#FBBF24", grad:"linear-gradient(135deg,#92400E,#F59E0B)", icon:<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
-              ].map(opt=>(
-                <button key={opt.id} onClick={()=>setMode(opt.id)} style={{ background:opt.grad, border:"none", borderRadius:18, padding:"22px 16px", cursor:"pointer", color:"#fff", textAlign:"center", boxShadow:"0 6px 24px rgba(0,0,0,0.25)", transition:"transform .15s" }}>
-                  <div style={{ marginBottom:10 }}>{opt.icon}</div>
-                  <div style={{ fontSize:16, fontWeight:700, marginBottom:5 }}>{opt.label}</div>
-                  <div style={{ fontSize:11, opacity:0.85, lineHeight:1.4 }}>{opt.sub}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div>
-            <button onClick={()=>{ setMode(null); setImage(null); setResult(null); }} style={{ background:"transparent", border:"none", color:C.sub, cursor:"pointer", fontFamily:font, fontSize:12, display:"flex", alignItems:"center", gap:5, marginBottom:16, padding:0 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
-              {mode==="food"?"تحليل أكلة":"تحليل فاتورة"}
-            </button>
-
-            {/* منطقة رفع الصورة */}
-            <div onClick={()=>!image&&fileRef.current?.click()} style={{ ...card, padding:"24px", textAlign:"center", cursor:image?"default":"pointer", marginBottom:14, overflow:"hidden" }}>
-              {image ? (
-                <div>
-                  <img src={URL.createObjectURL(image)} alt="" style={{ maxWidth:"100%", maxHeight:280, borderRadius:12, objectFit:"cover" }}/>
-                  <button onClick={(e)=>{e.stopPropagation();setImage(null);setResult(null);}} style={{ marginTop:12, background:"transparent", border:`1px solid ${C.border}`, borderRadius:8, padding:"7px 16px", color:C.faint, cursor:"pointer", fontFamily:font, fontSize:12 }}>تغيير الصورة</button>
-                </div>
-              ) : (
-                <div>
-                  <div style={{ width:56, height:56, borderRadius:16, background:C.card, border:`1.5px dashed ${C.border}`, margin:"0 auto 14px", display:"flex", alignItems:"center", justifyContent:"center", color:C.faint }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                  </div>
-                  <div style={{ fontSize:14, color:C.sub, fontWeight:500, marginBottom:4 }}>اضغط لرفع صورة</div>
-                  <div style={{ fontSize:12, color:C.faint }}>أو صوّر مباشرة من الكاميرا</div>
-                </div>
-              )}
-            </div>
-            <input ref={fileRef} type="file" accept="image/*" style={{ display:"none" }} onChange={e=>e.target.files[0]&&setImage(e.target.files[0])}/>
-
-            {image && !loading && !result && (
-              <button onClick={analyze} style={{ ...pri, width:"100%", marginBottom:14 }}>
-                {mode==="food"?"تحليل الأكلة":"تحليل الفاتورة"}
-              </button>
-            )}
-
-            {loading && (
-              <div style={{ textAlign:"center", padding:"30px", ...card }}>
-                <div style={{ display:"flex", gap:6, justifyContent:"center", marginBottom:12 }}>
-                  {[0,1,2].map(d=><div key={d} style={{ width:9, height:9, borderRadius:"50%", background:C.blue, animation:`gPulse 1.2s ${d*0.2}s infinite` }}/>)}
-                </div>
-                <div style={{ fontSize:13, color:C.sub }}>مرن يحلل الصورة...</div>
-                <style>{`@keyframes gPulse{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}`}</style>
-              </div>
-            )}
-
-            {result && (
-              <div style={{ ...card, overflow:"hidden" }}>
-                <div style={{ height:3, background:C.grad }}/>
-                <div style={{ padding:"16px 18px" }}>
-                  <div style={{ fontSize:16, fontWeight:700, color:C.text, marginBottom:4 }}>{result.title}</div>
-                  {result.sub && <div style={{ fontSize:12, color:C.sub, marginBottom:12 }}>{result.sub}</div>}
-
-                  {/* تبويبات النتيجة */}
-                  {result.tabs?.map((tab,i)=>(
-                    <div key={i} style={{ marginBottom:12 }}>
-                      <div style={{ fontSize:10, color:C.faint, fontWeight:700, letterSpacing:1.1, marginBottom:6, textTransform:"uppercase" }}>{tab.label}</div>
-                      {tab.type==="text" && <div style={{ fontSize:13, color:C.text, lineHeight:1.7, background:C.card, borderRadius:10, padding:"11px 13px", border:`1px solid ${C.border2}` }}>{tab.data?.body}</div>}
-                      {tab.type==="list" && (
-                        <div style={{ background:C.card, borderRadius:10, border:`1px solid ${C.border2}`, overflow:"hidden" }}>
-                          {tab.data?.items?.map((it,j)=>(
-                            <div key={j} style={{ padding:"9px 13px", borderBottom:j<tab.data.items.length-1?`1px solid ${C.border2}`:"none", fontSize:13, color:C.text }}>{it}</div>
-                          ))}
-                        </div>
-                      )}
-                      {tab.type==="stats" && (
-                        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-                          {tab.data?.items?.map((it,j)=>(
-                            <div key={j} style={{ background:C.card, borderRadius:10, padding:"11px", border:`1px solid ${C.border2}`, textAlign:"center" }}>
-                              <div style={{ fontSize:16, fontWeight:800, color:C.blue }}>{it.value}</div>
-                              <div style={{ fontSize:11, color:C.faint, marginTop:3 }}>{it.label}</div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-
-                  <button onClick={()=>{ setImage(null); setResult(null); }} style={{ width:"100%", background:"transparent", border:`1px solid ${C.border}`, borderRadius:12, padding:"11px", color:C.sub, cursor:"pointer", fontFamily:font, marginTop:4 }}>تحليل صورة أخرى</button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
