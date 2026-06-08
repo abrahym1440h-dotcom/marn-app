@@ -20,6 +20,7 @@ const STORAGE_KEY = "marn_chats_v2";
 const SETTINGS_KEY = "marn_settings_v2";
 const FAV_KEY = "marn_favs_v2";
 const PROFILE_KEY = "marn_profile_v1";
+const ONBOARDING_KEY = "marn_onboarded_v1";
 const VERSION = "3.0";
 
 const ACCENTS = {
@@ -210,6 +211,7 @@ export default function App() {
   const [appView, setAppView] = useState("chat"); // "chat" | "groups" | "organizer" | "profile" | "fatwa" | "nibras"
   const [agent, setAgent] = useState("marn"); // الوكيل النشط: marn | nibras | fatwa
   const [toolScreen, setToolScreen] = useState(null); // الشاشة المطلوب فتحها داخل أداة الوكيل
+  const [agentMenuOpen, setAgentMenuOpen] = useState(false); // قائمة اختيار المساعد/الأدوات
   const [showAppMenu, setShowAppMenu] = useState(false); // قائمة التطبيقات
   const [isMobile, setIsMobile] = useState(false);
   const [chats, setChats] = useState({});
@@ -660,14 +662,25 @@ export default function App() {
           borderBottom: `1px solid ${T.line}`,
           backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
         }}>
-          <div style={{ maxWidth: 820, margin: "0 auto", padding: "10px 16px 0", display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ maxWidth: 820, margin: "0 auto", padding: "10px 14px", display: "flex", alignItems: "center", gap: 8 }}>
             {isMobile && (
               <button onClick={() => setSidebarOpen(true)} style={iconBtnStyle(T)}>
                 <Icon.Menu />
               </button>
             )}
-            <div style={{ flex: 1, fontSize: F.base, fontWeight: 600, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {activeChat ? chats[activeChat]?.title : currentAgent.name}
+            <button onClick={() => setAgentMenuOpen(true)} className="press" style={{
+              display: "flex", alignItems: "center", gap: 8, background: T.pillFill,
+              border: `1px solid ${T.line}`, borderRadius: 999, padding: "6px 12px 6px 7px",
+              cursor: "pointer", fontFamily: "inherit", flexShrink: 0,
+            }}>
+              <span style={{ width: 26, height: 26, borderRadius: 8, background: currentAgent.color + "18", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {AG_ICON[currentAgent.id] ? AG_ICON[currentAgent.id](currentAgent.color, 15) : null}
+              </span>
+              <span style={{ fontSize: F.base - 1, fontWeight: 700, color: T.text }}>{currentAgent.name}</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.sub} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div style={{ flex: 1, fontSize: F.base - 1, fontWeight: 600, color: T.sub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center" }}>
+              {activeChat ? chats[activeChat]?.title : ""}
             </div>
             <button onClick={newChat} style={{
               ...iconBtnStyle(T),
@@ -680,8 +693,15 @@ export default function App() {
               <Icon.Plus />
             </button>
           </div>
-          <AgentSwitcher T={T} F={F} current={activeAgentId} onSwitch={switchAgent} />
+          <div style={{ height: 2, background: `linear-gradient(90deg, transparent, ${currentAgent.color}, transparent)`, opacity: 0.6 }} />
         </header>
+
+        {agentMenuOpen && (
+          <AgentMenu T={T} F={F} current={activeAgentId} isMobile={isMobile}
+            onPick={(id) => { switchAgent(id); setAgentMenuOpen(false); }}
+            onOpenView={(v) => { setAgentMenuOpen(false); setAppView(v); }}
+            onClose={() => setAgentMenuOpen(false)} />
+        )}
 
         {/* خيط الرسائل */}
         <div style={{ flex: 1, overflowY: "auto", padding: "0 14px", position: "relative" }}>
@@ -1229,32 +1249,69 @@ function ConfirmModal({ T, t, F, title, onConfirm, onCancel }) {
   );
 }
 
-/* ============ حالة فارغة ============ */
-/* ============ مبدّل الوكلاء ============ */
-function AgentSwitcher({ T, F, current, onSwitch }) {
+/* ============ قائمة المساعدين والأدوات ============ */
+function AgentMenu({ T, F, current, isMobile, onPick, onOpenView, onClose }) {
+  const TOOLS = [
+    { view: "organizer", name: "المنظّم", desc: "مهام ومواعيد وعادات", color: "#8B7FE8",
+      icon: (c) => <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
+    { view: "groups", name: "المجموعات", desc: "رحلات وفعاليات", color: "#2FB479",
+      icon: (c) => <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="7" r="3"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg> },
+  ];
+
+  const rowBase = {
+    width: "100%", display: "flex", alignItems: "center", gap: 12,
+    borderRadius: 13, padding: "10px 11px", marginBottom: 6,
+    cursor: "pointer", fontFamily: "inherit", textAlign: "right",
+  };
+
   return (
-    <div style={{ maxWidth: 820, margin: "0 auto", padding: "8px 12px 0" }}>
-      <div style={{ display: "flex", gap: 5, background: T.pillFill, border: `1px solid ${T.line}`, borderRadius: 12, padding: 4 }}>
-        {AGENT_ORDER.map(id => {
-          const a = AGENTS[id]; const on = id === current;
-          return (
-            <button key={id} onClick={() => onSwitch(id)} className="press" style={{
-              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-              background: on ? T.cardBg : "transparent",
-              color: on ? a.color : T.sub,
-              border: on ? `1px solid ${a.color}33` : "1px solid transparent",
-              borderRadius: 9, padding: "7px 4px", cursor: "pointer", fontFamily: "inherit",
-              fontSize: F.base - 1.5, fontWeight: on ? 700 : 600,
-              boxShadow: on ? "0 1px 4px rgba(16,24,40,0.06)" : "none",
-              transition: "all .15s",
-            }}>
-              {AG_ICON[id](on ? a.color : T.faint, 16)}
-              <span>{a.name}</span>
+    <div style={{ position: "fixed", inset: 0, zIndex: 60 }}>
+      <style>{`@keyframes agMenuIn{from{opacity:0;transform:translateY(-10px) scale(.98)}to{opacity:1;transform:none}}`}</style>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(8,12,24,0.45)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)" }} />
+      <div style={{
+        position: "absolute", top: 62, insetInlineStart: 12, insetInlineEnd: "auto",
+        width: "min(380px, 92vw)",
+        background: T.cardBg, border: `1px solid ${T.line}`, borderRadius: 18,
+        boxShadow: "0 24px 64px rgba(8,12,24,0.4)", overflow: "hidden",
+        animation: "agMenuIn .2s cubic-bezier(.2,.8,.3,1) both",
+      }}>
+        <div style={{ padding: "14px 14px 6px" }}>
+          <div style={{ fontSize: F.label, color: T.faint, fontWeight: 700, marginBottom: 8, paddingInline: 4 }}>المساعدون</div>
+          {AGENT_ORDER.map(id => {
+            const a = AGENTS[id]; const on = id === current;
+            return (
+              <button key={id} onClick={() => onPick(id)} className="press" style={{
+                ...rowBase,
+                background: on ? a.color + "12" : "transparent",
+                border: `1px solid ${on ? a.color + "40" : "transparent"}`,
+              }}>
+                <span style={{ width: 38, height: 38, borderRadius: 11, background: a.color + "16", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{AG_ICON[id](a.color, 19)}</span>
+                <span style={{ flex: 1, textAlign: "right", overflow: "hidden" }}>
+                  <span style={{ display: "block", fontSize: F.base - 0.5, fontWeight: 700, color: T.text }}>{a.name}</span>
+                  <span style={{ display: "block", fontSize: F.base - 3, color: T.sub, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.desc}</span>
+                </span>
+                {on && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={a.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
+              </button>
+            );
+          })}
+        </div>
+        <div style={{ height: 1, background: T.line, margin: "2px 14px" }} />
+        <div style={{ padding: "8px 14px 14px" }}>
+          <div style={{ fontSize: F.label, color: T.faint, fontWeight: 700, marginBottom: 8, paddingInline: 4 }}>الأدوات</div>
+          {TOOLS.map(tl => (
+            <button key={tl.view} onClick={() => onOpenView(tl.view)} className="press" style={{ ...rowBase, background: "transparent", border: "1px solid transparent" }}
+              onMouseEnter={e => { e.currentTarget.style.background = T.hover; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
+              <span style={{ width: 38, height: 38, borderRadius: 11, background: tl.color + "16", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{tl.icon(tl.color)}</span>
+              <span style={{ flex: 1, textAlign: "right", overflow: "hidden" }}>
+                <span style={{ display: "block", fontSize: F.base - 0.5, fontWeight: 700, color: T.text }}>{tl.name}</span>
+                <span style={{ display: "block", fontSize: F.base - 3, color: T.sub, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{tl.desc}</span>
+              </span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.faint} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
-          );
-        })}
+          ))}
+        </div>
       </div>
-      <div style={{ height: 2, marginTop: 8, background: `linear-gradient(90deg, transparent, ${AGENTS[current]?.color || T.accentBlue}, transparent)`, opacity: 0.7 }} />
     </div>
   );
 }
