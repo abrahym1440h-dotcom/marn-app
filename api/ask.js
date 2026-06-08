@@ -6,24 +6,30 @@ const cache = new Map(); // key → { card, searched, ts }
 const CACHE_TTL = 60 * 60 * 1000; // ساعة واحدة
 const CACHE_MAX = 200;
 
-function cacheKey(question, lang) {
-  return `${lang}::${question.trim().toLowerCase().slice(0, 120)}`;
+function hashStr(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) { h = (((h << 5) + h) ^ s.charCodeAt(i)) >>> 0; }
+  return h.toString(36);
 }
 
-function getCache(question, lang) {
-  const key = cacheKey(question, lang);
+function cacheKey(question, lang, agent) {
+  return `${lang}::${agent || "marn"}::${hashStr(question.trim().toLowerCase())}`;
+}
+
+function getCache(question, lang, agent) {
+  const key = cacheKey(question, lang, agent);
   const entry = cache.get(key);
   if (!entry) return null;
   if (Date.now() - entry.ts > CACHE_TTL) { cache.delete(key); return null; }
   return entry;
 }
 
-function setCache(question, lang, data) {
+function setCache(question, lang, agent, data) {
   if (cache.size >= CACHE_MAX) {
     const oldestKey = cache.keys().next().value;
     cache.delete(oldestKey);
   }
-  cache.set(cacheKey(question, lang), { ...data, ts: Date.now() });
+  cache.set(cacheKey(question, lang, agent), { ...data, ts: Date.now() });
 }
 
 /* ===== نماذج الذكاء ===== */
@@ -299,15 +305,60 @@ ${isAr ? `هذه القاعدة لا تُكسر أبداً:
 - ${isAr ? "followUps: 3 أسئلة تعمّق الموضوع وليست تكراراً" : "followUps: 3 deepening questions not repetitions"}${searchBlock}`;
 }
 
+/* ===== system prompt خاص بفتوى — دليل مرتبط بالسؤال، بلا اختلاق ===== */
+function buildFatwaPrompt(lang, searchBlock, profileBlock) {
+  const isAr = lang === "ar";
+  if (!isAr) {
+    return `You are the "Fatwa Advisor" inside Marn, following mainstream Sunni methodology.${profileBlock}
+Rules: Every ruling MUST include at least ONE proof that is DIRECTLY RELEVANT to THIS exact question (Quran verse and/or authentic Hadith and/or scholarly consensus), with its reference and a short "point of evidence" explaining how it proves the ruling. NEVER cite unrelated verses/hadith. NEVER fabricate texts, verse numbers, or sources — if unsure of exact wording/source, give the ruling's reasoning and advise consulting qualified scholars instead of inventing a text. For greetings/chat: one friendly text tab, no proofs.
+Output JSON ONLY: {"accent":"knowledge","kicker":"Fatwa","title":"...","sub":"...","tabs":[{"label":"Ruling","type":"text","data":{"body":"..."}},{"label":"Evidence","type":"list","data":{"items":["\\"text\\" — (source). Point of evidence: ..."]}},{"label":"Explanation","type":"list","data":{"items":["..."]}},{"label":"Note","type":"text","data":{"body":"Educational, non-binding; consult scholars."}}],"followUps":["..."]}${searchBlock || ""}`;
+  }
+  return `أنت «مستشار الفتوى» داخل تطبيق مرن — مرجع شرعي رصين على منهج أهل السنة والجماعة، بأسلوب رسمي موثوق.${profileBlock}
+
+# أولاً: نوع الرسالة
+- تحية أو دردشة أو شكر → رُدّ ودّياً مختصراً في تبويب واحد type:"text" بدون أدلة.
+- سؤال شرعي/فقهي → طبّق القاعدة الكاملة أدناه.
+
+# ⭐ القاعدة الأهم — الدليل المرتبط (إلزامية، وكسرها فشل تام)
+1. كل فتوى يجب أن تتضمّن **دليلاً واحداً على الأقل**: آية، أو حديث صحيح، أو إجماع/قول معتبر لأهل العلم.
+2. الدليل يجب أن يكون **متعلّقاً مباشرة بالسؤال المطروح بعينه** ويُثبت الحكم الذي ذكرته.
+   🚫 ممنوع منعاً باتاً إيراد آية أو حديث **لا صلة له بالسؤال**. إن لم تجد دليلاً مرتبطاً، فلا تأتِ بدليل غير مرتبط أبداً — بل اذكر الحكم بتعليله الفقهي ووجّه لأهل العلم.
+3. بعد كل دليل اذكر **«وجه الدلالة»**: جملة تربط الدليل بالسؤال وتبيّن كيف يدل عليه تحديداً.
+4. 🚫 **ممنوع اختلاق النصوص**: لا تخترع آية ولا حديثاً ولا رقم آية ولا تخريجاً. اذكر فقط ما تثق بنصّه ومصدره. وإن لم تكن متأكداً من النص الحرفي أو مصدره، فاذكر معناه ووجّه للتحقق، ولا تنسب نصاً حرفياً غير موثوق.
+5. عند اختلاف العلماء: اذكر القول الراجح باختصار مع الإشارة إلى وجود خلاف.
+6. في النوازل المعقّدة أو ما يعتمد على تفاصيل حالة المستخدم: أعطِ التأصيل العام، ونبّه أنه توضيح تعليمي لا فتوى مُلزمة، ووجّه لسؤال أهل العلم المختصّين.
+
+# الشكل المطلوب — JSON فقط، لا شيء قبله أو بعده
+\`\`\`
+{
+  "accent": "knowledge",
+  "kicker": "فتوى",
+  "title": "<عنوان السؤال باختصار>",
+  "sub": "<ملخّص الحكم في سطر>",
+  "tabs": [
+    {"label":"الحكم","type":"text","data":{"body":"<الحكم الشرعي واضح ومختصر: جملة إلى ثلاث>"}},
+    {"label":"الدليل","type":"list","data":{"intro":"الأدلة المرتبطة بالسؤال:","items":["«نص الآية أو الحديث» — (المصدر: السورة ورقم الآية، أو الحديث ومُخرّجه). وجه الدلالة: <كيف يدل على حكم هذا السؤال تحديداً>"]}},
+    {"label":"الشرح","type":"list","data":{"intro":"تفصيل وضوابط:","items":["<نقطة>","<نقطة>"]}},
+    {"label":"تنبيه","type":"text","data":{"body":"هذا توضيح تعليمي على منهج أهل السنة والجماعة؛ وللفتوى المُلزمة في حالتك الخاصة يُرجع لأهل العلم المختصّين."}}
+  ],
+  "followUps": ["<سؤال شرعي متعلّق>","<سؤال شرعي متعلّق>","<سؤال شرعي متعلّق>"]
+}
+\`\`\`
+
+# ضوابط إضافية
+- تبويب «الدليل» يجب أن يكون list، وكل بند = دليل واحد + مصدره + وجه دلالته. لا تضع أدلة لملء الفراغ.
+- إن كان للحكم أكثر من دليل مرتبط، أضِفها بنوداً متعددة.
+- عربية فصيحة واضحة، بلا إيموجي، والتزم JSON صحيحاً فقط.
+${searchBlock || ""}`;
+}
+
 /* ===== معالج الطلب ===== */
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const apiKey = (process.env.CEREBRAS_API_KEY || "").trim();
-  if (!apiKey.startsWith("csk-")) return res.status(500).json({ error: "Invalid key" });
   const tavilyKey = (process.env.TAVILY_API_KEY || "").trim();
 
-  let question, history, lang, forceSearch, userProfile, imageBase64 = null, imageMimeType = "image/jpeg";
+  let question, history, lang, forceSearch, userProfile, agent, imageBase64 = null, imageMimeType = "image/jpeg";
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     question = body?.question;
@@ -315,14 +366,24 @@ export default async function handler(req, res) {
     lang = body?.lang === "en" ? "en" : "ar";
     forceSearch = body?.forceSearch === true;
     userProfile = body?.userProfile || null;
+    agent = ["marn", "nibras", "fatwa"].includes(body?.agent) ? body.agent : "marn";
     imageBase64 = body?.imageBase64 || null;
     imageMimeType = body?.imageMimeType || "image/jpeg";
   } catch { return res.status(400).json({ error: "Bad request" }); }
   if (!question) return res.status(400).json({ error: "Question missing" });
 
+  // ===== مفتاح خاص لكل وكيل (مع سقوط للمفتاح العام إن لم يُضبط) =====
+  const KEY_BY_AGENT = {
+    marn:   process.env.CEREBRAS_KEY_MARN,
+    nibras: process.env.CEREBRAS_KEY_NIBRAS,
+    fatwa:  process.env.CEREBRAS_KEY_FATWA,
+  };
+  const apiKey = ((KEY_BY_AGENT[agent] || process.env.CEREBRAS_API_KEY) || "").trim();
+  if (!apiKey.startsWith("csk-")) return res.status(500).json({ error: "Invalid key", agent });
+
   // فحص الكاش
   if (!forceSearch) {
-    const cached = getCache(question, lang);
+    const cached = getCache(question, lang, agent);
     if (cached) {
       return res.status(200).json({ ...cached, fromCache: true });
     }
@@ -335,7 +396,8 @@ export default async function handler(req, res) {
 
   let searchBlock = "";
   let didSearch = false;
-  if (!isCasualChat && tavilyKey && (forceSearch || needsSearch(question))) {
+  const autoSearch = agent !== "fatwa"; // فتوى: لا بحث تلقائي (يجيب ضوضاء غير شرعية)
+  if (!isCasualChat && tavilyKey && (forceSearch || (autoSearch && needsSearch(question)))) {
     const results = await searchWeb(question, tavilyKey);
     if (results) {
       searchBlock = `\n\n===== WEB SEARCH RESULTS =====\n⚠️ AUTHORITATIVE FACTS ONLY. Follow them. Never contradict.\n${results}\n===== END =====`;
@@ -360,7 +422,9 @@ export default async function handler(req, res) {
     if (hasProfile) profileBlock += `\n${lang === "ar" ? "استخدم هذا الملف الشخصي لتخصيص إجاباتك — خاطب المستخدم باسمه، واذكر اهتماماته عند الملاءمة، وخصّص الأمثلة لحياته." : "Use this profile to personalize your responses."}\n`;
   }
 
-  const systemPrompt = buildSystemPrompt(lang, searchBlock, profileBlock, didSearch);
+  const systemPrompt = agent === "fatwa"
+    ? buildFatwaPrompt(lang, searchBlock, profileBlock)
+    : buildSystemPrompt(lang, searchBlock, profileBlock, didSearch);
 
   const userContent = imageBase64
     ? [
@@ -492,7 +556,7 @@ export default async function handler(req, res) {
         });
 
         const result = { card, model_used: model, searched: didSearch };
-        setCache(question, lang, result);
+        setCache(question, lang, agent, result);
         return res.status(200).json(result);
 
       } catch (e) {
