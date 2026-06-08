@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { TRANSLATIONS } from "./i18n.js";
 import FatwaApp from "./FatwaApp.jsx";
+import NibrasApp from "./NibrasApp.jsx";
 
 
 /* ===== شعار مرن ===== */
@@ -163,7 +164,7 @@ export default function App() {
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tab, setTab] = useState("chats");
-  const [appView, setAppView] = useState("chat"); // "chat" | "groups" | "organizer" | "profile" | "fatwa"
+  const [appView, setAppView] = useState("chat"); // "chat" | "groups" | "organizer" | "profile" | "fatwa" | "nibras"
   const [showAppMenu, setShowAppMenu] = useState(false); // قائمة التطبيقات
   const [isMobile, setIsMobile] = useState(false);
   const [chats, setChats] = useState({});
@@ -522,6 +523,13 @@ export default function App() {
   if (appView === "fatwa") {
     return (
       <FatwaApp onClose={() => setAppView("chat")} />
+    );
+  }
+
+  // قسم نبراس — المساعد الذكي للمذاكرة (شاشة كاملة)
+  if (appView === "nibras") {
+    return (
+      <NibrasApp onClose={() => setAppView("chat")} />
     );
   }
 
@@ -1231,6 +1239,10 @@ function EmptyState({ T, t, F, send, settings, userProfile, onOpenView }) {
     { label:"فتوى", sub:"فتاوى، أذكار، مواقيت", view:"fatwa",
       color:"#4A8FFF", grad:"linear-gradient(135deg,rgba(74,143,255,0.12),rgba(74,143,255,0.04))",
       icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#4A8FFF" strokeWidth="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> },
+
+    { label:"نبراس", sub:"مذاكرة، اختبارات، بطاقات", view:"nibras",
+      color:"#E2B14A", grad:"linear-gradient(135deg,rgba(226,177,74,0.14),rgba(226,177,74,0.04))",
+      icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#E2B14A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2 3 6 3s6-2 6-3v-5"/></svg> },
   ] : [];
 
   return (
