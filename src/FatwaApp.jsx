@@ -933,9 +933,20 @@ function Drawer({ open, view, onSelect, onClose, onExit }) {
 // ---------------------------------------------------------------------------
 // المكوّن الرئيسي
 // ---------------------------------------------------------------------------
-export default function FatwaApp({ onClose }) {
-  const [view, setView] = useState('home');
+export default function FatwaApp({ onClose, marnT, marnF, dark, initialScreen }) {
+  const [view, setView] = useState(initialScreen || 'home');
   const [drawer, setDrawer] = useState(false);
+
+  // مطابقة نظام مرن (الثيم/الوضع) — تجعل فتوى جزءاً من مرن لا تطبيقاً منفصلاً
+  if (marnT) {
+    Object.assign(T, {
+      bg: marnT.pageBg, surface: marnT.cardBg, surfaceAlt: marnT.inputBg || marnT.pillFill,
+      border: marnT.line, borderSoft: marnT.line,
+      text: marnT.text, textDim: marnT.sub, textFaint: marnT.faint,
+      accent: '#1FA98F', accentSoft: 'rgba(31,169,143,0.12)', accentLine: 'rgba(31,169,143,0.30)',
+    });
+    Object.assign(backLink, { color: T.accent });
+  }
 
   const meta = {
     home: { title: 'فتوى', Icon: Compass },
@@ -957,7 +968,7 @@ export default function FatwaApp({ onClose }) {
         title={meta.title}
         Icon={meta.Icon}
         onMenu={() => setDrawer(true)}
-        onBack={view === 'home' ? onClose : () => setView('home')}
+        onBack={onClose}
       />
       <div className="fatwa-scroll" style={{ flex: 1, overflowY: 'auto' }}>
         {view === 'home' && <HomeView go={setView} />}
