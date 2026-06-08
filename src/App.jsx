@@ -128,9 +128,9 @@ const AGENTS = {
     suggestions: ["اشرح لي درس الكسور", "سوّ لي اختبار قصير", "خطة مذاكرة لأسبوع", "لخّص هذا الدرس"],
     tools: [
       { id: "explain", label: "اشرح درس", kind: "prompt", prompt: "اشرح لي بشكل تعليمي مبسّط مع أمثلة:\n" },
-      { id: "quiz", label: "اختبار", kind: "sheet", view: "nibras" },
-      { id: "cards", label: "بطاقات", kind: "sheet", view: "nibras" },
-      { id: "plan", label: "خطة مذاكرة", kind: "sheet", view: "nibras" },
+      { id: "quiz", label: "اختبار", kind: "sheet", view: "nibras", screen: "quizzes" },
+      { id: "cards", label: "بطاقات", kind: "sheet", view: "nibras", screen: "cards" },
+      { id: "plan", label: "خطة مذاكرة", kind: "sheet", view: "nibras", screen: "plan" },
     ],
   },
   fatwa: {
@@ -140,9 +140,9 @@ const AGENTS = {
     suggestions: ["ما حكم الجمع في السفر؟", "كيف أحسب زكاة المال؟", "أذكار الصباح", "ما صحة هذا الحديث؟"],
     tools: [
       { id: "ask", label: "سؤال فقهي", kind: "focus" },
-      { id: "prayer", label: "مواقيت الصلاة", kind: "sheet", view: "fatwa" },
-      { id: "adhkar", label: "أذكار", kind: "sheet", view: "fatwa" },
-      { id: "track", label: "تتبّع العبادات", kind: "sheet", view: "fatwa" },
+      { id: "prayer", label: "مواقيت الصلاة", kind: "sheet", view: "fatwa", screen: "prayer" },
+      { id: "adhkar", label: "أذكار", kind: "sheet", view: "fatwa", screen: "adhkar" },
+      { id: "track", label: "تتبّع العبادات", kind: "sheet", view: "fatwa", screen: "tracking" },
     ],
   },
 };
@@ -209,6 +209,7 @@ export default function App() {
   const [tab, setTab] = useState("chats");
   const [appView, setAppView] = useState("chat"); // "chat" | "groups" | "organizer" | "profile" | "fatwa" | "nibras"
   const [agent, setAgent] = useState("marn"); // الوكيل النشط: marn | nibras | fatwa
+  const [toolScreen, setToolScreen] = useState(null); // الشاشة المطلوب فتحها داخل أداة الوكيل
   const [showAppMenu, setShowAppMenu] = useState(false); // قائمة التطبيقات
   const [isMobile, setIsMobile] = useState(false);
   const [chats, setChats] = useState({});
@@ -345,7 +346,7 @@ export default function App() {
     if (tool.kind === "search") { setForceSearch(true); setTimeout(() => inputRef.current?.focus(), 40); }
     else if (tool.kind === "focus") { setTimeout(() => inputRef.current?.focus(), 40); }
     else if (tool.kind === "prompt") { setDraft(tool.prompt || ""); setTimeout(() => inputRef.current?.focus(), 40); }
-    else if (tool.kind === "sheet" && tool.view) { setAppView(tool.view); }
+    else if (tool.kind === "sheet" && tool.view) { setToolScreen(tool.screen || null); setAppView(tool.view); }
   }, []);
 
   const askConfirm = useCallback((title, action) => {
@@ -587,17 +588,17 @@ export default function App() {
     );
   }
 
-  // قسم فتوى — شاشة كاملة (هوية Clean Navy خاصة به)
+  // قسم فتوى — أداة داخل مرن (تتبع ثيم مرن)
   if (appView === "fatwa") {
     return (
-      <FatwaApp onClose={() => setAppView("chat")} />
+      <FatwaApp onClose={() => { setAppView("chat"); setToolScreen(null); }} marnT={T} marnF={F} dark={effectiveMode === "dark"} initialScreen={toolScreen} />
     );
   }
 
-  // قسم نبراس — المساعد الذكي للمذاكرة (شاشة كاملة)
+  // قسم نبراس — أداة داخل مرن (تتبع ثيم مرن)
   if (appView === "nibras") {
     return (
-      <NibrasApp onClose={() => setAppView("chat")} />
+      <NibrasApp onClose={() => { setAppView("chat"); setToolScreen(null); }} marnT={T} marnF={F} dark={effectiveMode === "dark"} initialScreen={toolScreen} />
     );
   }
 
