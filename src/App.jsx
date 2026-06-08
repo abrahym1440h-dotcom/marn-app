@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { TRANSLATIONS } from "./i18n.js";
+import FatwaApp from "./FatwaApp.jsx";
 
 
 /* ===== شعار مرن ===== */
@@ -162,7 +163,7 @@ export default function App() {
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tab, setTab] = useState("chats");
-  const [appView, setAppView] = useState("chat"); // "chat" | "groups" | "organizer" | "profile"
+  const [appView, setAppView] = useState("chat"); // "chat" | "groups" | "organizer" | "profile" | "fatwa"
   const [showAppMenu, setShowAppMenu] = useState(false); // قائمة التطبيقات
   const [isMobile, setIsMobile] = useState(false);
   const [chats, setChats] = useState({});
@@ -514,6 +515,13 @@ export default function App() {
         organizer={organizer} setOrganizer={setOrganizer}
         userProfile={userProfile} onBack={() => setAppView("chat")}
       />
+    );
+  }
+
+  // قسم فتوى — شاشة كاملة (هوية Clean Navy خاصة به)
+  if (appView === "fatwa") {
+    return (
+      <FatwaApp onClose={() => setAppView("chat")} />
     );
   }
 
@@ -1219,6 +1227,10 @@ function EmptyState({ T, t, F, send, settings, userProfile, onOpenView }) {
     { label:"المجموعات", sub:"رحلات، كشت، فعاليات", view:"groups",
       color:"#34D399", grad:"linear-gradient(135deg,rgba(52,211,153,0.12),rgba(52,211,153,0.04))",
       icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="7" r="3"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg> },
+
+    { label:"فتوى", sub:"فتاوى، أذكار، مواقيت", view:"fatwa",
+      color:"#4A8FFF", grad:"linear-gradient(135deg,rgba(74,143,255,0.12),rgba(74,143,255,0.04))",
+      icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#4A8FFF" strokeWidth="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> },
   ] : [];
 
   return (
