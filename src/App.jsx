@@ -103,6 +103,51 @@ const FONT_SIZES = {
   large: { base: 16, h1: 27, h2: 22, label: 13 },
 };
 
+/* ============ الوكلاء (Agents) ============ */
+const AG_ICON = {
+  marn:   (c, s = 18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+  nibras: (c, s = 18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2 3 6 3s6-2 6-3v-5"/></svg>,
+  fatwa:  (c, s = 18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
+};
+
+const AGENTS = {
+  marn: {
+    id: "marn", name: "مرن", color: "#2A6BF0", desc: "مساعدك العام",
+    greeting: (n) => n ? `أهلاً، ${n}` : "كيف أقدر أساعدك؟",
+    directive: "",
+    suggestions: ["لخّص لي نصاً", "اكتب رسالة احترافية", "اقترح أفكاراً لمشروع", "اشرح موضوعاً ببساطة"],
+    tools: [
+      { id: "search", label: "بحث حي", kind: "search" },
+      { id: "sum", label: "تلخيص", kind: "prompt", prompt: "لخّص لي النص التالي بنقاط واضحة:\n" },
+    ],
+  },
+  nibras: {
+    id: "nibras", name: "نبراس", color: "#D9A93C", desc: "المذاكرة والتعليم",
+    greeting: (n) => n ? `جاهزين نذاكر، ${n}؟` : "وش نذاكر اليوم؟",
+    directive: "أنت «نبراس»، مساعد تعليمي متخصص داخل تطبيق مرن. اشرح بأسلوب تعليمي مبسّط ومنظّم بالعربية مع أمثلة وخطوات واضحة، وركّز على ترسيخ الفهم لدى الطالب.",
+    suggestions: ["اشرح لي درس الكسور", "سوّ لي اختبار قصير", "خطة مذاكرة لأسبوع", "لخّص هذا الدرس"],
+    tools: [
+      { id: "explain", label: "اشرح درس", kind: "prompt", prompt: "اشرح لي بشكل تعليمي مبسّط مع أمثلة:\n" },
+      { id: "quiz", label: "اختبار", kind: "sheet", view: "nibras" },
+      { id: "cards", label: "بطاقات", kind: "sheet", view: "nibras" },
+      { id: "plan", label: "خطة مذاكرة", kind: "sheet", view: "nibras" },
+    ],
+  },
+  fatwa: {
+    id: "fatwa", name: "فتوى", color: "#1FA98F", desc: "مستشار شرعي موثوق",
+    greeting: (n) => n ? `حيّاك الله، ${n}` : "اسأل عن أمور دينك",
+    directive: "أنت «مستشار الفتوى» داخل تطبيق مرن. أجب وفق منهج أهل السنة والجماعة بأسلوب رسمي موثوق: اذكر الحكم الشرعي ثم الدليل من القرآن والسنة وأقوال أهل العلم عند توفّرها، ونبّه أن الفتوى الملزمة تؤخذ من أهل العلم المختصين، وتجنّب القول بلا علم.",
+    suggestions: ["ما حكم الجمع في السفر؟", "كيف أحسب زكاة المال؟", "أذكار الصباح", "ما صحة هذا الحديث؟"],
+    tools: [
+      { id: "ask", label: "سؤال فقهي", kind: "focus" },
+      { id: "prayer", label: "مواقيت الصلاة", kind: "sheet", view: "fatwa" },
+      { id: "adhkar", label: "أذكار", kind: "sheet", view: "fatwa" },
+      { id: "track", label: "تتبّع العبادات", kind: "sheet", view: "fatwa" },
+    ],
+  },
+};
+const AGENT_ORDER = ["marn", "nibras", "fatwa"];
+
 /* ============ مكوّن البطاقة الاحترافية ============ */
 function Glass({ T, children, style, radius = 12, onClick, className = "" }) {
   return (
@@ -163,6 +208,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tab, setTab] = useState("chats");
   const [appView, setAppView] = useState("chat"); // "chat" | "groups" | "organizer" | "profile" | "fatwa" | "nibras"
+  const [agent, setAgent] = useState("marn"); // الوكيل النشط: marn | nibras | fatwa
   const [showAppMenu, setShowAppMenu] = useState(false); // قائمة التطبيقات
   const [isMobile, setIsMobile] = useState(false);
   const [chats, setChats] = useState({});
@@ -257,6 +303,8 @@ export default function App() {
   /* ===== الإجراءات ===== */
   const currentMessages = activeChat ? (chats[activeChat]?.messages || []) : [];
   const empty = currentMessages.length === 0;
+  const activeAgentId = (activeChat && chats[activeChat]?.agent) || agent;
+  const currentAgent = AGENTS[activeAgentId] || AGENTS.marn;
   const sortedChats = useMemo(() => {
     let list = Object.values(chats).sort((a, b) => b.createdAt - a.createdAt);
     if (chatSearch.trim()) {
@@ -278,8 +326,27 @@ export default function App() {
 
   const openChat = useCallback((id) => {
     setActiveChat(id);
+    setAgent(chats[id]?.agent || "marn");
     if (isMobile) setSidebarOpen(false);
-  }, [isMobile]);
+  }, [isMobile, chats]);
+
+  const switchAgent = useCallback((id) => {
+    if (!AGENTS[id]) return;
+    setAgent(id);
+    setForceSearch(false);
+    if (activeChat) {
+      setChats(prev => prev[activeChat] ? { ...prev, [activeChat]: { ...prev[activeChat], agent: id } } : prev);
+    }
+    setTimeout(() => inputRef.current?.focus(), 60);
+  }, [activeChat]);
+
+  const handleAgentTool = useCallback((tool) => {
+    if (!tool) return;
+    if (tool.kind === "search") { setForceSearch(true); setTimeout(() => inputRef.current?.focus(), 40); }
+    else if (tool.kind === "focus") { setTimeout(() => inputRef.current?.focus(), 40); }
+    else if (tool.kind === "prompt") { setDraft(tool.prompt || ""); setTimeout(() => inputRef.current?.focus(), 40); }
+    else if (tool.kind === "sheet" && tool.view) { setAppView(tool.view); }
+  }, []);
 
   const askConfirm = useCallback((title, action) => {
     setConfirmDialog({ title, action });
@@ -373,13 +440,15 @@ export default function App() {
     if (!q || thinking) return;
 
     let chatId = targetChatId || activeChat;
+    const agentId = (chatId && chats[chatId]?.agent) || agent;
+    const agentDirective = AGENTS[agentId]?.directive || "";
     let isNewChat = false;
     if (!chatId) {
       chatId = "c_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
       isNewChat = true;
       setChats(prev => ({
         ...prev,
-        [chatId]: { id: chatId, title: q.slice(0, 40), messages: [], createdAt: Date.now() }
+        [chatId]: { id: chatId, title: q.slice(0, 40), messages: [], createdAt: Date.now(), agent: agentId }
       }));
       setActiveChat(chatId);
     }
@@ -411,7 +480,8 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          question: q,
+          question: agentDirective ? `${agentDirective}\n\nسؤال المستخدم: ${q}` : q,
+          agent: agentId,
           history,
           lang: settings.lang,
           forceSearch: forceWebSearch === true,
@@ -587,19 +657,20 @@ export default function App() {
           flexShrink: 0, position: "relative", zIndex: 5,
           background: T.headerBg,
           borderBottom: `1px solid ${T.line}`,
+          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
         }}>
-          <div style={{ maxWidth: 820, margin: "0 auto", padding: "14px 18px", display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ maxWidth: 820, margin: "0 auto", padding: "10px 16px 0", display: "flex", alignItems: "center", gap: 10 }}>
             {isMobile && (
               <button onClick={() => setSidebarOpen(true)} style={iconBtnStyle(T)}>
                 <Icon.Menu />
               </button>
             )}
             <div style={{ flex: 1, fontSize: F.base, fontWeight: 600, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {activeChat ? chats[activeChat]?.title : t.appName}
+              {activeChat ? chats[activeChat]?.title : currentAgent.name}
             </div>
             <button onClick={newChat} style={{
               ...iconBtnStyle(T),
-              background: T.gradBtn||"linear-gradient(135deg,#0F2060,#2A5ED8)",
+              background: T.gradBtn,
               color: "#fff",
               border: "none",
               boxShadow: "none",
@@ -608,13 +679,14 @@ export default function App() {
               <Icon.Plus />
             </button>
           </div>
+          <AgentSwitcher T={T} F={F} current={activeAgentId} onSwitch={switchAgent} />
         </header>
 
         {/* خيط الرسائل */}
         <div style={{ flex: 1, overflowY: "auto", padding: "0 14px", position: "relative" }}>
           <div style={{ maxWidth: 760, margin: "0 auto", padding: "18px 0 16px" }}>
             {empty && (
-              <EmptyState T={T} t={t} F={F} send={send} settings={settings} userProfile={userProfile} onOpenView={(v)=>setAppView(v)} />
+              <EmptyState T={T} t={t} F={F} send={send} settings={settings} userProfile={userProfile} onOpenView={(v)=>setAppView(v)} agent={currentAgent} onTool={handleAgentTool} />
             )}
 
             {currentMessages.map((m, i) => (
@@ -651,14 +723,25 @@ export default function App() {
           backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
         }}>
           <div style={{ maxWidth: 760, margin: "0 auto", padding: "12px 14px" }}>
-            {settings.showSuggestions && currentMessages.length > 0 && (
+            {currentAgent.tools && currentAgent.tools.length > 0 && (
               <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 10, scrollbarWidth: "none" }}>
-                {t.suggestions.slice(0, 3).map(s => (
-                  <Glass key={s} T={T} radius={999} onClick={() => send(s)} className="press"
-                    style={{ cursor: thinking ? "default" : "pointer", padding: "7px 13px", flexShrink: 0 }}>
-                    <span style={{ fontSize: F.base - 2, fontWeight: 500, color: T.sub, whiteSpace: "nowrap" }}>{s}</span>
-                  </Glass>
-                ))}
+                {currentAgent.tools.map(tool => {
+                  const isSearchOn = tool.kind === "search" && forceSearch;
+                  return (
+                    <button key={tool.id} onClick={() => handleAgentTool(tool)} disabled={thinking} className="press" style={{
+                      flexShrink: 0, display: "flex", alignItems: "center", gap: 6,
+                      background: isSearchOn ? currentAgent.color : T.pillFill,
+                      color: isSearchOn ? "#fff" : T.text,
+                      border: `1px solid ${isSearchOn ? currentAgent.color : T.line}`,
+                      borderRadius: 999, padding: "7px 13px", cursor: thinking ? "default" : "pointer",
+                      fontFamily: "inherit", fontSize: F.base - 2, fontWeight: 600, whiteSpace: "nowrap",
+                      opacity: thinking ? 0.5 : 1, transition: "all .15s",
+                    }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: isSearchOn ? "#fff" : currentAgent.color }} />
+                      {tool.label}
+                    </button>
+                  );
+                })}
               </div>
             )}
             <div style={{
@@ -1146,79 +1229,122 @@ function ConfirmModal({ T, t, F, title, onConfirm, onCancel }) {
 }
 
 /* ============ حالة فارغة ============ */
-function EmptyState({ T, t, F, send, settings, userProfile, onOpenView }) {
+/* ============ مبدّل الوكلاء ============ */
+function AgentSwitcher({ T, F, current, onSwitch }) {
+  return (
+    <div style={{ maxWidth: 820, margin: "0 auto", padding: "8px 12px 0" }}>
+      <div style={{ display: "flex", gap: 5, background: T.pillFill, border: `1px solid ${T.line}`, borderRadius: 12, padding: 4 }}>
+        {AGENT_ORDER.map(id => {
+          const a = AGENTS[id]; const on = id === current;
+          return (
+            <button key={id} onClick={() => onSwitch(id)} className="press" style={{
+              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              background: on ? T.cardBg : "transparent",
+              color: on ? a.color : T.sub,
+              border: on ? `1px solid ${a.color}33` : "1px solid transparent",
+              borderRadius: 9, padding: "7px 4px", cursor: "pointer", fontFamily: "inherit",
+              fontSize: F.base - 1.5, fontWeight: on ? 700 : 600,
+              boxShadow: on ? "0 1px 4px rgba(16,24,40,0.06)" : "none",
+              transition: "all .15s",
+            }}>
+              {AG_ICON[id](on ? a.color : T.faint, 16)}
+              <span>{a.name}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ height: 2, marginTop: 8, background: `linear-gradient(90deg, transparent, ${AGENTS[current]?.color || T.accentBlue}, transparent)`, opacity: 0.7 }} />
+    </div>
+  );
+}
+
+function EmptyState({ T, t, F, send, settings, userProfile, onOpenView, agent, onTool }) {
   const name = userProfile?.name;
   const isAr = t.appName === "مرن";
+  const A = agent || AGENTS.marn;
+  const sugg = (A.suggestions && A.suggestions.length ? A.suggestions : t.suggestions) || [];
 
-  const APPS = isAr ? [
-    { label:"المنظّم الشخصي", sub:"مهام ومواعيد وعادات", view:"organizer", color:"#8B7FE8",
-      icon:<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#8B7FE8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
-    { label:"المجموعات", sub:"رحلات وفعاليات", view:"groups", color:"#2FB479",
-      icon:<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2FB479" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="7" r="3"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg> },
-    { label:"فتوى", sub:"فتاوى وأذكار ومواقيت", view:"fatwa", color:"#2A6BF0",
-      icon:<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2A6BF0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> },
-    { label:"نبراس", sub:"مذاكرة واختبارات", view:"nibras", color:"#D9A93C",
-      icon:<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#D9A93C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2 3 6 3s6-2 6-3v-5"/></svg> },
+  const OTHER = isAr ? [
+    { label:"المنظّم", view:"organizer", color:"#8B7FE8",
+      icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B7FE8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
+    { label:"المجموعات", view:"groups", color:"#2FB479",
+      icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2FB479" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="7" r="3"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg> },
   ] : [];
 
   return (
-    <div style={{ textAlign: "center", padding: "44px 0 24px", maxWidth: 560, margin: "0 auto", width:"100%" }}>
+    <div style={{ textAlign: "center", padding: "36px 0 24px", maxWidth: 560, margin: "0 auto", width:"100%" }}>
+      {/* هوية الوكيل النشط */}
       <div style={{
-        width: 56, height: 56, borderRadius: 16, margin: "0 auto 20px",
-        background: "#FFFFFF", border: `1px solid ${T.line}`,
+        width: 62, height: 62, borderRadius: 19, margin: "0 auto 16px",
+        background: A.color + "14", border: `1px solid ${A.color}33`,
         display: "flex", alignItems: "center", justifyContent: "center",
-        overflow: "hidden", padding: 9,
-        boxShadow: "0 4px 16px rgba(16,24,40,0.06)",
-      }}><img src={LOGO_LIGHT_SM} alt="مرن" style={{ width:"100%", height:"100%", objectFit:"contain" }}/></div>
+      }}>{AG_ICON[A.id] ? AG_ICON[A.id](A.color, 28) : null}</div>
 
-      <h1 style={{ fontSize: F.h1, fontWeight: 700, margin: "0 0 8px", color: T.text, letterSpacing: "-0.4px" }}>
-        {name ? (isAr ? `أهلاً، ${name}` : `Hello, ${name}`) : t.tagline}
+      <h1 style={{ fontSize: F.h1, fontWeight: 700, margin: "0 0 6px", color: T.text, letterSpacing: "-0.4px" }}>
+        {A.greeting ? A.greeting(name) : (name ? `أهلاً، ${name}` : A.name)}
       </h1>
-      <p style={{ fontSize: F.base, color: T.sub, margin: "0 0 28px", lineHeight: 1.7, maxWidth: 360, marginInline: "auto" }}>
-        {t.askAnything}
-      </p>
+      <p style={{ fontSize: F.base, color: T.sub, margin: "0 0 26px", lineHeight: 1.6 }}>{A.desc}</p>
 
-      {/* بطاقات التطبيقات */}
-      {APPS.length > 0 && (
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:28, padding:"0 16px" }}>
-          {APPS.map(a=>(
-            <button key={a.view} onClick={()=>onOpenView&&onOpenView(a.view)} className="press" style={{
-              display:"flex", alignItems:"center", gap:12,
+      {/* أدوات الوكيل */}
+      {A.tools && A.tools.length > 0 && (
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:24, padding:"0 16px" }}>
+          {A.tools.map(tool=>(
+            <button key={tool.id} onClick={()=>onTool&&onTool(tool)} className="press" style={{
+              display:"flex", alignItems:"center", gap:11,
               background:T.cardBg, border:`1px solid ${T.line}`, borderRadius:14,
-              padding:"14px 14px", cursor:"pointer", fontFamily:"inherit", textAlign:"right",
-              transition:"border-color .15s, transform .15s",
+              padding:"13px 14px", cursor:"pointer", fontFamily:"inherit", textAlign:"right",
+              transition:"border-color .15s",
             }}
-              onMouseEnter={e=>{ e.currentTarget.style.borderColor = a.color+"66"; }}
+              onMouseEnter={e=>{ e.currentTarget.style.borderColor = A.color+"66"; }}
               onMouseLeave={e=>{ e.currentTarget.style.borderColor = T.line; }}>
-              <div style={{ width:38, height:38, borderRadius:11, background:a.color+"16", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{a.icon}</div>
-              <div style={{ textAlign:"right", overflow:"hidden" }}>
-                <div style={{ fontSize:14, fontWeight:700, color:T.text }}>{a.label}</div>
-                <div style={{ fontSize:12, color:T.sub, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{a.sub}</div>
-              </div>
+              <span style={{ width:32, height:32, borderRadius:10, background:A.color+"16", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <span style={{ width:8, height:8, borderRadius:"50%", background:A.color }}/>
+              </span>
+              <span style={{ fontSize:F.base-1, fontWeight:700, color:T.text }}>{tool.label}</span>
             </button>
           ))}
         </div>
       )}
 
-      {/* اقتراحات الأسئلة */}
-      {settings.showSuggestions && (
-        <div style={{ padding:"0 16px" }}>
-          <div style={{ fontSize: F.label, color: T.faint, fontWeight: 600, marginBottom: 12, textAlign: "center" }}>
+      {/* اقتراحات */}
+      {settings.showSuggestions && sugg.length > 0 && (
+        <div style={{ padding:"0 16px", marginBottom: OTHER.length ? 22 : 0 }}>
+          <div style={{ fontSize: F.label, color: T.faint, fontWeight: 600, marginBottom: 12 }}>
             {isAr ? "جرّب أن تسأل" : "Try asking"}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-            {t.suggestions.map(s => (
+            {sugg.map(s => (
               <button key={s} onClick={() => send(s)} className="press"
                 style={{
                   background: T.pillFill, color: T.text,
                   border: `1px solid ${T.line}`, borderRadius: 999,
                   padding: "9px 15px", fontSize: F.base - 1.5, fontWeight: 500,
-                  cursor: "pointer", fontFamily: "inherit", lineHeight: 1.4,
-                  transition: "all .15s",
+                  cursor: "pointer", fontFamily: "inherit", lineHeight: 1.4, transition: "all .15s",
                 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = T.accentBlue + "66"; e.currentTarget.style.background = T.hover; }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = A.color + "66"; e.currentTarget.style.background = T.hover; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = T.line; e.currentTarget.style.background = T.pillFill; }}>
                 {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* أدوات أخرى */}
+      {OTHER.length > 0 && (
+        <div style={{ padding:"18px 16px 0", borderTop:`1px solid ${T.line}`, marginTop:8 }}>
+          <div style={{ fontSize:F.label, color:T.faint, fontWeight:600, marginBottom:10 }}>أدوات أخرى</div>
+          <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
+            {OTHER.map(o=>(
+              <button key={o.view} onClick={()=>onOpenView&&onOpenView(o.view)} className="press" style={{
+                flex:1, maxWidth:200, display:"flex", alignItems:"center", gap:9, justifyContent:"center",
+                background:T.cardBg, border:`1px solid ${T.line}`, borderRadius:12, padding:"11px 12px",
+                cursor:"pointer", fontFamily:"inherit", transition:"border-color .15s",
+              }}
+                onMouseEnter={e=>{ e.currentTarget.style.borderColor = o.color+"66"; }}
+                onMouseLeave={e=>{ e.currentTarget.style.borderColor = T.line; }}>
+                <span style={{ display:"flex" }}>{o.icon}</span>
+                <span style={{ fontSize:F.base-1, fontWeight:600, color:T.text }}>{o.label}</span>
               </button>
             ))}
           </div>
