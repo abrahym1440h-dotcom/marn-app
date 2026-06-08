@@ -687,7 +687,7 @@ export default function App() {
         <div style={{ flex: 1, overflowY: "auto", padding: "0 14px", position: "relative" }}>
           <div style={{ maxWidth: 760, margin: "0 auto", padding: "18px 0 16px" }}>
             {empty && (
-              <EmptyState T={T} t={t} F={F} send={send} settings={settings} userProfile={userProfile} onOpenView={(v)=>setAppView(v)} agent={currentAgent} onTool={handleAgentTool} />
+              <EmptyState T={T} t={t} F={F} send={send} settings={settings} userProfile={userProfile} onOpenView={(v)=>setAppView(v)} agent={currentAgent} onTool={handleAgentTool} isMobile={isMobile} />
             )}
 
             {currentMessages.map((m, i) => (
@@ -724,7 +724,7 @@ export default function App() {
           backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
         }}>
           <div style={{ maxWidth: 760, margin: "0 auto", padding: "12px 14px" }}>
-            {currentAgent.tools && currentAgent.tools.length > 0 && (
+            {!empty && currentAgent.tools && currentAgent.tools.length > 0 && (
               <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 10, scrollbarWidth: "none" }}>
                 {currentAgent.tools.map(tool => {
                   const isSearchOn = tool.kind === "search" && forceSearch;
@@ -1259,49 +1259,52 @@ function AgentSwitcher({ T, F, current, onSwitch }) {
   );
 }
 
-function EmptyState({ T, t, F, send, settings, userProfile, onOpenView, agent, onTool }) {
+function EmptyState({ T, t, F, send, settings, userProfile, onOpenView, agent, onTool, isMobile }) {
   const name = userProfile?.name;
   const isAr = t.appName === "مرن";
   const A = agent || AGENTS.marn;
-  const sugg = (A.suggestions && A.suggestions.length ? A.suggestions : t.suggestions) || [];
+  const allSugg = (A.suggestions && A.suggestions.length ? A.suggestions : t.suggestions) || [];
+  const sugg = isMobile ? allSugg.slice(0, 3) : allSugg;
 
   const OTHER = isAr ? [
     { label:"المنظّم", view:"organizer", color:"#8B7FE8",
-      icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B7FE8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
+      icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8B7FE8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
     { label:"المجموعات", view:"groups", color:"#2FB479",
-      icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2FB479" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="7" r="3"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg> },
+      icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2FB479" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="7" r="3"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg> },
   ] : [];
 
+  const icoSize = isMobile ? 54 : 62;
+
   return (
-    <div style={{ textAlign: "center", padding: "36px 0 24px", maxWidth: 560, margin: "0 auto", width:"100%" }}>
+    <div style={{ textAlign: "center", padding: isMobile ? "20px 0 16px" : "36px 0 24px", maxWidth: 560, margin: "0 auto", width:"100%" }}>
       {/* هوية الوكيل النشط */}
       <div style={{
-        width: 62, height: 62, borderRadius: 19, margin: "0 auto 16px",
+        width: icoSize, height: icoSize, borderRadius: isMobile ? 16 : 19, margin: isMobile ? "0 auto 12px" : "0 auto 16px",
         background: A.color + "14", border: `1px solid ${A.color}33`,
         display: "flex", alignItems: "center", justifyContent: "center",
-      }}>{AG_ICON[A.id] ? AG_ICON[A.id](A.color, 28) : null}</div>
+      }}>{AG_ICON[A.id] ? AG_ICON[A.id](A.color, isMobile ? 25 : 28) : null}</div>
 
-      <h1 style={{ fontSize: F.h1, fontWeight: 700, margin: "0 0 6px", color: T.text, letterSpacing: "-0.4px" }}>
+      <h1 style={{ fontSize: F.h1, fontWeight: 700, margin: "0 0 5px", color: T.text, letterSpacing: "-0.4px" }}>
         {A.greeting ? A.greeting(name) : (name ? `أهلاً، ${name}` : A.name)}
       </h1>
-      <p style={{ fontSize: F.base, color: T.sub, margin: "0 0 26px", lineHeight: 1.6 }}>{A.desc}</p>
+      <p style={{ fontSize: F.base, color: T.sub, margin: isMobile ? "0 0 18px" : "0 0 26px", lineHeight: 1.6 }}>{A.desc}</p>
 
       {/* أدوات الوكيل */}
       {A.tools && A.tools.length > 0 && (
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:24, padding:"0 16px" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap: isMobile ? 8 : 10, marginBottom: isMobile ? 18 : 24, padding:"0 16px" }}>
           {A.tools.map(tool=>(
             <button key={tool.id} onClick={()=>onTool&&onTool(tool)} className="press" style={{
-              display:"flex", alignItems:"center", gap:11,
-              background:T.cardBg, border:`1px solid ${T.line}`, borderRadius:14,
-              padding:"13px 14px", cursor:"pointer", fontFamily:"inherit", textAlign:"right",
+              display:"flex", alignItems:"center", gap:10,
+              background:T.cardBg, border:`1px solid ${T.line}`, borderRadius:13,
+              padding: isMobile ? "11px 12px" : "13px 14px", cursor:"pointer", fontFamily:"inherit", textAlign:"right",
               transition:"border-color .15s",
             }}
               onMouseEnter={e=>{ e.currentTarget.style.borderColor = A.color+"66"; }}
               onMouseLeave={e=>{ e.currentTarget.style.borderColor = T.line; }}>
-              <span style={{ width:32, height:32, borderRadius:10, background:A.color+"16", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <span style={{ width:8, height:8, borderRadius:"50%", background:A.color }}/>
+              <span style={{ width: isMobile?28:32, height: isMobile?28:32, borderRadius:9, background:A.color+"16", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <span style={{ width:7, height:7, borderRadius:"50%", background:A.color }}/>
               </span>
-              <span style={{ fontSize:F.base-1, fontWeight:700, color:T.text }}>{tool.label}</span>
+              <span style={{ fontSize: F.base - 1.5, fontWeight:700, color:T.text }}>{tool.label}</span>
             </button>
           ))}
         </div>
@@ -1309,17 +1312,17 @@ function EmptyState({ T, t, F, send, settings, userProfile, onOpenView, agent, o
 
       {/* اقتراحات */}
       {settings.showSuggestions && sugg.length > 0 && (
-        <div style={{ padding:"0 16px", marginBottom: OTHER.length ? 22 : 0 }}>
-          <div style={{ fontSize: F.label, color: T.faint, fontWeight: 600, marginBottom: 12 }}>
+        <div style={{ padding:"0 16px", marginBottom: OTHER.length ? (isMobile ? 16 : 22) : 0 }}>
+          <div style={{ fontSize: F.label, color: T.faint, fontWeight: 600, marginBottom: 10 }}>
             {isAr ? "جرّب أن تسأل" : "Try asking"}
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 7, justifyContent: "center" }}>
             {sugg.map(s => (
               <button key={s} onClick={() => send(s)} className="press"
                 style={{
                   background: T.pillFill, color: T.text,
                   border: `1px solid ${T.line}`, borderRadius: 999,
-                  padding: "9px 15px", fontSize: F.base - 1.5, fontWeight: 500,
+                  padding: isMobile ? "8px 13px" : "9px 15px", fontSize: F.base - 1.5, fontWeight: 500,
                   cursor: "pointer", fontFamily: "inherit", lineHeight: 1.4, transition: "all .15s",
                 }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = A.color + "66"; e.currentTarget.style.background = T.hover; }}
@@ -1333,19 +1336,19 @@ function EmptyState({ T, t, F, send, settings, userProfile, onOpenView, agent, o
 
       {/* أدوات أخرى */}
       {OTHER.length > 0 && (
-        <div style={{ padding:"18px 16px 0", borderTop:`1px solid ${T.line}`, marginTop:8 }}>
+        <div style={{ padding: isMobile ? "14px 16px 0" : "18px 16px 0", borderTop:`1px solid ${T.line}`, marginTop:8 }}>
           <div style={{ fontSize:F.label, color:T.faint, fontWeight:600, marginBottom:10 }}>أدوات أخرى</div>
-          <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
+          <div style={{ display:"flex", gap:9, justifyContent:"center" }}>
             {OTHER.map(o=>(
               <button key={o.view} onClick={()=>onOpenView&&onOpenView(o.view)} className="press" style={{
-                flex:1, maxWidth:200, display:"flex", alignItems:"center", gap:9, justifyContent:"center",
-                background:T.cardBg, border:`1px solid ${T.line}`, borderRadius:12, padding:"11px 12px",
+                flex:1, maxWidth:200, display:"flex", alignItems:"center", gap:8, justifyContent:"center",
+                background:T.cardBg, border:`1px solid ${T.line}`, borderRadius:12, padding:"10px 12px",
                 cursor:"pointer", fontFamily:"inherit", transition:"border-color .15s",
               }}
                 onMouseEnter={e=>{ e.currentTarget.style.borderColor = o.color+"66"; }}
                 onMouseLeave={e=>{ e.currentTarget.style.borderColor = T.line; }}>
                 <span style={{ display:"flex" }}>{o.icon}</span>
-                <span style={{ fontSize:F.base-1, fontWeight:600, color:T.text }}>{o.label}</span>
+                <span style={{ fontSize:F.base-1.5, fontWeight:600, color:T.text }}>{o.label}</span>
               </button>
             ))}
           </div>
