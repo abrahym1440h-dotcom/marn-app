@@ -198,9 +198,9 @@ function Dashboard({ store, go, name }) {
     { id: 'files', title: 'الملفات المرفوعة', desc: 'ارفع ملفاتك ولخّصها', Icon: FileUp, tint: T.accent, tintSoft: T.accentSoft },
   ];
   return (<div style={{ padding: 18 }}>
-    <div style={{ background: 'linear-gradient(135deg,#13245A,#0F1C3E)', border: `1px solid ${T.border}`, borderRadius: 18, padding: 22, marginBottom: 18 }}>
-      <div style={{ fontWeight: 800, fontSize: 20, color: '#fff' }}>{name ? `مساء الخير، ${name}` : 'مساء الخير'}</div>
-      <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, marginTop: 6 }}>مرحباً بك في نبراس — مساعدك الذكي للتعلّم والتفوق</div>
+    <div style={{ background: T.goldSoft, border: `1px solid ${T.goldLine}`, borderRadius: 18, padding: 22, marginBottom: 18 }}>
+      <div style={{ fontWeight: 800, fontSize: 20, color: T.text }}>{name ? `مساء الخير، ${name}` : 'مساء الخير'}</div>
+      <div style={{ color: T.textDim, fontSize: 14, marginTop: 6 }}>مرحباً بك في نبراس — مساعدك الذكي للتعلّم والتفوق</div>
     </div>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 22 }}>
       <StatCard Icon={Video} value={store.videos.length} label="الفيديوهات" tint={T.gold} tintSoft={T.goldSoft} />
@@ -934,7 +934,7 @@ function Drawer({ open, view, onSelect, onClose, onExit }) {
   if (!open) return null;
   return (<div style={{ position: 'fixed', inset: 0, zIndex: 60 }}>
     <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)' }} />
-    <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 300, maxWidth: '82%', background: '#0B1430', borderLeft: `1px solid ${T.border}`, padding: 18, overflowY: 'auto' }}>
+    <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 300, maxWidth: '82%', background: T.surface, borderLeft: `1px solid ${T.border}`, padding: 18, overflowY: 'auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
         <button onClick={onClose} style={iconBtn}><X size={22} color={T.text} /></button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -963,12 +963,25 @@ function Drawer({ open, view, onSelect, onClose, onExit }) {
 // ---------------------------------------------------------------------------
 // المكوّن الرئيسي
 // ---------------------------------------------------------------------------
-export default function NibrasApp({ onClose }) {
-  const [view, setView] = useState('dashboard');
+export default function NibrasApp({ onClose, marnT, marnF, dark, initialScreen }) {
+  const [view, setView] = useState(initialScreen || 'dashboard');
   const [drawer, setDrawer] = useState(false);
   const [store, setStoreRaw] = useState(loadStore);
   const setStore = (updater) => setStoreRaw((prev) => { const next = typeof updater === 'function' ? updater(prev) : updater; try { localStorage.setItem(STORE_KEY, JSON.stringify(next)); } catch { /* ignore */ } return next; });
   const name = store.settings.name || profileName();
+
+  // مطابقة نظام مرن (الثيم/الوضع فاتح-داكن) — تجعل نبراس جزءاً من مرن لا تطبيقاً منفصلاً
+  if (marnT) {
+    Object.assign(T, {
+      bg: marnT.pageBg, surface: marnT.cardBg, surfaceAlt: marnT.inputBg || marnT.pillFill,
+      border: marnT.line, borderSoft: marnT.line,
+      text: marnT.text, textDim: marnT.sub, textFaint: marnT.faint,
+      accent: '#D9A93C', accentSoft: 'rgba(217,169,60,0.12)', accentLine: 'rgba(217,169,60,0.30)',
+      gold: '#D9A93C', goldSoft: 'rgba(217,169,60,0.14)', goldLine: 'rgba(217,169,60,0.32)',
+    });
+    Object.assign(field, { background: T.surfaceAlt, border: `1px solid ${T.border}`, color: T.text });
+    Object.assign(backLink, { color: T.accent });
+  }
 
   const meta = {
     dashboard: { title: 'لوحة التحكم', Icon: LayoutGrid },
@@ -985,13 +998,13 @@ export default function NibrasApp({ onClose }) {
 
   return (<div dir="rtl" style={{ position: 'fixed', inset: 0, zIndex: 40, background: T.bg, color: T.text, fontFamily: FONT, display: 'flex', flexDirection: 'column' }}>
     <style>{`@keyframes nspin{to{transform:rotate(360deg)}} .nbr-scroll::-webkit-scrollbar{width:0}`}</style>
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: `1px solid ${T.borderSoft}`, background: '#0B1430', position: 'sticky', top: 0, zIndex: 5 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: `1px solid ${T.border}`, background: marnT ? marnT.headerBg : '#0B1430', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 5 }}>
       <button onClick={() => setDrawer(true)} style={iconBtn}><Menu size={22} color={T.text} /></button>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <meta.Icon size={18} color={T.gold} />
         <span style={{ fontWeight: 800, color: T.text, fontSize: 17 }}>{meta.title}</span>
       </div>
-      <button onClick={view === 'dashboard' ? onClose : () => setView('dashboard')} style={iconBtn}><ArrowRight size={22} color={T.text} /></button>
+      <button onClick={onClose} style={iconBtn}><ArrowRight size={22} color={T.text} /></button>
     </div>
     <div className="nbr-scroll" style={{ flex: 1, overflowY: 'auto' }}>
       {view === 'dashboard' && <Dashboard store={store} go={setView} name={name} />}
