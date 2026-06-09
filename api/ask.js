@@ -317,6 +317,7 @@ Output JSON ONLY: {"accent":"knowledge","kicker":"Fatwa","title":"...","sub":"..
 
 # أولاً: نوع الرسالة
 - تحية أو دردشة أو شكر → رُدّ ودّياً مختصراً في تبويب واحد type:"text" بدون أدلة.
+- سؤال لا علاقة له بالدين إطلاقاً → أجب كمساعد عام مفيد بإيجاز، دون فرض قالب الفتوى أو الأدلة.
 - سؤال شرعي/فقهي → طبّق القاعدة الكاملة أدناه.
 
 # ⭐ القاعدة الأهم — الدليل المرتبط (إلزامية، وكسرها فشل تام)
@@ -352,6 +353,46 @@ Output JSON ONLY: {"accent":"knowledge","kicker":"Fatwa","title":"...","sub":"..
 ${searchBlock || ""}`;
 }
 
+/* ===== system prompt خاص بنبراس — معلّم خبير، تصميم تعليمي ===== */
+function buildNibrasPrompt(lang, searchBlock, profileBlock) {
+  const isAr = lang === "ar";
+  if (!isAr) {
+    return `You are "نبراس", an expert, encyclopedic tutor inside Marn, mastering every academic field. Goal: flawless, accurate teaching that builds understanding. Always include one worked example and end with a short "test yourself". If unsure, say so. Output JSON ONLY with tabs: الفكرة(text), الشرح(list), مثال(list), خلاصة(list), اختبر نفسك(list).${profileBlock}${searchBlock || ""}`;
+  }
+  return `أنت «نبراس» — معلّم خبير وموسوعي داخل تطبيق مرن، متمكّن في كل المجالات الدراسية (علوم، رياضيات، لغة، تاريخ، برمجة، وغيرها). هدفك شرح تعليمي **دقيق لا غبار عليه** يرسّخ الفهم.${profileBlock}
+
+# نوع الرسالة
+- تحية أو دردشة → رد ودّي مختصر بتبويب text واحد.
+- طلب تعليمي (شرح، تلخيص، حل مسألة، تبسيط، اختبار) → طبّق التصميم التعليمي أدناه.
+
+# قواعد الجودة (إلزامية)
+1. الدقة أولاً: لا تعطِ معلومة إلا وأنت واثق منها؛ وإن لم تكن متأكداً نبّه بوضوح ولا تخمّن.
+2. اشرح بتدرّج من الأبسط للأعقد، بعربية واضحة وأمثلة محسوسة.
+3. كل شرح يتضمّن **مثالاً تطبيقياً** واحداً على الأقل.
+4. اختم بـ «اختبر نفسك»: سؤال أو سؤالان قصيران لترسيخ الفهم.
+5. لا إيموجي، وJSON صحيح فقط.
+
+# التصميم المطلوب — JSON فقط، لا شيء قبله أو بعده
+\`\`\`
+{
+  "accent": "knowledge",
+  "kicker": "شرح تعليمي",
+  "title": "<الموضوع>",
+  "sub": "<ملخّص في سطر>",
+  "tabs": [
+    {"label":"الفكرة","type":"text","data":{"body":"<تمهيد وتعريف مبسّط في جملة إلى جملتين>"}},
+    {"label":"الشرح","type":"list","data":{"intro":"بالتفصيل وبالتدرّج:","items":["<نقطة>","<نقطة>","<نقطة>"]}},
+    {"label":"مثال","type":"list","data":{"intro":"مثال تطبيقي:","items":["<مثال أو خطوة محلولة>"]}},
+    {"label":"خلاصة","type":"list","data":{"items":["<أهم ما يجب تذكّره>"]}},
+    {"label":"اختبر نفسك","type":"list","data":{"intro":"أجب لترسّخ فهمك:","items":["<سؤال قصير>","<سؤال قصير>"]}}
+  ],
+  "followUps": ["<سؤال تعليمي متعلّق>","<سؤال تعليمي متعلّق>","<سؤال تعليمي متعلّق>"]
+}
+\`\`\`
+- استخدم list لأي محتوى أكثر من جملتين. خصّص الأمثلة لمستوى الطالب إن عُرف من ملفه.
+${searchBlock || ""}`;
+}
+
 /* ===== معالج الطلب ===== */
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
@@ -381,6 +422,13 @@ export default async function handler(req, res) {
   const apiKey = ((KEY_BY_AGENT[agent] || process.env.CEREBRAS_API_KEY) || "").trim();
   if (!apiKey.startsWith("csk-")) return res.status(500).json({ error: "Invalid key", agent });
 
+  // ===== توجيه ذكي: سؤال خارج مجال الوكيل → يجاوب كـ«مرن» =====
+  const GENERAL_DOMAINS = /طقس|حرار|مطر|رياح|مباراة|مباريات|الدوري|كأس|نتيجة|ترتيب|تشكيلة|سعر|أسعار|سهم|أسهم|عملة|دولار|بتكوين|ذهب|نفط|أخبار|خبر|الآن|اليوم|weather|temperature|rain|match|league|score|standings|stock|price|bitcoin|news/i;
+  let effectiveAgent = agent;
+  if ((agent === "nibras" || agent === "fatwa") && GENERAL_DOMAINS.test(question)) {
+    effectiveAgent = "marn";
+  }
+
   // فحص الكاش
   if (!forceSearch) {
     const cached = getCache(question, lang, agent);
@@ -396,7 +444,7 @@ export default async function handler(req, res) {
 
   let searchBlock = "";
   let didSearch = false;
-  const autoSearch = agent !== "fatwa"; // فتوى: لا بحث تلقائي (يجيب ضوضاء غير شرعية)
+  const autoSearch = effectiveAgent !== "fatwa"; // فتوى: لا بحث تلقائي (يجيب ضوضاء غير شرعية)
   if (!isCasualChat && tavilyKey && (forceSearch || (autoSearch && needsSearch(question)))) {
     const results = await searchWeb(question, tavilyKey);
     if (results) {
@@ -422,9 +470,11 @@ export default async function handler(req, res) {
     if (hasProfile) profileBlock += `\n${lang === "ar" ? "استخدم هذا الملف الشخصي لتخصيص إجاباتك — خاطب المستخدم باسمه، واذكر اهتماماته عند الملاءمة، وخصّص الأمثلة لحياته." : "Use this profile to personalize your responses."}\n`;
   }
 
-  const systemPrompt = agent === "fatwa"
+  const systemPrompt = effectiveAgent === "fatwa"
     ? buildFatwaPrompt(lang, searchBlock, profileBlock)
-    : buildSystemPrompt(lang, searchBlock, profileBlock, didSearch);
+    : effectiveAgent === "nibras"
+      ? buildNibrasPrompt(lang, searchBlock, profileBlock)
+      : buildSystemPrompt(lang, searchBlock, profileBlock, didSearch);
 
   const userContent = imageBase64
     ? [
