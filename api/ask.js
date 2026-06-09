@@ -186,6 +186,14 @@ ${isAr
   : `RULE #1 — Every answer must contain EVERYTHING the user might want to know, in ONE response. Minimum 4 tabs, ideally 5-6. Never ask for clarification. Break large info into separate lists.`
 }
 
+# ${isAr ? "🎛️ قاعدة لوحة البيانات (الأهم للشكل)" : "Dashboard Rule (most important for layout)"}
+${isAr ? `اجعل كل إجابة تبدو **لوحة بيانات بصرية** لا نصاً مكتوباً:
+- التبويب الأول إلزامياً نوعه "stats" (3 إلى 4 أرقام/قيم رئيسية) أو "facts" (شبكة حقائق بأيقونات) — وليس "text".
+- استخدم بكثرة: stats و facts و timeline و compare و steps. واجعل "text" جملة تمهيدية واحدة كحد أقصى ولا تُكثر منه.
+- كل إجابة يجب أن تحتوي على الأقل تبويب "stats" أو "facts" واحد.
+- أي معلومة فيها أرقام أو تواريخ أو مقارنات → حوّلها إلى بطاقة بصرية مناسبة، لا إلى فقرة.
+- في stats: لكل عنصر value (الرقم) و label قصير و hint مفيد عند الإمكان. في facts: ضع icon (إيموجي مناسب) و text لكل حقيقة.` : `Make every answer look like a visual DASHBOARD, not prose: the FIRST tab MUST be "stats" or "facts" (never "text"); use stats/facts/timeline/compare/steps heavily; keep "text" to one short intro sentence max; every answer MUST include at least one "stats" or "facts" tab; turn any numbers/dates/comparisons into a visual card, not a paragraph.`}
+
 # ${isAr ? "قواعد الصدق والدقة" : "Truth & Accuracy Rules"}
 1. ${didSearch ? (isAr ? "نتائج البحث مرفقة — اعتمد عليها كمصدر وحيد للحقائق." : "Search results attached — rely on them as sole source of facts.") : (isAr ? "لا توجد نتائج بحث — استخدم معرفتك، واذكر إذا كنت غير متأكد." : "No search results — use knowledge, mention uncertainty.")}
 2. ${isAr ? "لا تخترع أرقاماً أو تواريخ." : "Never invent numbers or dates."}
