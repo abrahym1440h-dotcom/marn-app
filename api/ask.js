@@ -89,10 +89,16 @@ async function searchWeb(query, key) {
     const d = await r.json();
     const lines = [];
     if (d.answer) lines.push("VERIFIED ANSWER: " + d.answer);
+    const sources = [];
     (d.results || []).slice(0, 8).forEach((x, i) => {
       lines.push(`\n[${i+1}] ${x.title}\n${x.url}\n${(x.content||"").slice(0,600)}`);
+      if (x.url) {
+        let domain = "";
+        try { domain = new URL(x.url).hostname.replace(/^www\./, ""); } catch {}
+        sources.push({ title: x.title || domain || x.url, url: x.url, domain });
+      }
     });
-    return lines.join("\n");
+    return { text: lines.join("\n"), sources: sources.slice(0, 6) };
   } catch { return null; }
 }
 
@@ -452,12 +458,14 @@ export default async function handler(req, res) {
 
   let searchBlock = "";
   let didSearch = false;
+  let sources = [];
   const autoSearch = effectiveAgent !== "fatwa"; // فتوى: لا بحث تلقائي (يجيب ضوضاء غير شرعية)
   if (!isCasualChat && tavilyKey && (forceSearch || (autoSearch && needsSearch(question)))) {
     const results = await searchWeb(question, tavilyKey);
-    if (results) {
-      searchBlock = `\n\n===== WEB SEARCH RESULTS =====\n⚠️ AUTHORITATIVE FACTS ONLY. Follow them. Never contradict.\n${results}\n===== END =====`;
+    if (results && results.text) {
+      searchBlock = `\n\n===== WEB SEARCH RESULTS =====\n⚠️ AUTHORITATIVE FACTS ONLY. Follow them. Never contradict.\n${results.text}\n===== END =====`;
       didSearch = true;
+      sources = results.sources || [];
     }
   }
 
@@ -613,7 +621,7 @@ export default async function handler(req, res) {
           return tab;
         });
 
-        const result = { card, model_used: model, searched: didSearch };
+        const result = { card, model_used: model, searched: didSearch, sources };
         setCache(question, lang, agent, result);
         return res.status(200).json(result);
 
