@@ -213,6 +213,7 @@ export default function App() {
   const [toolScreen, setToolScreen] = useState(null); // الشاشة المطلوب فتحها داخل أداة الوكيل
   const [agentMenuOpen, setAgentMenuOpen] = useState(false); // قائمة اختيار المساعد/الأدوات
   const [activeTool, setActiveTool] = useState(null); // أداة نصية مفعّلة (مثل تلخيص) — توجيه مخفي
+  const [stageIdx, setStageIdx] = useState(0); // وضع المسرح: أي جولة معروضة
   const [showAppMenu, setShowAppMenu] = useState(false); // قائمة التطبيقات
   const [isMobile, setIsMobile] = useState(false);
   const [chats, setChats] = useState({});
@@ -307,6 +308,23 @@ export default function App() {
   /* ===== الإجراءات ===== */
   const currentMessages = activeChat ? (chats[activeChat]?.messages || []) : [];
   const empty = currentMessages.length === 0;
+
+  // ===== المسرح: تجميع الرسائل إلى جولات (سؤال + جوابه) =====
+  const turns = [];
+  for (let i = 0; i < currentMessages.length; i++) {
+    const m = currentMessages[i];
+    if (m.role !== "card" && m.role !== "error") turns.push({ qi: i, q: m.text || "", ci: null });
+    else if (turns.length) turns[turns.length - 1].ci = i;
+    else turns.push({ qi: null, q: "", ci: i });
+  }
+  const stageSafe = Math.min(stageIdx, Math.max(0, turns.length - 1));
+  const activeTurn = turns[stageSafe] || null;
+
+  /* ===== المسرح: القفز لأحدث جولة عند رسالة جديدة أو تبديل محادثة ===== */
+  useEffect(() => {
+    const turnCount = currentMessages.filter(x => x.role !== "card" && x.role !== "error").length;
+    setStageIdx(Math.max(0, turnCount - 1));
+  }, [currentMessages.length, activeChat]);
   const activeAgentId = (activeChat && chats[activeChat]?.agent) || agent;
   const currentAgent = AGENTS[activeAgentId] || AGENTS.marn;
   const sortedChats = useMemo(() => {
@@ -505,7 +523,7 @@ export default function App() {
         if (!cur) return prev;
         let newMsg;
         if (r.ok && data?.card) {
-          newMsg = { role: "card", card: data.card, searched: data.searched, at: Date.now(), forSearchQuery: q, followUps: Array.isArray(data.card?.followUps) ? data.card.followUps : [] };
+          newMsg = { role: "card", card: data.card, searched: data.searched, sources: Array.isArray(data.sources) ? data.sources : [], at: Date.now(), forSearchQuery: q, followUps: Array.isArray(data.card?.followUps) ? data.card.followUps : [] };
         } else {
           const errMsg = (data && (data.error || data.detail))
             ? `${data.error || ""}${data.detail ? " — " + data.detail : ""}`
@@ -710,38 +728,96 @@ export default function App() {
             onClose={() => setAgentMenuOpen(false)} />
         )}
 
-        {/* خيط الرسائل */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "0 14px", position: "relative" }}>
-          <div style={{ maxWidth: 760, margin: "0 auto", padding: "18px 0 16px" }}>
-            {empty && (
-              <EmptyState T={T} t={t} F={F} send={send} settings={settings} userProfile={userProfile} onOpenView={(v)=>setAppView(v)} agent={currentAgent} onTool={handleAgentTool} isMobile={isMobile} />
-            )}
-
-            {currentMessages.map((m, i) => (
-              <MessageItem key={i} m={m} idx={i} T={T} t={t} F={F}
-                isRTL={isRTL} lang={settings.lang}
-                isFav={isFav} toggleFav={() => toggleFav(m.text, activeChat)}
-                copyCard={copyCard} activeChat={activeChat}
-                editingMsg={editingMsg} setEditingMsg={setEditingMsg}
-                onEditSend={(newText) => editAndResend(activeChat, i, newText)}
-                onRegenerate={() => regenerate(activeChat, i)}
-                onSelect={(q) => send(q)}
-                thinking={thinking}
-              />
-            ))}
-
-            {thinking && (
-              <div style={{ display: "flex", gap: 6, padding: "6px 4px 20px" }}>
-                {[0, 0.16, 0.32].map((d, i) => (
-                  <span key={i} style={{
-                    width: 8, height: 8, borderRadius: "50%", background: T.dotIdle,
-                    animation: `bd 1.3s ${d}s infinite ease-in-out`,
-                  }} />
-                ))}
+        {/* المسرح */}
+        <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
+          {empty ? (
+            <div style={{ flex: 1, overflowY: "auto", padding: "0 14px" }}>
+              <div style={{ maxWidth: 760, margin: "0 auto", padding: "18px 0 16px" }}>
+                <EmptyState T={T} t={t} F={F} send={send} settings={settings} userProfile={userProfile} onOpenView={(v)=>setAppView(v)} agent={currentAgent} onTool={handleAgentTool} isMobile={isMobile} />
               </div>
-            )}
-            <div ref={endRef} />
-          </div>
+            </div>
+          ) : (
+            <>
+              {/* شريط الجولات */}
+              <div style={{
+                width: isMobile ? 50 : 184, flexShrink: 0, overflowY: "auto",
+                borderInlineEnd: `1px solid ${T.line}`, padding: "16px 8px",
+                display: "flex", flexDirection: "column", gap: 3,
+              }}>
+                {!isMobile && <div style={{ fontSize: F.label - 1, fontWeight: 700, color: T.faint, padding: "2px 8px 8px" }}>الجولات</div>}
+                {turns.map((tn, ti) => {
+                  const on = ti === stageSafe;
+                  return (
+                    <button key={ti} onClick={() => setStageIdx(ti)} className="press" style={{
+                      display: "flex", alignItems: "center", gap: 9, textAlign: "start",
+                      background: on ? `${currentAgent.color}14` : "transparent",
+                      border: `1px solid ${on ? currentAgent.color + "44" : "transparent"}`,
+                      borderRadius: 10, padding: isMobile ? "9px 0" : "9px 10px",
+                      justifyContent: isMobile ? "center" : "flex-start",
+                      cursor: "pointer", fontFamily: "inherit", width: "100%",
+                    }}>
+                      <span style={{
+                        flexShrink: 0, width: 9, height: 9, borderRadius: "50%",
+                        background: on ? currentAgent.color : T.dotIdle,
+                        boxShadow: on ? `0 0 0 4px ${currentAgent.color}22` : "none",
+                      }} />
+                      {!isMobile && <span style={{
+                        flex: 1, minWidth: 0, fontSize: F.label, color: on ? T.text : T.sub,
+                        fontWeight: on ? 600 : 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                      }}>{tn.q || "…"}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* خشبة العرض */}
+              <div style={{
+                flex: 1, overflowY: "auto", padding: "0 14px", position: "relative",
+                backgroundImage: `radial-gradient(120% 55% at 85% 0%, ${currentAgent.color}0f, transparent 60%)`,
+              }}>
+                <div style={{ maxWidth: 820, margin: "0 auto", padding: "14px 0 24px" }}>
+                  {/* تنقّل الجولات */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                    <button onClick={() => setStageIdx(Math.max(0, stageSafe - 1))} disabled={stageSafe === 0} className="press" style={navBtn(T, stageSafe === 0)}>›</button>
+                    <button onClick={() => setStageIdx(Math.min(turns.length - 1, stageSafe + 1))} disabled={stageSafe >= turns.length - 1} className="press" style={navBtn(T, stageSafe >= turns.length - 1)}>‹</button>
+                    <div style={{ fontSize: F.label, color: T.faint, fontWeight: 600 }}>{stageSafe + 1} / {turns.length}</div>
+                    <div style={{ flex: 1 }} />
+                  </div>
+
+                  <div key={stageSafe} className="card-in">
+                    {activeTurn && activeTurn.qi != null && (
+                      <MessageItem key={"q" + activeTurn.qi} m={currentMessages[activeTurn.qi]} idx={activeTurn.qi} T={T} t={t} F={F}
+                        isRTL={isRTL} lang={settings.lang}
+                        isFav={isFav} toggleFav={() => toggleFav(currentMessages[activeTurn.qi].text, activeChat)}
+                        copyCard={copyCard} activeChat={activeChat}
+                        editingMsg={editingMsg} setEditingMsg={setEditingMsg}
+                        onEditSend={(newText) => editAndResend(activeChat, activeTurn.qi, newText)}
+                        onRegenerate={() => regenerate(activeChat, activeTurn.qi)}
+                        onSelect={(q) => send(q)} thinking={thinking} />
+                    )}
+                    {activeTurn && activeTurn.ci != null && (
+                      <MessageItem key={"a" + activeTurn.ci} m={currentMessages[activeTurn.ci]} idx={activeTurn.ci} T={T} t={t} F={F}
+                        isRTL={isRTL} lang={settings.lang}
+                        isFav={isFav} toggleFav={() => toggleFav(currentMessages[activeTurn.ci].text, activeChat)}
+                        copyCard={copyCard} activeChat={activeChat}
+                        editingMsg={editingMsg} setEditingMsg={setEditingMsg}
+                        onEditSend={(newText) => editAndResend(activeChat, activeTurn.ci, newText)}
+                        onRegenerate={() => regenerate(activeChat, activeTurn.ci)}
+                        onSelect={(q) => send(q)} thinking={thinking} />
+                    )}
+                    {thinking && activeTurn && activeTurn.ci == null && (
+                      <div style={{ display: "flex", gap: 6, padding: "10px 4px 20px" }}>
+                        {[0, 0.16, 0.32].map((d, i) => (
+                          <span key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: T.dotIdle, animation: `bd 1.3s ${d}s infinite ease-in-out` }} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div ref={endRef} />
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* مربع الكتابة */}
@@ -1538,7 +1614,39 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
       />
       <FollowUps suggestions={m.followUps} T={T} F={F}
         onSelect={onSelect} thinking={thinking} />
+      <SourcesBar sources={m.sources} T={T} F={F} isRTL={isRTL} />
       {timeStr && <div style={{ fontSize: F.label - 1, color: T.faint, marginTop: 4 }}>{timeStr}</div>}
+    </div>
+  );
+}
+
+/* ============ شريط المصادر ============ */
+function SourcesBar({ sources, T, F, isRTL }) {
+  if (!Array.isArray(sources) || sources.length === 0) return null;
+  return (
+    <div style={{ marginTop: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 9 }}>
+        <span style={{ width: 16, height: 16, color: T.sub, display: "inline-flex" }}><Icon.Globe /></span>
+        <span style={{ fontSize: F.label, fontWeight: 700, color: T.sub }}>{isRTL ? "المصادر" : "Sources"}</span>
+        <span style={{ fontSize: F.label - 1, color: T.faint }}>({sources.length})</span>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {sources.map((s, i) => (
+          <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" className="press" style={{
+            display: "flex", alignItems: "center", gap: 9, maxWidth: 250,
+            background: T.pillFill, border: `1px solid ${T.line}`, borderRadius: 11,
+            padding: "8px 12px", textDecoration: "none",
+          }}>
+            <img src={`https://www.google.com/s2/favicons?domain=${encodeURIComponent(s.domain || s.url)}&sz=64`}
+              alt="" width="18" height="18" style={{ borderRadius: 5, flexShrink: 0 }}
+              onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} />
+            <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+              <span style={{ fontSize: F.label, fontWeight: 600, color: T.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 200 }}>{s.title || s.domain}</span>
+              {s.domain && <span style={{ fontSize: F.label - 1, color: T.faint, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 200 }}>{s.domain}</span>}
+            </span>
+          </a>
+        ))}
+      </div>
     </div>
   );
 }
@@ -2753,6 +2861,17 @@ function cardActionBtn(T) {
     background: "transparent", border: "none", color: T.faint,
     cursor: "pointer", padding: 6, borderRadius: 7,
     display: "flex", alignItems: "center", transition: "all .2s",
+  };
+}
+
+function navBtn(T, disabled) {
+  return {
+    width: 32, height: 32, borderRadius: 9, flexShrink: 0,
+    background: T.pillFill, border: `1px solid ${T.line}`,
+    color: disabled ? T.faint : T.sub, opacity: disabled ? 0.45 : 1,
+    cursor: disabled ? "default" : "pointer", fontSize: 18, lineHeight: 1,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    fontFamily: "inherit",
   };
 }
 
