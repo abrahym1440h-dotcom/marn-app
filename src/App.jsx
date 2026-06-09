@@ -777,27 +777,21 @@ export default function App() {
               }}>
                 <div style={{ maxWidth: 820, margin: "0 auto", padding: "14px 0 24px" }}>
                   {/* تنقّل الجولات */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
                     <button onClick={() => setStageIdx(Math.max(0, stageSafe - 1))} disabled={stageSafe === 0} className="press" style={navBtn(T, stageSafe === 0)}>›</button>
                     <button onClick={() => setStageIdx(Math.min(turns.length - 1, stageSafe + 1))} disabled={stageSafe >= turns.length - 1} className="press" style={navBtn(T, stageSafe >= turns.length - 1)}>‹</button>
-                    <div style={{ fontSize: F.label, color: T.faint, fontWeight: 600 }}>{stageSafe + 1} / {turns.length}</div>
-                    <div style={{ flex: 1 }} />
+                    <div style={{ fontSize: F.label, color: T.faint, fontWeight: 600, flexShrink: 0 }}>{stageSafe + 1} / {turns.length}</div>
+                    {activeTurn && activeTurn.q && (
+                      <div style={{ flex: 1, minWidth: 0, fontSize: F.base - 1, color: T.sub, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "start" }}>
+                        · {activeTurn.q}
+                      </div>
+                    )}
                   </div>
 
                   <div key={stageSafe} className="card-in">
-                    {activeTurn && activeTurn.qi != null && (
-                      <MessageItem key={"q" + activeTurn.qi} m={currentMessages[activeTurn.qi]} idx={activeTurn.qi} T={T} t={t} F={F}
-                        isRTL={isRTL} lang={settings.lang}
-                        isFav={isFav} toggleFav={() => toggleFav(currentMessages[activeTurn.qi].text, activeChat)}
-                        copyCard={copyCard} activeChat={activeChat}
-                        editingMsg={editingMsg} setEditingMsg={setEditingMsg}
-                        onEditSend={(newText) => editAndResend(activeChat, activeTurn.qi, newText)}
-                        onRegenerate={() => regenerate(activeChat, activeTurn.qi)}
-                        onSelect={(q) => send(q)} thinking={thinking} />
-                    )}
                     {activeTurn && activeTurn.ci != null && (
                       <MessageItem key={"a" + activeTurn.ci} m={currentMessages[activeTurn.ci]} idx={activeTurn.ci} T={T} t={t} F={F}
-                        isRTL={isRTL} lang={settings.lang}
+                        isRTL={isRTL} lang={settings.lang} stage
                         isFav={isFav} toggleFav={() => toggleFav(currentMessages[activeTurn.ci].text, activeChat)}
                         copyCard={copyCard} activeChat={activeChat}
                         editingMsg={editingMsg} setEditingMsg={setEditingMsg}
@@ -1510,7 +1504,7 @@ function EmptyState({ T, t, F, send, settings, userProfile, onOpenView, agent, o
 
 /* ============ عنصر الرسالة ============ */
 function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard, activeChat,
-  editingMsg, setEditingMsg, onEditSend, onRegenerate, onSelect, thinking }) {
+  editingMsg, setEditingMsg, onEditSend, onRegenerate, onSelect, thinking, stage }) {
   const timeStr = m.at ? formatTime(m.at, lang) : "";
   const isEditing = editingMsg && editingMsg.idx === idx;
   const [editDraft, setEditDraft] = useState(m.text || "");
@@ -1606,16 +1600,16 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
   }
 
   return (
-    <div className="card-in" style={{ marginBottom: 20 }}>
-      <BigCard card={m.card} T={T} t={t} F={F} searched={m.searched}
+    <div className="card-in" style={{ marginBottom: stage ? 0 : 20 }}>
+      <BigCard card={m.card} T={T} t={t} F={F} searched={m.searched} sources={m.sources} stage={stage}
         onCopy={() => copyCard(m.card)}
         onRegenerate={thinking ? null : onRegenerate}
         isRTL={isRTL}
       />
       <FollowUps suggestions={m.followUps} T={T} F={F}
         onSelect={onSelect} thinking={thinking} />
-      <SourcesBar sources={m.sources} T={T} F={F} isRTL={isRTL} />
-      {timeStr && <div style={{ fontSize: F.label - 1, color: T.faint, marginTop: 4 }}>{timeStr}</div>}
+      {!stage && <SourcesBar sources={m.sources} T={T} F={F} isRTL={isRTL} />}
+      {!stage && timeStr && <div style={{ fontSize: F.label - 1, color: T.faint, marginTop: 4 }}>{timeStr}</div>}
     </div>
   );
 }
@@ -1652,23 +1646,21 @@ function SourcesBar({ sources, T, F, isRTL }) {
 }
 
 /* ============ البطاقة الكبيرة ============ */
-function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
+function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL, stage }) {
   const a = ACCENTS[card.accent] || ACCENTS.knowledge;
   const [activeTab, setActiveTab] = useState(0);
+  const [showSources, setShowSources] = useState(false);
   const tabs = Array.isArray(card.tabs) ? card.tabs : [];
   const active = tabs[activeTab] || {};
+  const hasSources = Array.isArray(sources) && sources.length > 0;
 
-  return (
-    <Glass T={T} radius={14} style={{ padding: 0, overflow: "hidden" }}>
-      {/* شريط هوية */}
-      <div style={{ height: 3, background: `linear-gradient(90deg,${a},${a}88,transparent)` }}/>
-      <div style={{ padding: 20 }}>
-
+  const inner = (
+    <>
       {/* الهيدر */}
-      <div style={{ position: "relative", marginBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 5 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-            {card.kicker && <div style={{ color: T.accentBlue||"#2A5ED8", fontSize: F.label - 1, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>{card.kicker}</div>}
+      <div style={{ position: "relative", marginBottom: stage ? 22 : 16 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 7 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0, flexWrap: "wrap" }}>
+            {card.kicker && <div style={{ color: a, fontSize: F.label, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.5 }}>{card.kicker}</div>}
             {searched && (
               <div style={{
                 fontSize: F.label - 1, fontWeight: 600, color: "#34D399",
@@ -1679,7 +1671,12 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
               </div>
             )}
           </div>
-          <div style={{ display: "flex", gap: 2 }}>
+          <div style={{ display: "flex", gap: 2, alignItems: "center" }}>
+            {hasSources && (
+              <button onClick={() => setShowSources(v => !v)} title={isRTL ? "المصادر" : "Sources"} style={{ ...cardActionBtn(T), gap: 5, color: showSources ? a : T.sub, fontSize: F.label, fontWeight: 700, fontFamily: "inherit" }}>
+                <span style={{ width: 15, height: 15, display: "inline-flex" }}><Icon.Globe /></span>{sources.length}
+              </button>
+            )}
             {onRegenerate && (
               <button onClick={onRegenerate} title={isRTL ? "إعادة توليد" : "Regenerate"} style={cardActionBtn(T)}>
                 <Icon.Refresh />
@@ -1690,26 +1687,21 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
             </button>
           </div>
         </div>
-        <h2 style={{ fontSize: F.h2, fontWeight: 700, margin: 0, letterSpacing: "-0.4px", lineHeight: 1.3 }}>{card.title}</h2>
-        {card.sub && <div style={{ color: T.sub, fontSize: F.base - 1, marginTop: 5, lineHeight: 1.5 }}>{card.sub}</div>}
+        <h2 style={{ fontSize: stage ? F.h1 : F.h2, fontWeight: 800, margin: 0, letterSpacing: "-0.4px", lineHeight: 1.25 }}>{card.title}</h2>
+        {card.sub && <div style={{ color: T.sub, fontSize: stage ? F.base : F.base - 1, marginTop: 6, lineHeight: 1.6 }}>{card.sub}</div>}
       </div>
 
       {tabs.length > 1 && (
-        <div style={{
-          display: "flex", gap: 6,
-          marginBottom: 16, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 2,
-        }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: stage ? 20 : 16, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 2 }}>
           {tabs.map((tt, i) => (
             <button key={i} onClick={() => setActiveTab(i)} style={{
               flexShrink: 0,
               background: i === activeTab ? `${a}16` : T.pillFill,
               border: `1px solid ${i === activeTab ? a + "55" : T.line}`,
-              borderRadius: 999,
-              padding: "6px 13px",
+              borderRadius: 999, padding: stage ? "8px 15px" : "6px 13px",
               color: i === activeTab ? a : T.sub,
               fontSize: F.label + 0.5, fontWeight: i === activeTab ? 700 : 600,
-              cursor: "pointer", fontFamily: "inherit",
-              transition: "all .15s", whiteSpace: "nowrap",
+              cursor: "pointer", fontFamily: "inherit", transition: "all .15s", whiteSpace: "nowrap",
             }}>{tt.label}</button>
           ))}
         </div>
@@ -1718,7 +1710,27 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
       <div key={activeTab} className="tab-in">
         <TabContent tab={active} a={a} T={T} F={F} />
       </div>
-          </div>
+
+      {hasSources && showSources && (
+        <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${T.line}` }}>
+          <SourcesBar sources={sources} T={T} F={F} isRTL={isRTL} />
+        </div>
+      )}
+    </>
+  );
+
+  if (stage) {
+    return (
+      <div style={{ width: "100%" }}>
+        <div style={{ width: 36, height: 4, borderRadius: 3, background: a, marginBottom: 18 }} />
+        {inner}
+      </div>
+    );
+  }
+  return (
+    <Glass T={T} radius={14} style={{ padding: 0, overflow: "hidden" }}>
+      <div style={{ height: 3, background: `linear-gradient(90deg,${a},${a}88,transparent)` }}/>
+      <div style={{ padding: 20 }}>{inner}</div>
     </Glass>
   );
 }
