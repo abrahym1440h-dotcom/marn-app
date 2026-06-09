@@ -1687,8 +1687,8 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
             </button>
           </div>
         </div>
-        <h2 style={{ fontSize: stage ? F.h1 : F.h2, fontWeight: 800, margin: 0, letterSpacing: "-0.4px", lineHeight: 1.25 }}>{card.title}</h2>
-        {card.sub && <div style={{ color: T.sub, fontSize: stage ? F.base : F.base - 1, marginTop: 6, lineHeight: 1.6 }}>{card.sub}</div>}
+        <h2 style={{ fontSize: stage ? F.h2 : F.h2, fontWeight: 800, margin: 0, letterSpacing: "-0.4px", lineHeight: 1.3 }}>{card.title}</h2>
+        {card.sub && <div style={{ color: T.sub, fontSize: F.base - 1, marginTop: 6, lineHeight: 1.6 }}>{card.sub}</div>}
       </div>
 
       {tabs.length > 1 && (
@@ -1805,15 +1805,18 @@ function TabContent({ tab, a, T, F }) {
       return (
         <div>
           {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 14px", lineHeight:1.7 }}>{d.intro}</p>}
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(120px,1fr))", gap:10 }}>
-            {(d.items||[]).map((s,i) => (
-              <div key={i} style={{ position:"relative", background:T.cardBg, borderRadius:14, padding:"16px 12px 14px", border:`1px solid ${T.line}`, textAlign:"center", overflow:"hidden", boxShadow:T.glassShadow }}>
-                <div style={{ position:"absolute", top:0, insetInlineStart:0, insetInlineEnd:0, height:3, background:`linear-gradient(90deg,${a},${a}66)` }}/>
-                <div style={{ fontSize:F.h1+2, fontWeight:800, lineHeight:1, marginBottom:5, color:a, background:`linear-gradient(135deg,${a},${a}aa)`, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>{s.value}</div>
-                <div style={{ fontSize:F.base-2, fontWeight:700, color:T.text }}>{s.label}</div>
-                {s.hint && <div style={{ fontSize:F.label, color:T.sub, marginTop:2 }}>{s.hint}</div>}
-              </div>
-            ))}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(132px,1fr))", gap:10 }}>
+            {(d.items||[]).map((s,i) => {
+              const v = String(s.value ?? "");
+              const fs = v.length <= 4 ? F.h2 : v.length <= 10 ? F.base+3 : F.base+0.5;
+              return (
+                <div key={i} style={{ background:T.pillFill, borderRadius:13, padding:"13px 14px", border:`1px solid ${T.line}` }}>
+                  <div style={{ fontSize:F.label, fontWeight:600, color:T.sub, marginBottom:6 }}>{s.label}</div>
+                  <div style={{ fontSize:fs, fontWeight:800, color:a, lineHeight:1.2, wordBreak:"break-word" }}>{v}</div>
+                  {s.hint && <div style={{ fontSize:F.label, color:T.faint, marginTop:5, lineHeight:1.5 }}>{s.hint}</div>}
+                </div>
+              );
+            })}
           </div>
         </div>
       );
@@ -1882,11 +1885,14 @@ function TabContent({ tab, a, T, F }) {
 
     case "facts":
       return (
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:9 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))", gap:9 }}>
           {(d.items||[]).map((f,i) => (
-            <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"12px 13px", borderRadius:12, background:T.pillFill, border:`1px solid ${T.line}` }}>
-              <span style={{ flexShrink:0, width:30, height:30, borderRadius:9, background:`${a}16`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:15 }}>{f.icon||"•"}</span>
-              <span style={{ flex:1, color:T.text, fontSize:F.base-1, lineHeight:1.5 }}>{f.text}</span>
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:11, padding:"12px 13px", borderRadius:12, background:T.pillFill, border:`1px solid ${T.line}` }}>
+              <span style={{ flexShrink:0, width:34, height:34, borderRadius:10, background:`${a}14`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:17 }}>{f.icon||"•"}</span>
+              <div style={{ flex:1, minWidth:0 }}>
+                {f.label && <div style={{ fontSize:F.label, color:T.sub, marginBottom:2 }}>{f.label}</div>}
+                <div style={{ fontSize:F.base-0.5, fontWeight:700, color:T.text, lineHeight:1.4, wordBreak:"break-word" }}>{f.value || f.text || ""}</div>
+              </div>
             </div>
           ))}
         </div>
