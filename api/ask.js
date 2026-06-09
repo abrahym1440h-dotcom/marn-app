@@ -193,12 +193,14 @@ ${isAr
 }
 
 # ${isAr ? "🎛️ قاعدة لوحة البيانات (الأهم للشكل)" : "Dashboard Rule (most important for layout)"}
-${isAr ? `اجعل كل إجابة تبدو **لوحة بيانات بصرية** لا نصاً مكتوباً:
-- التبويب الأول إلزامياً نوعه "stats" (3 إلى 4 أرقام/قيم رئيسية) أو "facts" (شبكة حقائق بأيقونات) — وليس "text".
-- استخدم بكثرة: stats و facts و timeline و compare و steps. واجعل "text" جملة تمهيدية واحدة كحد أقصى ولا تُكثر منه.
-- كل إجابة يجب أن تحتوي على الأقل تبويب "stats" أو "facts" واحد.
-- أي معلومة فيها أرقام أو تواريخ أو مقارنات → حوّلها إلى بطاقة بصرية مناسبة، لا إلى فقرة.
-- في stats: لكل عنصر value (الرقم) و label قصير و hint مفيد عند الإمكان. في facts: ضع icon (إيموجي مناسب) و text لكل حقيقة.` : `Make every answer look like a visual DASHBOARD, not prose: the FIRST tab MUST be "stats" or "facts" (never "text"); use stats/facts/timeline/compare/steps heavily; keep "text" to one short intro sentence max; every answer MUST include at least one "stats" or "facts" tab; turn any numbers/dates/comparisons into a visual card, not a paragraph.`}
+${isAr ? `اجعل كل إجابة تبدو **لوحة بيانات بصرية / إنفوجرافيك** لا نصاً مكتوباً:
+- التبويب الأول إلزامياً نوعه "stats" أو "facts" — وليس "text".
+- استخدم بكثرة: stats و facts و timeline و compare و steps. اجعل "text" جملة واحدة قصيرة كحد أقصى.
+- **الاختصار إلزامي**: التسميات والقيم كلمات قصيرة (٤ كلمات أو أقل)، وعناصر القوائم نقاط مكثّفة (٨ كلمات أو أقل) — لا جُمل طويلة ولا فقرات.
+- في "stats": القيمة value يجب أن تكون **رقماً أو رمزاً قصيراً جداً** (مثل: ٦، ٢-١، ١٩٩٤، ٪٤٢). أي معلومة نصية (مكان، منافس، اسم) ضعها في "facts" لا في stats.
+- في "facts": لكل عنصر {icon (إيموجي مناسب)، label (كلمة)، value (كلمة/كلمتان)}.
+- أي أرقام/تواريخ/مقارنات/تسلسل → حوّلها إلى البطاقة البصرية المناسبة، لا إلى فقرة.
+- كل إجابة يجب أن تحتوي على الأقل تبويب stats أو facts واحد.` : `Make every answer a visual DASHBOARD/infographic, not prose. First tab MUST be stats or facts (never text). Use stats/facts/timeline/compare/steps heavily; text = one short sentence max. BREVITY MANDATORY: labels/values ≤4 words, list items ≤8 words, no paragraphs. stats.value MUST be a number/short token (6, 2-1, 1994, 42%); put textual info (place, opponent, name) in facts (icon+label+value), never as a stats value. Every answer includes at least one stats or facts tab.`}
 
 # ${isAr ? "قواعد الصدق والدقة" : "Truth & Accuracy Rules"}
 1. ${didSearch ? (isAr ? "نتائج البحث مرفقة — اعتمد عليها كمصدر وحيد للحقائق." : "Search results attached — rely on them as sole source of facts.") : (isAr ? "لا توجد نتائج بحث — استخدم معرفتك، واذكر إذا كنت غير متأكد." : "No search results — use knowledge, mention uncertainty.")}
@@ -266,7 +268,7 @@ ${isAr ? `هذه القاعدة لا تُكسر أبداً:
 - **stats**: {"items":[{"value":"100","label":"${isAr ? "عنوان" : "title"}","hint":"${isAr ? "تفصيل" : "detail"}"}]}
 - **timeline**: {"events":[["${isAr ? "التاريخ" : "date"}","${isAr ? "عنوان" : "title"}","${isAr ? "وصف" : "desc"}"]]}
 - **compare**: {"cols":["${isAr ? "وجه" : "aspect"}","A","B"],"rows":[["${isAr ? "صف" : "row"}","val","val"]]}
-- **facts**: {"items":[{"icon":"📍","text":"${isAr ? "معلومة" : "info"}"}]}
+- **facts**: {"items":[{"icon":"📍","label":"${isAr ? "المكان" : "label"}","value":"${isAr ? "الرياض" : "value"}"}]}
 
 ## ${isAr ? "بطاقات رياضية" : "Sports Cards"}
 - **match**: {"team1":"${isAr ? "الفريق الأول" : "Team A"}","score1":2,"team2":"${isAr ? "الفريق الثاني" : "Team B"}","score2":1,"status":"${isAr ? "انتهت" : "FT"}","venue":"${isAr ? "الملعب" : "stadium"}","date":"${isAr ? "التاريخ" : "date"}","details":[{"label":"${isAr ? "تفصيل" : "detail"}","value":"${isAr ? "قيمة" : "value"}"}]}
