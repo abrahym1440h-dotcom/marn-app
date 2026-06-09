@@ -999,7 +999,7 @@ export default function NibrasApp({ onClose, marnT, marnF, dark, initialScreen }
   return (<div dir="rtl" style={{ position: 'fixed', inset: 0, zIndex: 40, background: T.bg, color: T.text, fontFamily: FONT, display: 'flex', flexDirection: 'column' }}>
     <style>{`@keyframes nspin{to{transform:rotate(360deg)}} .nbr-scroll::-webkit-scrollbar{width:0}`}</style>
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: `1px solid ${T.border}`, background: marnT ? marnT.headerBg : '#0B1430', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 5 }}>
-      <button onClick={() => setDrawer(true)} style={iconBtn}><Menu size={22} color={T.text} /></button>
+      <div style={{ width: 40 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <meta.Icon size={18} color={T.gold} />
         <span style={{ fontWeight: 800, color: T.text, fontSize: 17 }}>{meta.title}</span>
@@ -1018,6 +1018,5 @@ export default function NibrasApp({ onClose, marnT, marnF, dark, initialScreen }
       {view === 'stats' && <StatsView store={store} />}
       {view === 'settings' && <SettingsView store={store} setStore={setStore} />}
     </div>
-    <Drawer open={drawer} view={view} onSelect={setView} onClose={() => setDrawer(false)} onExit={onClose} />
   </div>);
 }
