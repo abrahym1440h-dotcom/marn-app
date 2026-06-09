@@ -36,22 +36,22 @@ const THEMES = {
     // نظام موحّد — فاتح
     pageBg:      "#FBFCFE",
     sidebarBg:   "#FFFFFF",
-    text:        "#0F1A2E",
-    sub:         "#5E6B85",
-    faint:       "#9AA6BE",
+    text:        "#0E1726",
+    sub:         "#4B586F",
+    faint:       "#7C879B",
     glassFill:   "#FFFFFF",
-    glassEdge:   "rgba(15,26,46,0.05)",
-    glassBorder: "#E7EBF3",
-    glassShadow: "0 1px 2px rgba(16,24,40,0.04), 0 10px 28px rgba(16,24,40,0.05)",
-    headerBg:    "rgba(255,255,255,0.82)",
-    composerBg:  "rgba(251,252,254,0.9)",
+    glassEdge:   "rgba(15,26,46,0.06)",
+    glassBorder: "#DEE4EF",
+    glassShadow: "0 1px 2px rgba(16,24,40,0.05), 0 10px 28px rgba(16,24,40,0.06)",
+    headerBg:    "rgba(255,255,255,0.85)",
+    composerBg:  "rgba(251,252,254,0.92)",
     userFill:    "linear-gradient(135deg,#2E6BE6,#2257D8)",
     userText:    "#ffffff",
-    pillFill:    "#F2F5FB",
+    pillFill:    "#EFF3F9",
     pillActive:  "#FFFFFF",
-    line:        "#E7EBF3",
-    hover:       "#F2F5FB",
-    dotIdle:     "#C4CDDC",
+    line:        "#E2E7F0",
+    hover:       "#EFF3F9",
+    dotIdle:     "#BAC4D4",
     modalBg:     "rgba(15,23,42,0.40)",
     cardBg:      "#FFFFFF",
     inputBg:     "#F4F6FB",
@@ -119,16 +119,16 @@ const AGENTS = {
     suggestions: ["لخّص لي نصاً", "اكتب رسالة احترافية", "اقترح أفكاراً لمشروع", "اشرح موضوعاً ببساطة"],
     tools: [
       { id: "search", label: "بحث حي", kind: "search" },
-      { id: "sum", label: "تلخيص", kind: "prompt", prompt: "لخّص لي النص التالي بنقاط واضحة:\n" },
+      { id: "sum", label: "تلخيص", kind: "prompt", prompt: "لخّص لي النص التالي بنقاط واضحة:\n", hint: "الصق النص المراد تلخيصه..." },
     ],
   },
   nibras: {
     id: "nibras", name: "نبراس", color: "#D9A93C", desc: "المذاكرة والتعليم",
     greeting: (n) => n ? `جاهزين نذاكر، ${n}؟` : "وش نذاكر اليوم؟",
-    directive: "أنت «نبراس»، مساعد تعليمي متخصص داخل تطبيق مرن. اشرح بأسلوب تعليمي مبسّط ومنظّم بالعربية مع أمثلة وخطوات واضحة، وركّز على ترسيخ الفهم لدى الطالب.",
+    directive: "",
     suggestions: ["اشرح لي درس الكسور", "سوّ لي اختبار قصير", "خطة مذاكرة لأسبوع", "لخّص هذا الدرس"],
     tools: [
-      { id: "explain", label: "اشرح درس", kind: "prompt", prompt: "اشرح لي بشكل تعليمي مبسّط مع أمثلة:\n" },
+      { id: "explain", label: "اشرح درس", kind: "prompt", prompt: "اشرح لي بشكل تعليمي مبسّط مع أمثلة:\n", hint: "اكتب اسم الدرس أو الصق محتواه..." },
       { id: "quiz", label: "اختبار", kind: "sheet", view: "nibras", screen: "quizzes" },
       { id: "cards", label: "بطاقات", kind: "sheet", view: "nibras", screen: "cards" },
       { id: "plan", label: "خطة مذاكرة", kind: "sheet", view: "nibras", screen: "plan" },
@@ -212,6 +212,7 @@ export default function App() {
   const [agent, setAgent] = useState("marn"); // الوكيل النشط: marn | nibras | fatwa
   const [toolScreen, setToolScreen] = useState(null); // الشاشة المطلوب فتحها داخل أداة الوكيل
   const [agentMenuOpen, setAgentMenuOpen] = useState(false); // قائمة اختيار المساعد/الأدوات
+  const [activeTool, setActiveTool] = useState(null); // أداة نصية مفعّلة (مثل تلخيص) — توجيه مخفي
   const [showAppMenu, setShowAppMenu] = useState(false); // قائمة التطبيقات
   const [isMobile, setIsMobile] = useState(false);
   const [chats, setChats] = useState({});
@@ -347,7 +348,7 @@ export default function App() {
     if (!tool) return;
     if (tool.kind === "search") { setForceSearch(true); setTimeout(() => inputRef.current?.focus(), 40); }
     else if (tool.kind === "focus") { setTimeout(() => inputRef.current?.focus(), 40); }
-    else if (tool.kind === "prompt") { setDraft(tool.prompt || ""); setTimeout(() => inputRef.current?.focus(), 40); }
+    else if (tool.kind === "prompt") { setActiveTool(tool); setTimeout(() => inputRef.current?.focus(), 40); }
     else if (tool.kind === "sheet" && tool.view) { setToolScreen(tool.screen || null); setAppView(tool.view); }
   }, []);
 
@@ -439,7 +440,7 @@ export default function App() {
 
   /* ===== الإرسال ===== */
   const sendMessage = async (q, opts = {}) => {
-    const { chatId: targetChatId, replaceFromIndex, forceWebSearch } = opts;
+    const { chatId: targetChatId, replaceFromIndex, forceWebSearch, toolPrompt } = opts;
     if (!q || thinking) return;
 
     let chatId = targetChatId || activeChat;
@@ -483,7 +484,12 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          question: agentDirective ? `${agentDirective}\n\nسؤال المستخدم: ${q}` : q,
+          question: (() => {
+            const pre = [];
+            if (agentDirective) pre.push(agentDirective);
+            if (toolPrompt) pre.push(toolPrompt);
+            return pre.length ? `${pre.join("\n")}\n\nسؤال المستخدم: ${q}` : q;
+          })(),
           agent: agentId,
           history,
           lang: settings.lang,
@@ -525,7 +531,8 @@ export default function App() {
 
   const send = (text) => {
     const q = (text ?? draft).trim();
-    sendMessage(q, { forceWebSearch: forceSearch });
+    sendMessage(q, { forceWebSearch: forceSearch, toolPrompt: activeTool?.prompt || "" });
+    if (activeTool) setActiveTool(null);
   };
 
   const editAndResend = (chatId, index, newText) => {
@@ -765,6 +772,16 @@ export default function App() {
                 })}
               </div>
             )}
+            {activeTool && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 7, background: currentAgent.color + "16", color: currentAgent.color, border: `1px solid ${currentAgent.color}40`, borderRadius: 999, padding: "5px 7px 5px 12px", fontSize: F.base - 2, fontWeight: 700 }}>
+                  {activeTool.label}
+                  <button onClick={() => setActiveTool(null)} style={{ display: "inline-flex", background: "transparent", border: "none", cursor: "pointer", color: currentAgent.color, padding: 0 }} title="إلغاء">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </span>
+              </div>
+            )}
             <div style={{
               background: T.inputBg || T.glassFill,
               border: `1.5px solid ${T.line}`,
@@ -782,7 +799,7 @@ export default function App() {
                   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
                   if (e.key === "Escape") { setDraft(""); setEditingMsg(null); }
                 }}
-                placeholder={forceSearch ? (isRTL ? "ابحث في الإنترنت..." : "Search the web...") : t.placeholder}
+                placeholder={activeTool ? (activeTool.hint || t.placeholder) : (forceSearch ? (isRTL ? "ابحث في الإنترنت..." : "Search the web...") : t.placeholder)}
                 style={{
                   flex: 1, background: "transparent", border: "none", outline: "none",
                   color: T.text, fontSize: F.base, padding: "2px 4px", fontFamily: "inherit",
