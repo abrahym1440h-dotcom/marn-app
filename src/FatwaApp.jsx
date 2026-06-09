@@ -309,7 +309,7 @@ function parseFatwa(raw) {
 function TopBar({ title, subtitle, Icon, onBack, onMenu }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: `1px solid ${T.borderSoft}`, background: T.surface, position: 'sticky', top: 0, zIndex: 5 }}>
-      <button onClick={onMenu} style={iconBtn}><Menu size={22} color={T.text} /></button>
+      {onMenu ? <button onClick={onMenu} style={iconBtn}><Menu size={22} color={T.text} /></button> : <div style={{ width: 40 }} />}
       <div style={{ textAlign: 'center', flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           {Icon && <Icon size={18} color={T.accent} />}
@@ -967,7 +967,6 @@ export default function FatwaApp({ onClose, marnT, marnF, dark, initialScreen })
       <TopBar
         title={meta.title}
         Icon={meta.Icon}
-        onMenu={() => setDrawer(true)}
         onBack={onClose}
       />
       <div className="fatwa-scroll" style={{ flex: 1, overflowY: 'auto' }}>
@@ -982,7 +981,6 @@ export default function FatwaApp({ onClose, marnT, marnF, dark, initialScreen })
         {view === 'faq' && <FaqView />}
         {view === 'sources' && <SourcesView />}
       </div>
-      <Drawer open={drawer} view={view} onSelect={setView} onClose={() => setDrawer(false)} onExit={onClose} />
     </div>
   );
 }
