@@ -1553,7 +1553,7 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
   return (
     <Glass T={T} radius={14} style={{ padding: 0, overflow: "hidden" }}>
       {/* شريط هوية */}
-      <div style={{ height: 3, background: "linear-gradient(90deg,#2A6BF0,#4A8FFF,#8FBEFF)" }}/>
+      <div style={{ height: 3, background: `linear-gradient(90deg,${a},${a}88,transparent)` }}/>
       <div style={{ padding: 20 }}>
 
       {/* الهيدر */}
@@ -1588,21 +1588,20 @@ function BigCard({ card, T, t, F, searched, onCopy, onRegenerate, isRTL }) {
 
       {tabs.length > 1 && (
         <div style={{
-          display: "flex", gap: 0,
-          borderBottom: `1px solid ${T.line}`,
-          marginBottom: 16, overflowX: "auto",
+          display: "flex", gap: 6,
+          marginBottom: 16, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 2,
         }}>
           {tabs.map((tt, i) => (
             <button key={i} onClick={() => setActiveTab(i)} style={{
-              background: "transparent",
-              border: "none",
-              borderBottom: `2px solid ${i === activeTab ? T.accentBlue||T.blue : "transparent"}`,
-              padding: "8px 14px",
-              color: i === activeTab ? T.text : T.sub,
-              fontSize: F.label + 0.5, fontWeight: i === activeTab ? 600 : 400,
+              flexShrink: 0,
+              background: i === activeTab ? `${a}16` : T.pillFill,
+              border: `1px solid ${i === activeTab ? a + "55" : T.line}`,
+              borderRadius: 999,
+              padding: "6px 13px",
+              color: i === activeTab ? a : T.sub,
+              fontSize: F.label + 0.5, fontWeight: i === activeTab ? 700 : 600,
               cursor: "pointer", fontFamily: "inherit",
               transition: "all .15s", whiteSpace: "nowrap",
-              marginBottom: -1,
             }}>{tt.label}</button>
           ))}
         </div>
