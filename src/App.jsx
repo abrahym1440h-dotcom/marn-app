@@ -1685,16 +1685,14 @@ function TabContent({ tab, a, T, F }) {
     case "stats":
       return (
         <div>
-          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 14px", lineHeight:1.6 }}>{d.intro}</p>}
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(100px,1fr))", gap:10 }}>
+          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 14px", lineHeight:1.7 }}>{d.intro}</p>}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(120px,1fr))", gap:10 }}>
             {(d.items||[]).map((s,i) => (
-              <div key={i} style={{ background:T.pillFill, borderRadius:10, padding:"12px 10px", border:`1px solid ${T.line}`, textAlign:"center" }}>
-                <div style={{ color:a, fontSize:F.h2, fontWeight:800, lineHeight:1.1, marginBottom:3 }}>{s.value}</div>
-                <div style={{ fontSize:F.label, fontWeight:600, marginBottom:2 }}>{s.label}</div>
-                {s.hint && <div style={{ fontSize:F.label-1, color:T.sub }}>{s.hint}</div>}
-                <div style={{ height:3, background:T.line, borderRadius:2, marginTop:6 }}>
-                  <div style={{ height:"100%", width:"70%", background:a, borderRadius:2 }}/>
-                </div>
+              <div key={i} style={{ position:"relative", background:T.cardBg, borderRadius:14, padding:"16px 12px 14px", border:`1px solid ${T.line}`, textAlign:"center", overflow:"hidden", boxShadow:T.glassShadow }}>
+                <div style={{ position:"absolute", top:0, insetInlineStart:0, insetInlineEnd:0, height:3, background:`linear-gradient(90deg,${a},${a}66)` }}/>
+                <div style={{ fontSize:F.h1+2, fontWeight:800, lineHeight:1, marginBottom:5, color:a, background:`linear-gradient(135deg,${a},${a}aa)`, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>{s.value}</div>
+                <div style={{ fontSize:F.base-2, fontWeight:700, color:T.text }}>{s.label}</div>
+                {s.hint && <div style={{ fontSize:F.label, color:T.sub, marginTop:2 }}>{s.hint}</div>}
               </div>
             ))}
           </div>
@@ -1704,42 +1702,50 @@ function TabContent({ tab, a, T, F }) {
     case "steps":
       return (
         <div>
-          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 12px", lineHeight:1.6 }}>{d.intro}</p>}
-          {(d.steps||[]).map((s,i,arr) => (
-            <div key={i} style={{ display:"flex", gap:12, padding:"12px 0", borderBottom:i===arr.length-1?"none":`1px solid ${T.line}` }}>
-              <div style={{ flexShrink:0, width:26, height:26, borderRadius:7, background:`${a}18`, color:a, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:F.label+1 }}>{i+1}</div>
-              <div>
-                <div style={{ fontWeight:600, fontSize:F.base-0.5, marginBottom:3 }}>{s.t}</div>
-                {s.d && <div style={{ color:T.sub, fontSize:F.base-1.5, lineHeight:1.6 }}>{s.d}</div>}
+          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 14px", lineHeight:1.7 }}>{d.intro}</p>}
+          <div style={{ position:"relative" }}>
+            {(d.steps||[]).map((s,i,arr) => (
+              <div key={i} style={{ display:"flex", gap:12, position:"relative", paddingBottom:i===arr.length-1?0:14 }}>
+                {i!==arr.length-1 && <div style={{ position:"absolute", insetInlineStart:16, top:34, bottom:0, width:2, background:`${a}26` }}/>}
+                <div style={{ flexShrink:0, width:34, height:34, borderRadius:11, background:`linear-gradient(135deg,${a},${a}cc)`, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:F.base, zIndex:1, boxShadow:`0 4px 12px ${a}40` }}>{i+1}</div>
+                <div style={{ flex:1, background:T.pillFill, border:`1px solid ${T.line}`, borderRadius:12, padding:"11px 14px" }}>
+                  <div style={{ fontWeight:700, fontSize:F.base-0.5, marginBottom:s.d?4:0, color:T.text }}>{s.t}</div>
+                  {s.d && <div style={{ color:T.sub, fontSize:F.base-1.5, lineHeight:1.7 }}>{s.d}</div>}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       );
 
     case "list":
       return (
         <div>
-          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 12px", lineHeight:1.6 }}>{d.intro}</p>}
-          {(d.items||[]).map((x,i,arr) => (
-            <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"10px 0", borderBottom:i===arr.length-1?"none":`1px solid ${T.line}`, fontSize:F.base-0.5, lineHeight:1.6 }}>
-              <span style={{ color:a, fontSize:16, lineHeight:1, marginTop:2, flexShrink:0 }}>•</span>
-              <span>{typeof x==="string"?x:(x.text||JSON.stringify(x))}</span>
-            </div>
-          ))}
+          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 14px", lineHeight:1.7 }}>{d.intro}</p>}
+          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+            {(d.items||[]).map((x,i) => (
+              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"12px 14px", borderRadius:12, background:T.pillFill, border:`1px solid ${T.line}`, position:"relative", overflow:"hidden" }}>
+                <div style={{ position:"absolute", insetInlineStart:0, top:0, bottom:0, width:3, background:a, opacity:.55 }}/>
+                <span style={{ flexShrink:0, width:22, height:22, borderRadius:7, background:`${a}1f`, color:a, display:"flex", alignItems:"center", justifyContent:"center", fontSize:F.label, fontWeight:800, marginTop:1 }}>{i+1}</span>
+                <span style={{ flex:1, fontSize:F.base-0.5, lineHeight:1.75, color:T.text }}>{typeof x==="string"?x:(x.text||JSON.stringify(x))}</span>
+              </div>
+            ))}
+          </div>
         </div>
       );
 
     case "timeline":
       return (
-        <div style={{ position:"relative", paddingRight:20 }}>
-          <div style={{ position:"absolute", right:5, top:6, bottom:6, width:2, background:`linear-gradient(180deg,${a},transparent)`, borderRadius:2 }}/>
+        <div style={{ position:"relative", paddingInlineStart:22 }}>
+          <div style={{ position:"absolute", insetInlineStart:6, top:8, bottom:8, width:2, background:`linear-gradient(180deg,${a},${a}22)`, borderRadius:2 }}/>
           {(d.events||[]).map((e,i,arr) => (
-            <div key={i} style={{ position:"relative", marginBottom:i===arr.length-1?0:18 }}>
-              <div style={{ position:"absolute", right:-19, top:4, width:10, height:10, borderRadius:"50%", background:a, border:`2px solid ${T.cardBg||T.glassFill}`, boxShadow:`0 0 8px ${a}80` }}/>
-              <div style={{ color:a, fontWeight:700, fontSize:F.base-1.5 }}>{e[0]}</div>
-              <div style={{ fontWeight:600, fontSize:F.base-0.5, margin:"2px 0" }}>{e[1]}</div>
-              {e[2] && <div style={{ color:T.sub, fontSize:F.base-1.5, lineHeight:1.6 }}>{e[2]}</div>}
+            <div key={i} style={{ position:"relative", marginBottom:i===arr.length-1?0:14 }}>
+              <div style={{ position:"absolute", insetInlineStart:-21, top:6, width:12, height:12, borderRadius:"50%", background:a, border:`3px solid ${T.cardBg||T.glassFill}`, boxShadow:`0 0 0 2px ${a}40` }}/>
+              <div style={{ background:T.pillFill, border:`1px solid ${T.line}`, borderRadius:12, padding:"10px 14px" }}>
+                <span style={{ display:"inline-block", color:a, fontWeight:800, fontSize:F.label, background:`${a}14`, padding:"2px 9px", borderRadius:999, marginBottom:5 }}>{e[0]}</span>
+                <div style={{ fontWeight:700, fontSize:F.base-0.5, margin:"2px 0", color:T.text }}>{e[1]}</div>
+                {e[2] && <div style={{ color:T.sub, fontSize:F.base-1.5, lineHeight:1.7 }}>{e[2]}</div>}
+              </div>
             </div>
           ))}
         </div>
@@ -1747,21 +1753,21 @@ function TabContent({ tab, a, T, F }) {
 
     case "compare":
       return (
-        <div style={{ overflowX:"auto" }}>
+        <div style={{ overflowX:"auto", borderRadius:12, border:`1px solid ${T.line}` }}>
           <table style={{ width:"100%", borderCollapse:"collapse", fontSize:F.base-1, minWidth:260 }}>
-            <thead><tr>{(d.cols||[]).map((c,i) => <th key={i} style={{ textAlign:"right", padding:"8px 10px", color:i===0?T.sub:a, fontWeight:700, fontSize:F.label }}>{c}</th>)}</tr></thead>
-            <tbody>{(d.rows||[]).map((row,ri) => <tr key={ri}>{row.map((cell,ci) => <td key={ci} style={{ padding:"11px 10px", color:ci===0?T.text:T.sub, fontWeight:ci===0?600:400, borderTop:`1px solid ${T.line}` }}>{cell}</td>)}</tr>)}</tbody>
+            <thead><tr style={{ background:`${a}10` }}>{(d.cols||[]).map((c,i) => <th key={i} style={{ textAlign:"right", padding:"11px 12px", color:i===0?T.sub:a, fontWeight:800, fontSize:F.label }}>{c}</th>)}</tr></thead>
+            <tbody>{(d.rows||[]).map((row,ri) => <tr key={ri} style={{ background: ri%2?T.pillFill:"transparent" }}>{row.map((cell,ci) => <td key={ci} style={{ padding:"11px 12px", color:ci===0?T.text:T.sub, fontWeight:ci===0?700:500, borderTop:`1px solid ${T.line}` }}>{cell}</td>)}</tr>)}</tbody>
           </table>
         </div>
       );
 
     case "facts":
       return (
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))", gap:8 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:9 }}>
           {(d.items||[]).map((f,i) => (
-            <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:9, padding:"10px 12px", borderRadius:10, background:T.pillFill, border:`1px solid ${T.line}`, fontSize:F.base-1 }}>
-              {f.icon && <span style={{ fontSize:16, flexShrink:0 }}>{f.icon}</span>}
-              <span style={{ flex:1 }}>{f.text}</span>
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"12px 13px", borderRadius:12, background:T.pillFill, border:`1px solid ${T.line}` }}>
+              <span style={{ flexShrink:0, width:30, height:30, borderRadius:9, background:`${a}16`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:15 }}>{f.icon||"•"}</span>
+              <span style={{ flex:1, color:T.text, fontSize:F.base-1, lineHeight:1.5 }}>{f.text}</span>
             </div>
           ))}
         </div>
