@@ -30,6 +30,21 @@ const ACCENTS = {
   food: "#ff9500",
 };
 
+/* مشاهد «سماء حيّة» — خلفية كاملة لكل موضوع */
+const SCENES = {
+  sport:     "linear-gradient(175deg,#0E4D33 0%,#147A4D 48%,#0B2E20 100%)",
+  knowledge: "linear-gradient(175deg,#1D3A8F 0%,#2D63C8 48%,#173B70 100%)",
+  history:   "linear-gradient(175deg,#4A2B8F 0%,#6D43C0 48%,#33205E 100%)",
+  food:      "linear-gradient(175deg,#9A4D12 0%,#D9772B 48%,#6E350D 100%)",
+};
+/* ألوان زجاجية فوق المشهد */
+const SCENE_T = {
+  text: "#ffffff", sub: "rgba(255,255,255,0.85)", faint: "rgba(255,255,255,0.6)",
+  pillFill: "rgba(255,255,255,0.13)", line: "rgba(255,255,255,0.24)",
+  cardBg: "rgba(255,255,255,0.10)", hover: "rgba(255,255,255,0.2)", glassShadow: "none",
+  dotIdle: "rgba(255,255,255,0.45)",
+};
+
 /* ============ الثيمات الاحترافية ============ */
 const THEMES = {
   light: {
@@ -770,23 +785,29 @@ export default function App() {
                 })}
               </div>
 
-              {/* خشبة العرض — تتلوّن بموضوع الإجابة كأنها تطبيق خاص */}
+              {/* خشبة العرض — مشهد «سماء حيّة» لكل موضوع */}
               {(() => {
                 const stageCard = activeTurn && activeTurn.ci != null ? currentMessages[activeTurn.ci]?.card : null;
                 const sa = stageCard ? (ACCENTS[stageCard.accent] || ACCENTS.knowledge) : currentAgent.color;
+                const hasScene = !!stageCard;
+                const sceneBg = hasScene ? (SCENES[stageCard.accent] || SCENES.knowledge) : "none";
+                const TN = hasScene ? { ...T, ...SCENE_T } : T;
                 return (
               <div style={{
-                flex: 1, overflowY: "auto", padding: isMobile ? "0 12px" : "0 20px", position: "relative",
-                backgroundImage: `linear-gradient(180deg, ${sa}1f, transparent 300px), radial-gradient(110% 50% at 50% 0%, ${sa}14, transparent 65%)`,
+                flex: 1, overflowY: "auto", padding: isMobile ? "0 14px" : "0 22px", position: "relative",
+                background: hasScene ? sceneBg : "transparent",
+                backgroundImage: hasScene
+                  ? `radial-gradient(420px 300px at 85% -5%, rgba(255,255,255,0.22), transparent 65%), ${sceneBg}`
+                  : `linear-gradient(180deg, ${sa}1c, transparent 280px)`,
               }}>
-                <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "10px 0 20px" : "14px 0 26px" }}>
+                <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "12px 0 22px" : "16px 0 28px" }}>
                   {/* تنقّل الجولات */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-                    <button onClick={() => setStageIdx(Math.max(0, stageSafe - 1))} disabled={stageSafe === 0} className="press" style={navBtn(T, stageSafe === 0)}>›</button>
-                    <button onClick={() => setStageIdx(Math.min(turns.length - 1, stageSafe + 1))} disabled={stageSafe >= turns.length - 1} className="press" style={navBtn(T, stageSafe >= turns.length - 1)}>‹</button>
-                    <div style={{ fontSize: F.label, color: T.faint, fontWeight: 600, flexShrink: 0 }}>{stageSafe + 1} / {turns.length}</div>
+                    <button onClick={() => setStageIdx(Math.max(0, stageSafe - 1))} disabled={stageSafe === 0} className="press" style={navBtn(TN, stageSafe === 0)}>›</button>
+                    <button onClick={() => setStageIdx(Math.min(turns.length - 1, stageSafe + 1))} disabled={stageSafe >= turns.length - 1} className="press" style={navBtn(TN, stageSafe >= turns.length - 1)}>‹</button>
+                    <div style={{ fontSize: F.label, color: TN.faint, fontWeight: 600, flexShrink: 0 }}>{stageSafe + 1} / {turns.length}</div>
                     {activeTurn && activeTurn.q && (
-                      <div style={{ flex: 1, minWidth: 0, fontSize: F.base - 1, color: T.sub, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "start" }}>
+                      <div style={{ flex: 1, minWidth: 0, fontSize: F.base - 1, color: TN.sub, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "start" }}>
                         · {activeTurn.q}
                       </div>
                     )}
@@ -1612,7 +1633,7 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
         onRegenerate={thinking ? null : onRegenerate}
         isRTL={isRTL}
       />
-      <FollowUps suggestions={m.followUps} T={T} F={F}
+      <FollowUps suggestions={m.followUps} T={stage ? { ...T, ...SCENE_T } : T} F={F}
         onSelect={onSelect} thinking={thinking} />
       {!stage && <SourcesBar sources={m.sources} T={T} F={F} isRTL={isRTL} />}
       {!stage && timeStr && <div style={{ fontSize: F.label - 1, color: T.faint, marginTop: 4 }}>{timeStr}</div>}
@@ -1653,25 +1674,28 @@ function SourcesBar({ sources, T, F, isRTL }) {
 
 /* ============ البطاقة الكبيرة ============ */
 function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL, stage }) {
-  const a = ACCENTS[card.accent] || ACCENTS.knowledge;
+  const baseA = ACCENTS[card.accent] || ACCENTS.knowledge;
+  const TT = stage ? { ...T, ...SCENE_T } : T;
+  const a = stage ? "#FFFFFF" : baseA;
   const [activeTab, setActiveTab] = useState(0);
   const [showSources, setShowSources] = useState(false);
   const tabs = Array.isArray(card.tabs) ? card.tabs : [];
   const active = tabs[activeTab] || {};
   const hasSources = Array.isArray(sources) && sources.length > 0;
+  const hero = stage && card.hero && (card.hero.value || card.hero.icon) ? card.hero : null;
 
   const inner = (
     <>
       {/* الهيدر */}
-      <div style={{ position: "relative", marginBottom: stage ? 22 : 16 }}>
+      <div style={{ position: "relative", marginBottom: stage ? 18 : 16 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 7 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0, flexWrap: "wrap" }}>
-            {card.kicker && <div style={{ color: a, fontSize: F.label, fontWeight: 800, background: `${a}14`, border: `1px solid ${a}33`, padding: "3px 11px", borderRadius: 999, letterSpacing: 0.4 }}>{card.kicker}</div>}
+            {card.kicker && <div style={{ color: stage ? "#fff" : a, fontSize: F.label, fontWeight: 800, background: stage ? "rgba(255,255,255,0.16)" : `${a}14`, border: `1px solid ${stage ? "rgba(255,255,255,0.3)" : a + "33"}`, padding: "3px 11px", borderRadius: 999, letterSpacing: 0.4 }}>{card.kicker}</div>}
             {searched && (
               <div style={{
-                fontSize: F.label - 1, fontWeight: 600, color: "#34D399",
-                background: "rgba(52,211,153,0.1)", padding: "2px 8px",
-                borderRadius: 6, border: "1px solid rgba(52,211,153,0.2)", display: "flex", alignItems: "center", gap: 4,
+                fontSize: F.label - 1, fontWeight: 600, color: stage ? "#CFFBE5" : "#34D399",
+                background: "rgba(52,211,153,0.16)", padding: "2px 8px",
+                borderRadius: 6, border: "1px solid rgba(52,211,153,0.3)", display: "flex", alignItems: "center", gap: 4,
               }}>
                 <Icon.Search /> {t.liveSearch}
               </div>
@@ -1679,47 +1703,60 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
           </div>
           <div style={{ display: "flex", gap: 2, alignItems: "center" }}>
             {hasSources && (
-              <button onClick={() => setShowSources(v => !v)} title={isRTL ? "المصادر" : "Sources"} style={{ ...cardActionBtn(T), gap: 5, color: showSources ? a : T.sub, fontSize: F.label, fontWeight: 700, fontFamily: "inherit" }}>
+              <button onClick={() => setShowSources(v => !v)} title={isRTL ? "المصادر" : "Sources"} style={{ ...cardActionBtn(TT), gap: 5, color: showSources ? TT.text : TT.sub, fontSize: F.label, fontWeight: 700, fontFamily: "inherit" }}>
                 <span style={{ width: 15, height: 15, display: "inline-flex" }}><Icon.Globe /></span>{sources.length}
               </button>
             )}
             {onRegenerate && (
-              <button onClick={onRegenerate} title={isRTL ? "إعادة توليد" : "Regenerate"} style={cardActionBtn(T)}>
+              <button onClick={onRegenerate} title={isRTL ? "إعادة توليد" : "Regenerate"} style={cardActionBtn(TT)}>
                 <Icon.Refresh />
               </button>
             )}
-            <button onClick={onCopy} title={t.copy} style={cardActionBtn(T)}>
+            <button onClick={onCopy} title={t.copy} style={cardActionBtn(TT)}>
               <Icon.Copy />
             </button>
           </div>
         </div>
-        <h2 style={{ fontSize: stage ? F.h2 : F.h2, fontWeight: 800, margin: 0, letterSpacing: "-0.4px", lineHeight: 1.3 }}>{card.title}</h2>
-        {card.sub && <div style={{ color: T.sub, fontSize: F.base - 1, marginTop: 6, lineHeight: 1.6 }}>{card.sub}</div>}
+        <h2 style={{ fontSize: F.h2, fontWeight: 800, margin: 0, letterSpacing: "-0.4px", lineHeight: 1.3, color: TT.text }}>{card.title}</h2>
+        {card.sub && <div style={{ color: TT.sub, fontSize: F.base - 1, marginTop: 6, lineHeight: 1.6 }}>{card.sub}</div>}
       </div>
+
+      {/* البطل — كتطبيق الطقس */}
+      {hero && (
+        <div style={{ display: "flex", alignItems: "center", gap: 18, margin: "2px 0 22px" }}>
+          {hero.icon && <div style={{ fontSize: 52, lineHeight: 1, filter: "drop-shadow(0 8px 20px rgba(0,0,0,0.35))" }}>{hero.icon}</div>}
+          <div style={{ minWidth: 0 }}>
+            {hero.value && <div style={{ fontSize: F.h1 + 22, fontWeight: 800, lineHeight: 0.95, color: "#fff", textShadow: "0 8px 30px rgba(0,0,0,0.3)", wordBreak: "break-word" }}>{hero.value}</div>}
+            {hero.label && <div style={{ fontSize: F.base, fontWeight: 600, color: "rgba(255,255,255,0.92)", marginTop: 7 }}>{hero.label}</div>}
+            {hero.sub && <div style={{ fontSize: F.base - 1, color: "rgba(255,255,255,0.72)", marginTop: 2 }}>{hero.sub}</div>}
+          </div>
+        </div>
+      )}
 
       {tabs.length > 1 && (
         <div style={{ display: "flex", gap: 6, marginBottom: stage ? 20 : 16, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 2 }}>
           {tabs.map((tt, i) => (
             <button key={i} onClick={() => setActiveTab(i)} style={{
               flexShrink: 0,
-              background: i === activeTab ? `${a}16` : T.pillFill,
-              border: `1px solid ${i === activeTab ? a + "55" : T.line}`,
+              background: i === activeTab ? (stage ? "rgba(255,255,255,0.22)" : `${a}16`) : TT.pillFill,
+              border: `1px solid ${i === activeTab ? (stage ? "rgba(255,255,255,0.5)" : a + "55") : TT.line}`,
               borderRadius: 999, padding: stage ? "8px 15px" : "6px 13px",
-              color: i === activeTab ? a : T.sub,
+              color: i === activeTab ? (stage ? "#fff" : a) : TT.sub,
               fontSize: F.label + 0.5, fontWeight: i === activeTab ? 700 : 600,
               cursor: "pointer", fontFamily: "inherit", transition: "all .15s", whiteSpace: "nowrap",
+              backdropFilter: stage ? "blur(8px)" : "none",
             }}>{tt.label}</button>
           ))}
         </div>
       )}
 
       <div key={activeTab} className="tab-in">
-        <TabContent tab={active} a={a} T={T} F={F} />
+        <TabContent tab={active} a={a} T={TT} F={F} />
       </div>
 
       {hasSources && showSources && (
-        <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${T.line}` }}>
-          <SourcesBar sources={sources} T={T} F={F} isRTL={isRTL} />
+        <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${TT.line}` }}>
+          <SourcesBar sources={sources} T={TT} F={F} isRTL={isRTL} />
         </div>
       )}
     </>
@@ -1834,7 +1871,7 @@ function TabContent({ tab, a, T, F }) {
             {(d.steps||[]).map((s,i,arr) => (
               <div key={i} style={{ display:"flex", gap:12, position:"relative", paddingBottom:i===arr.length-1?0:14 }}>
                 {i!==arr.length-1 && <div style={{ position:"absolute", insetInlineStart:16, top:34, bottom:0, width:2, background:`${a}26` }}/>}
-                <div style={{ flexShrink:0, width:34, height:34, borderRadius:11, background:`linear-gradient(135deg,${a},${a}cc)`, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:F.base, zIndex:1, boxShadow:`0 4px 12px ${a}40` }}>{i+1}</div>
+                <div style={{ flexShrink:0, width:34, height:34, borderRadius:11, background:`linear-gradient(135deg,${a},${a}cc)`, color:a.toUpperCase()==="#FFFFFF"?"#1d2a4a":"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:F.base, zIndex:1, boxShadow:`0 4px 12px ${a}40` }}>{i+1}</div>
                 <div style={{ flex:1, background:T.pillFill, border:`1px solid ${T.line}`, borderRadius:12, padding:"11px 14px" }}>
                   <div style={{ fontWeight:700, fontSize:F.base-0.5, marginBottom:s.d?4:0, color:T.text }}>{s.t}</div>
                   {s.d && <div style={{ color:T.sub, fontSize:F.base-1.5, lineHeight:1.7 }}>{s.d}</div>}
