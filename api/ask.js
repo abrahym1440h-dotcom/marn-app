@@ -35,9 +35,10 @@ function setCache(question, lang, agent, data) {
 /* ===== نماذج الذكاء ===== */
 const MODELS_TO_TRY = [
   "llama-3.3-70b",
-  "llama-4-scout-17b-16e-instruct",
+  "qwen-3-235b-a22b-instruct-2507",
   "gpt-oss-120b",
-  "llama3.1-8b",
+  "qwen-3-32b",
+  "llama-4-scout-17b-16e-instruct",
 ];
 
 /* ===== كشف البحث ===== */
@@ -653,5 +654,5 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.status(502).json({ error: lang === "ar" ? "حاول مرة ثانية" : "Try again", detail: lastError });
+  return res.status(502).json({ error: lang === "ar" ? "الخدمة مزدحمة حالياً — جرّب بعد لحظات" : "Service busy — try again shortly", detail: lastError });
 }
