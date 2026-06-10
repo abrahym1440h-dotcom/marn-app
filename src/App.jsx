@@ -540,8 +540,8 @@ export default function App() {
         if (r.ok && data?.card) {
           newMsg = { role: "card", card: data.card, searched: data.searched, sources: Array.isArray(data.sources) ? data.sources : [], at: Date.now(), forSearchQuery: q, followUps: Array.isArray(data.card?.followUps) ? data.card.followUps : [] };
         } else {
-          const errMsg = (data && (data.error || data.detail))
-            ? `${data.error || ""}${data.detail ? " — " + data.detail : ""}`
+          const errMsg = (data && data.error)
+            ? data.error
             : `${t.error} ${r.status}`;
           newMsg = { role: "error", text: errMsg, at: Date.now() };
         }
