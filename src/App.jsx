@@ -340,6 +340,12 @@ export default function App() {
     const turnCount = currentMessages.filter(x => x.role !== "card" && x.role !== "error").length;
     setStageIdx(Math.max(0, turnCount - 1));
   }, [currentMessages.length, activeChat]);
+
+  /* ===== مشهد «سماء حيّة» — يغمر عمود المحادثة كاملاً ===== */
+  const stageCard = activeTurn && activeTurn.ci != null ? currentMessages[activeTurn.ci]?.card : null;
+  const sceneOn = !empty && !!stageCard;
+  const sceneBg = sceneOn ? (SCENES[stageCard.accent] || SCENES.knowledge) : null;
+  const TSCN = sceneOn ? { ...T, ...SCENE_T } : T;
   const activeAgentId = (activeChat && chats[activeChat]?.agent) || agent;
   const currentAgent = AGENTS[activeAgentId] || AGENTS.marn;
   const sortedChats = useMemo(() => {
@@ -694,32 +700,35 @@ export default function App() {
       />
 
       {/* المنطقة الرئيسية */}
-      <main style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+      <main style={{
+        flex: 1, display: "flex", flexDirection: "column", position: "relative", overflow: "hidden",
+        background: sceneOn ? `radial-gradient(440px 320px at 85% -5%, rgba(255,255,255,0.20), transparent 65%), ${sceneBg}` : "transparent",
+      }}>
         {/* الهيدر */}
         <header style={{
           flexShrink: 0, position: "relative", zIndex: 5,
-          background: T.headerBg,
-          borderBottom: `1px solid ${T.line}`,
+          background: sceneOn ? "rgba(8,12,24,0.18)" : T.headerBg,
+          borderBottom: `1px solid ${sceneOn ? "rgba(255,255,255,0.14)" : T.line}`,
           backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
         }}>
           <div style={{ maxWidth: 820, margin: "0 auto", padding: "10px 14px", display: "flex", alignItems: "center", gap: 8 }}>
             {isMobile && (
-              <button onClick={() => setSidebarOpen(true)} style={iconBtnStyle(T)}>
+              <button onClick={() => setSidebarOpen(true)} style={iconBtnStyle(TSCN)}>
                 <Icon.Menu />
               </button>
             )}
             <button onClick={() => setAgentMenuOpen(true)} className="press" style={{
-              display: "flex", alignItems: "center", gap: 8, background: T.pillFill,
-              border: `1px solid ${T.line}`, borderRadius: 999, padding: "6px 12px 6px 7px",
+              display: "flex", alignItems: "center", gap: 8, background: TSCN.pillFill,
+              border: `1px solid ${TSCN.line}`, borderRadius: 999, padding: "6px 12px 6px 7px",
               cursor: "pointer", fontFamily: "inherit", flexShrink: 0,
             }}>
-              <span style={{ width: 26, height: 26, borderRadius: 8, background: currentAgent.color + "18", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {AG_ICON[currentAgent.id] ? AG_ICON[currentAgent.id](currentAgent.color, 15) : null}
+              <span style={{ width: 26, height: 26, borderRadius: 8, background: sceneOn ? "rgba(255,255,255,0.18)" : currentAgent.color + "18", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {AG_ICON[currentAgent.id] ? AG_ICON[currentAgent.id](sceneOn ? "#FFFFFF" : currentAgent.color, 15) : null}
               </span>
-              <span style={{ fontSize: F.base - 1, fontWeight: 700, color: T.text }}>{currentAgent.name}</span>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.sub} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              <span style={{ fontSize: F.base - 1, fontWeight: 700, color: TSCN.text }}>{currentAgent.name}</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={TSCN.sub} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
-            <div style={{ flex: 1, fontSize: F.base - 1, fontWeight: 600, color: T.sub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center" }}>
+            <div style={{ flex: 1, fontSize: F.base - 1, fontWeight: 600, color: TSCN.sub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center" }}>
               {activeChat ? chats[activeChat]?.title : ""}
             </div>
             <button onClick={newChat} style={{
@@ -733,7 +742,7 @@ export default function App() {
               <Icon.Plus />
             </button>
           </div>
-          <div style={{ height: 2, background: `linear-gradient(90deg, transparent, ${currentAgent.color}, transparent)`, opacity: 0.6 }} />
+          {!sceneOn && <div style={{ height: 2, background: `linear-gradient(90deg, transparent, ${currentAgent.color}, transparent)`, opacity: 0.6 }} />}
         </header>
 
         {agentMenuOpen && (
@@ -756,28 +765,30 @@ export default function App() {
               {/* شريط الجولات */}
               <div style={{
                 width: isMobile ? 50 : 184, flexShrink: 0, overflowY: "auto",
-                borderInlineEnd: `1px solid ${T.line}`, padding: "16px 8px",
+                borderInlineEnd: `1px solid ${sceneOn ? "rgba(255,255,255,0.14)" : T.line}`, padding: "16px 8px",
                 display: "flex", flexDirection: "column", gap: 3,
+                background: sceneOn ? "rgba(8,12,24,0.14)" : "transparent",
               }}>
-                {!isMobile && <div style={{ fontSize: F.label - 1, fontWeight: 700, color: T.faint, padding: "2px 8px 8px" }}>الجولات</div>}
+                {!isMobile && <div style={{ fontSize: F.label - 1, fontWeight: 700, color: TSCN.faint, padding: "2px 8px 8px" }}>الجولات</div>}
                 {turns.map((tn, ti) => {
                   const on = ti === stageSafe;
+                  const hl = sceneOn ? "#FFFFFF" : currentAgent.color;
                   return (
                     <button key={ti} onClick={() => setStageIdx(ti)} className="press" style={{
                       display: "flex", alignItems: "center", gap: 9, textAlign: "start",
-                      background: on ? `${currentAgent.color}14` : "transparent",
-                      border: `1px solid ${on ? currentAgent.color + "44" : "transparent"}`,
+                      background: on ? (sceneOn ? "rgba(255,255,255,0.16)" : `${currentAgent.color}14`) : "transparent",
+                      border: `1px solid ${on ? (sceneOn ? "rgba(255,255,255,0.4)" : currentAgent.color + "44") : "transparent"}`,
                       borderRadius: 10, padding: isMobile ? "9px 0" : "9px 10px",
                       justifyContent: isMobile ? "center" : "flex-start",
                       cursor: "pointer", fontFamily: "inherit", width: "100%",
                     }}>
                       <span style={{
                         flexShrink: 0, width: 9, height: 9, borderRadius: "50%",
-                        background: on ? currentAgent.color : T.dotIdle,
-                        boxShadow: on ? `0 0 0 4px ${currentAgent.color}22` : "none",
+                        background: on ? hl : TSCN.dotIdle,
+                        boxShadow: on ? `0 0 0 4px ${sceneOn ? "rgba(255,255,255,0.18)" : currentAgent.color + "22"}` : "none",
                       }} />
                       {!isMobile && <span style={{
-                        flex: 1, minWidth: 0, fontSize: F.label, color: on ? T.text : T.sub,
+                        flex: 1, minWidth: 0, fontSize: F.label, color: on ? TSCN.text : TSCN.sub,
                         fontWeight: on ? 600 : 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                       }}>{tn.q || "…"}</span>}
                     </button>
@@ -785,20 +796,14 @@ export default function App() {
                 })}
               </div>
 
-              {/* خشبة العرض — مشهد «سماء حيّة» لكل موضوع */}
+              {/* خشبة العرض — المشهد على العمود كاملاً */}
               {(() => {
-                const stageCard = activeTurn && activeTurn.ci != null ? currentMessages[activeTurn.ci]?.card : null;
-                const sa = stageCard ? (ACCENTS[stageCard.accent] || ACCENTS.knowledge) : currentAgent.color;
-                const hasScene = !!stageCard;
-                const sceneBg = hasScene ? (SCENES[stageCard.accent] || SCENES.knowledge) : "none";
-                const TN = hasScene ? { ...T, ...SCENE_T } : T;
+                const TN = TSCN;
                 return (
               <div style={{
                 flex: 1, overflowY: "auto", padding: isMobile ? "0 14px" : "0 22px", position: "relative",
-                background: hasScene ? sceneBg : "transparent",
-                backgroundImage: hasScene
-                  ? `radial-gradient(420px 300px at 85% -5%, rgba(255,255,255,0.22), transparent 65%), ${sceneBg}`
-                  : `linear-gradient(180deg, ${sa}1c, transparent 280px)`,
+                background: "transparent",
+                backgroundImage: sceneOn ? "none" : `linear-gradient(180deg, ${currentAgent.color}14, transparent 280px)`,
               }}>
                 <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "12px 0 22px" : "16px 0 28px" }}>
                   {/* تنقّل الجولات */}
@@ -844,7 +849,8 @@ export default function App() {
         {/* مربع الكتابة */}
         <div style={{
           flexShrink: 0, position: "relative", zIndex: 5,
-          background: T.composerBg, borderTop: `1px solid ${T.line}`,
+          background: sceneOn ? "rgba(8,12,24,0.22)" : T.composerBg,
+          borderTop: `1px solid ${sceneOn ? "rgba(255,255,255,0.14)" : T.line}`,
           backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
         }}>
           <div style={{ maxWidth: 760, margin: "0 auto", padding: "12px 14px" }}>
