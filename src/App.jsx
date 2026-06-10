@@ -228,7 +228,6 @@ export default function App() {
   const [toolScreen, setToolScreen] = useState(null); // الشاشة المطلوب فتحها داخل أداة الوكيل
   const [agentMenuOpen, setAgentMenuOpen] = useState(false); // قائمة اختيار المساعد/الأدوات
   const [activeTool, setActiveTool] = useState(null); // أداة نصية مفعّلة (مثل تلخيص) — توجيه مخفي
-  const [stageIdx, setStageIdx] = useState(0); // وضع المسرح: أي جولة معروضة
   const [showAppMenu, setShowAppMenu] = useState(false); // قائمة التطبيقات
   const [isMobile, setIsMobile] = useState(false);
   const [chats, setChats] = useState({});
@@ -324,28 +323,10 @@ export default function App() {
   const currentMessages = activeChat ? (chats[activeChat]?.messages || []) : [];
   const empty = currentMessages.length === 0;
 
-  // ===== المسرح: تجميع الرسائل إلى جولات (سؤال + جوابه) =====
-  const turns = [];
-  for (let i = 0; i < currentMessages.length; i++) {
-    const m = currentMessages[i];
-    if (m.role !== "card" && m.role !== "error") turns.push({ qi: i, q: m.text || "", ci: null });
-    else if (turns.length) turns[turns.length - 1].ci = i;
-    else turns.push({ qi: null, q: "", ci: i });
-  }
-  const stageSafe = Math.min(stageIdx, Math.max(0, turns.length - 1));
-  const activeTurn = turns[stageSafe] || null;
-
-  /* ===== المسرح: القفز لأحدث جولة عند رسالة جديدة أو تبديل محادثة ===== */
-  useEffect(() => {
-    const turnCount = currentMessages.filter(x => x.role !== "card" && x.role !== "error").length;
-    setStageIdx(Math.max(0, turnCount - 1));
-  }, [currentMessages.length, activeChat]);
-
-  /* ===== مشهد «سماء حيّة» — يغمر عمود المحادثة كاملاً ===== */
-  const stageCard = activeTurn && activeTurn.ci != null ? currentMessages[activeTurn.ci]?.card : null;
-  const sceneOn = !empty && !!stageCard;
-  const sceneBg = sceneOn ? (SCENES[stageCard.accent] || SCENES.knowledge) : null;
-  const TSCN = sceneOn ? { ...T, ...SCENE_T } : T;
+  // ===== صبغة المشهد: لون شفاف قريب من الثيم مستمد من آخر إجابة =====
+  const lastCardMsg = [...currentMessages].reverse().find(x => x.role === "card" && x.card);
+  const sceneOn = !empty && !!lastCardMsg;
+  const sceneAccent = lastCardMsg ? (ACCENTS[lastCardMsg.card.accent] || ACCENTS.knowledge) : currentAgent.color;
   const activeAgentId = (activeChat && chats[activeChat]?.agent) || agent;
   const currentAgent = AGENTS[activeAgentId] || AGENTS.marn;
   const sortedChats = useMemo(() => {
@@ -544,7 +525,7 @@ export default function App() {
         if (!cur) return prev;
         let newMsg;
         if (r.ok && data?.card) {
-          newMsg = { role: "card", card: data.card, searched: data.searched, sources: Array.isArray(data.sources) ? data.sources : [], at: Date.now(), forSearchQuery: q, followUps: Array.isArray(data.card?.followUps) ? data.card.followUps : [] };
+          newMsg = { role: "card", card: data.card, searched: data.searched, sources: Array.isArray(data.sources) ? data.sources : [], agentUsed: data.agent_used || agentId, at: Date.now(), forSearchQuery: q, followUps: Array.isArray(data.card?.followUps) ? data.card.followUps : [] };
         } else {
           const errMsg = (data && data.error)
             ? data.error
@@ -702,33 +683,35 @@ export default function App() {
       {/* المنطقة الرئيسية */}
       <main style={{
         flex: 1, display: "flex", flexDirection: "column", position: "relative", overflow: "hidden",
-        background: sceneOn ? `radial-gradient(440px 320px at 85% -5%, rgba(255,255,255,0.20), transparent 65%), ${sceneBg}` : "transparent",
+        backgroundImage: sceneOn
+          ? `radial-gradient(720px 360px at 82% -80px, ${sceneAccent}2e, transparent 70%), linear-gradient(180deg, ${sceneAccent}1a, transparent 440px)`
+          : "none",
       }}>
         {/* الهيدر */}
         <header style={{
           flexShrink: 0, position: "relative", zIndex: 5,
-          background: sceneOn ? "rgba(8,12,24,0.18)" : T.headerBg,
-          borderBottom: `1px solid ${sceneOn ? "rgba(255,255,255,0.14)" : T.line}`,
+          background: sceneOn ? "transparent" : T.headerBg,
+          borderBottom: `1px solid ${T.line}`,
           backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
         }}>
           <div style={{ maxWidth: 820, margin: "0 auto", padding: "10px 14px", display: "flex", alignItems: "center", gap: 8 }}>
             {isMobile && (
-              <button onClick={() => setSidebarOpen(true)} style={iconBtnStyle(TSCN)}>
+              <button onClick={() => setSidebarOpen(true)} style={iconBtnStyle(T)}>
                 <Icon.Menu />
               </button>
             )}
             <button onClick={() => setAgentMenuOpen(true)} className="press" style={{
-              display: "flex", alignItems: "center", gap: 8, background: TSCN.pillFill,
-              border: `1px solid ${TSCN.line}`, borderRadius: 999, padding: "6px 12px 6px 7px",
+              display: "flex", alignItems: "center", gap: 8, background: T.pillFill,
+              border: `1px solid ${T.line}`, borderRadius: 999, padding: "6px 12px 6px 7px",
               cursor: "pointer", fontFamily: "inherit", flexShrink: 0,
             }}>
-              <span style={{ width: 26, height: 26, borderRadius: 8, background: sceneOn ? "rgba(255,255,255,0.18)" : currentAgent.color + "18", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {AG_ICON[currentAgent.id] ? AG_ICON[currentAgent.id](sceneOn ? "#FFFFFF" : currentAgent.color, 15) : null}
+              <span style={{ width: 26, height: 26, borderRadius: 8, background: currentAgent.color + "18", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {AG_ICON[currentAgent.id] ? AG_ICON[currentAgent.id](currentAgent.color, 15) : null}
               </span>
-              <span style={{ fontSize: F.base - 1, fontWeight: 700, color: TSCN.text }}>{currentAgent.name}</span>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={TSCN.sub} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              <span style={{ fontSize: F.base - 1, fontWeight: 700, color: T.text }}>{currentAgent.name}</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.sub} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
-            <div style={{ flex: 1, fontSize: F.base - 1, fontWeight: 600, color: TSCN.sub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center" }}>
+            <div style={{ flex: 1, fontSize: F.base - 1, fontWeight: 600, color: T.sub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center" }}>
               {activeChat ? chats[activeChat]?.title : ""}
             </div>
             <button onClick={newChat} style={{
@@ -752,7 +735,7 @@ export default function App() {
             onClose={() => setAgentMenuOpen(false)} />
         )}
 
-        {/* المسرح */}
+        {/* خيط المحادثة */}
         <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
           {empty ? (
             <div style={{ flex: 1, overflowY: "auto", padding: "0 14px" }}>
@@ -761,96 +744,36 @@ export default function App() {
               </div>
             </div>
           ) : (
-            <>
-              {/* شريط الجولات */}
-              <div style={{
-                width: isMobile ? 50 : 184, flexShrink: 0, overflowY: "auto",
-                borderInlineEnd: `1px solid ${sceneOn ? "rgba(255,255,255,0.14)" : T.line}`, padding: "16px 8px",
-                display: "flex", flexDirection: "column", gap: 3,
-                background: sceneOn ? "rgba(8,12,24,0.14)" : "transparent",
-              }}>
-                {!isMobile && <div style={{ fontSize: F.label - 1, fontWeight: 700, color: TSCN.faint, padding: "2px 8px 8px" }}>الجولات</div>}
-                {turns.map((tn, ti) => {
-                  const on = ti === stageSafe;
-                  const hl = sceneOn ? "#FFFFFF" : currentAgent.color;
-                  return (
-                    <button key={ti} onClick={() => setStageIdx(ti)} className="press" style={{
-                      display: "flex", alignItems: "center", gap: 9, textAlign: "start",
-                      background: on ? (sceneOn ? "rgba(255,255,255,0.16)" : `${currentAgent.color}14`) : "transparent",
-                      border: `1px solid ${on ? (sceneOn ? "rgba(255,255,255,0.4)" : currentAgent.color + "44") : "transparent"}`,
-                      borderRadius: 10, padding: isMobile ? "9px 0" : "9px 10px",
-                      justifyContent: isMobile ? "center" : "flex-start",
-                      cursor: "pointer", fontFamily: "inherit", width: "100%",
-                    }}>
-                      <span style={{
-                        flexShrink: 0, width: 9, height: 9, borderRadius: "50%",
-                        background: on ? hl : TSCN.dotIdle,
-                        boxShadow: on ? `0 0 0 4px ${sceneOn ? "rgba(255,255,255,0.18)" : currentAgent.color + "22"}` : "none",
-                      }} />
-                      {!isMobile && <span style={{
-                        flex: 1, minWidth: 0, fontSize: F.label, color: on ? TSCN.text : TSCN.sub,
-                        fontWeight: on ? 600 : 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                      }}>{tn.q || "…"}</span>}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* خشبة العرض — المشهد على العمود كاملاً */}
-              {(() => {
-                const TN = TSCN;
-                return (
-              <div style={{
-                flex: 1, overflowY: "auto", padding: isMobile ? "0 14px" : "0 22px", position: "relative",
-                background: "transparent",
-                backgroundImage: sceneOn ? "none" : `linear-gradient(180deg, ${currentAgent.color}14, transparent 280px)`,
-              }}>
-                <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "12px 0 22px" : "16px 0 28px" }}>
-                  {/* تنقّل الجولات */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-                    <button onClick={() => setStageIdx(Math.max(0, stageSafe - 1))} disabled={stageSafe === 0} className="press" style={navBtn(TN, stageSafe === 0)}>›</button>
-                    <button onClick={() => setStageIdx(Math.min(turns.length - 1, stageSafe + 1))} disabled={stageSafe >= turns.length - 1} className="press" style={navBtn(TN, stageSafe >= turns.length - 1)}>‹</button>
-                    <div style={{ fontSize: F.label, color: TN.faint, fontWeight: 600, flexShrink: 0 }}>{stageSafe + 1} / {turns.length}</div>
-                    {activeTurn && activeTurn.q && (
-                      <div style={{ flex: 1, minWidth: 0, fontSize: F.base - 1, color: TN.sub, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: "start" }}>
-                        · {activeTurn.q}
-                      </div>
-                    )}
+            <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "0 14px" : "0 22px", position: "relative" }}>
+              <div style={{ maxWidth: 860, margin: "0 auto", padding: isMobile ? "14px 0 22px" : "18px 0 28px" }}>
+                {currentMessages.map((m, i) => (
+                  <MessageItem key={i} m={m} idx={i} T={T} t={t} F={F}
+                    isRTL={isRTL} lang={settings.lang} stage={m.role === "card"}
+                    isFav={isFav} toggleFav={() => toggleFav(m.text, activeChat)}
+                    copyCard={copyCard} activeChat={activeChat}
+                    editingMsg={editingMsg} setEditingMsg={setEditingMsg}
+                    onEditSend={(newText) => editAndResend(activeChat, i, newText)}
+                    onRegenerate={() => regenerate(activeChat, i)}
+                    onSelect={(q) => send(q)} thinking={thinking} />
+                ))}
+                {thinking && (
+                  <div style={{ display: "flex", gap: 6, padding: "8px 4px 20px" }}>
+                    {[0, 0.16, 0.32].map((d, i) => (
+                      <span key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: T.dotIdle, animation: `bd 1.3s ${d}s infinite ease-in-out` }} />
+                    ))}
                   </div>
-
-                  <div key={stageSafe} className="card-in">
-                    {activeTurn && activeTurn.ci != null && (
-                      <MessageItem key={"a" + activeTurn.ci} m={currentMessages[activeTurn.ci]} idx={activeTurn.ci} T={T} t={t} F={F}
-                        isRTL={isRTL} lang={settings.lang} stage
-                        isFav={isFav} toggleFav={() => toggleFav(currentMessages[activeTurn.ci].text, activeChat)}
-                        copyCard={copyCard} activeChat={activeChat}
-                        editingMsg={editingMsg} setEditingMsg={setEditingMsg}
-                        onEditSend={(newText) => editAndResend(activeChat, activeTurn.ci, newText)}
-                        onRegenerate={() => regenerate(activeChat, activeTurn.ci)}
-                        onSelect={(q) => send(q)} thinking={thinking} />
-                    )}
-                    {thinking && activeTurn && activeTurn.ci == null && (
-                      <div style={{ display: "flex", gap: 6, padding: "10px 4px 20px" }}>
-                        {[0, 0.16, 0.32].map((d, i) => (
-                          <span key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: T.dotIdle, animation: `bd 1.3s ${d}s infinite ease-in-out` }} />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div ref={endRef} />
-                </div>
+                )}
+                <div ref={endRef} />
               </div>
-                );
-              })()}
-            </>
+            </div>
           )}
         </div>
 
         {/* مربع الكتابة */}
         <div style={{
           flexShrink: 0, position: "relative", zIndex: 5,
-          background: sceneOn ? "rgba(8,12,24,0.22)" : T.composerBg,
-          borderTop: `1px solid ${sceneOn ? "rgba(255,255,255,0.14)" : T.line}`,
+          background: sceneOn ? "transparent" : T.composerBg,
+          borderTop: `1px solid ${T.line}`,
           backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
         }}>
           <div style={{ maxWidth: 760, margin: "0 auto", padding: "12px 14px" }}>
@@ -1633,16 +1556,16 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
   }
 
   return (
-    <div className="card-in" style={{ marginBottom: stage ? 0 : 20 }}>
-      <BigCard card={m.card} T={T} t={t} F={F} searched={m.searched} sources={m.sources} stage={stage}
+    <div className="card-in" style={{ marginBottom: stage ? 30 : 20 }}>
+      <BigCard card={m.card} T={T} t={t} F={F} searched={m.searched} sources={m.sources} stage={stage} agentUsed={m.agentUsed}
         onCopy={() => copyCard(m.card)}
         onRegenerate={thinking ? null : onRegenerate}
         isRTL={isRTL}
       />
-      <FollowUps suggestions={m.followUps} T={stage ? { ...T, ...SCENE_T } : T} F={F}
+      <FollowUps suggestions={m.followUps} T={T} F={F}
         onSelect={onSelect} thinking={thinking} />
       {!stage && <SourcesBar sources={m.sources} T={T} F={F} isRTL={isRTL} />}
-      {!stage && timeStr && <div style={{ fontSize: F.label - 1, color: T.faint, marginTop: 4 }}>{timeStr}</div>}
+      {timeStr && <div style={{ fontSize: F.label - 1, color: T.faint, marginTop: 4 }}>{timeStr}</div>}
     </div>
   );
 }
@@ -1679,16 +1602,16 @@ function SourcesBar({ sources, T, F, isRTL }) {
 }
 
 /* ============ البطاقة الكبيرة ============ */
-function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL, stage }) {
-  const baseA = ACCENTS[card.accent] || ACCENTS.knowledge;
-  const TT = stage ? { ...T, ...SCENE_T } : T;
-  const a = stage ? "#FFFFFF" : baseA;
+function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL, stage, agentUsed }) {
+  const a = ACCENTS[card.accent] || ACCENTS.knowledge;
+  const TT = T;
   const [activeTab, setActiveTab] = useState(0);
   const [showSources, setShowSources] = useState(false);
   const tabs = Array.isArray(card.tabs) ? card.tabs : [];
   const active = tabs[activeTab] || {};
   const hasSources = Array.isArray(sources) && sources.length > 0;
   const hero = stage && card.hero && (card.hero.value || card.hero.icon) ? card.hero : null;
+  const usedAgent = agentUsed && AGENTS[agentUsed] ? AGENTS[agentUsed] : null;
 
   const inner = (
     <>
@@ -1696,12 +1619,17 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
       <div style={{ position: "relative", marginBottom: stage ? 18 : 16 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 7 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0, flexWrap: "wrap" }}>
-            {card.kicker && <div style={{ color: stage ? "#fff" : a, fontSize: F.label, fontWeight: 800, background: stage ? "rgba(255,255,255,0.16)" : `${a}14`, border: `1px solid ${stage ? "rgba(255,255,255,0.3)" : a + "33"}`, padding: "3px 11px", borderRadius: 999, letterSpacing: 0.4 }}>{card.kicker}</div>}
+            {card.kicker && <div style={{ color: a, fontSize: F.label, fontWeight: 800, background: `${a}14`, border: `1px solid ${a}33`, padding: "3px 11px", borderRadius: 999, letterSpacing: 0.4 }}>{card.kicker}</div>}
+            {usedAgent && (
+              <div style={{ color: usedAgent.color, fontSize: F.label - 1, fontWeight: 700, background: `${usedAgent.color}14`, border: `1px solid ${usedAgent.color}33`, padding: "3px 10px", borderRadius: 999, display: "flex", alignItems: "center", gap: 5 }}>
+                {AG_ICON[usedAgent.id] ? AG_ICON[usedAgent.id](usedAgent.color, 11) : null}{usedAgent.name}
+              </div>
+            )}
             {searched && (
               <div style={{
-                fontSize: F.label - 1, fontWeight: 600, color: stage ? "#CFFBE5" : "#34D399",
-                background: "rgba(52,211,153,0.16)", padding: "2px 8px",
-                borderRadius: 6, border: "1px solid rgba(52,211,153,0.3)", display: "flex", alignItems: "center", gap: 4,
+                fontSize: F.label - 1, fontWeight: 600, color: "#34D399",
+                background: "rgba(52,211,153,0.1)", padding: "2px 8px",
+                borderRadius: 6, border: "1px solid rgba(52,211,153,0.2)", display: "flex", alignItems: "center", gap: 4,
               }}>
                 <Icon.Search /> {t.liveSearch}
               </div>
@@ -1709,7 +1637,7 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
           </div>
           <div style={{ display: "flex", gap: 2, alignItems: "center" }}>
             {hasSources && (
-              <button onClick={() => setShowSources(v => !v)} title={isRTL ? "المصادر" : "Sources"} style={{ ...cardActionBtn(TT), gap: 5, color: showSources ? TT.text : TT.sub, fontSize: F.label, fontWeight: 700, fontFamily: "inherit" }}>
+              <button onClick={() => setShowSources(v => !v)} title={isRTL ? "المصادر" : "Sources"} style={{ ...cardActionBtn(TT), gap: 5, color: showSources ? a : TT.sub, fontSize: F.label, fontWeight: 700, fontFamily: "inherit" }}>
                 <span style={{ width: 15, height: 15, display: "inline-flex" }}><Icon.Globe /></span>{sources.length}
               </button>
             )}
@@ -1727,30 +1655,29 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
         {card.sub && <div style={{ color: TT.sub, fontSize: F.base - 1, marginTop: 6, lineHeight: 1.6 }}>{card.sub}</div>}
       </div>
 
-      {/* البطل — كتطبيق الطقس */}
+      {/* البطل — أهم قيمة بلون الموضوع */}
       {hero && (
-        <div style={{ display: "flex", alignItems: "center", gap: 18, margin: "2px 0 22px" }}>
-          {hero.icon && <div style={{ fontSize: 52, lineHeight: 1, filter: "drop-shadow(0 8px 20px rgba(0,0,0,0.35))" }}>{hero.icon}</div>}
+        <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "2px 0 20px" }}>
+          {hero.icon && <div style={{ fontSize: 44, lineHeight: 1 }}>{hero.icon}</div>}
           <div style={{ minWidth: 0 }}>
-            {hero.value && <div style={{ fontSize: F.h1 + 22, fontWeight: 800, lineHeight: 0.95, color: "#fff", textShadow: "0 8px 30px rgba(0,0,0,0.3)", wordBreak: "break-word" }}>{hero.value}</div>}
-            {hero.label && <div style={{ fontSize: F.base, fontWeight: 600, color: "rgba(255,255,255,0.92)", marginTop: 7 }}>{hero.label}</div>}
-            {hero.sub && <div style={{ fontSize: F.base - 1, color: "rgba(255,255,255,0.72)", marginTop: 2 }}>{hero.sub}</div>}
+            {hero.value && <div style={{ fontSize: F.h1 + 14, fontWeight: 800, lineHeight: 1, color: a, wordBreak: "break-word" }}>{hero.value}</div>}
+            {hero.label && <div style={{ fontSize: F.base, fontWeight: 600, color: TT.text, marginTop: 7 }}>{hero.label}</div>}
+            {hero.sub && <div style={{ fontSize: F.base - 1, color: TT.sub, marginTop: 2 }}>{hero.sub}</div>}
           </div>
         </div>
       )}
 
       {tabs.length > 1 && (
-        <div style={{ display: "flex", gap: 6, marginBottom: stage ? 20 : 16, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 2 }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: stage ? 18 : 16, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 2 }}>
           {tabs.map((tt, i) => (
             <button key={i} onClick={() => setActiveTab(i)} style={{
               flexShrink: 0,
-              background: i === activeTab ? (stage ? "rgba(255,255,255,0.22)" : `${a}16`) : TT.pillFill,
-              border: `1px solid ${i === activeTab ? (stage ? "rgba(255,255,255,0.5)" : a + "55") : TT.line}`,
-              borderRadius: 999, padding: stage ? "8px 15px" : "6px 13px",
-              color: i === activeTab ? (stage ? "#fff" : a) : TT.sub,
+              background: i === activeTab ? `${a}16` : TT.pillFill,
+              border: `1px solid ${i === activeTab ? a + "55" : TT.line}`,
+              borderRadius: 999, padding: stage ? "7px 14px" : "6px 13px",
+              color: i === activeTab ? a : TT.sub,
               fontSize: F.label + 0.5, fontWeight: i === activeTab ? 700 : 600,
               cursor: "pointer", fontFamily: "inherit", transition: "all .15s", whiteSpace: "nowrap",
-              backdropFilter: stage ? "blur(8px)" : "none",
             }}>{tt.label}</button>
           ))}
         </div>
