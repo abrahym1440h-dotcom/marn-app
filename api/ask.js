@@ -232,10 +232,12 @@ ${isAr ? `اجعل كل إجابة تبدو **لوحة بيانات بصرية /
   "kicker": "${isAr ? "تصنيف قصير" : "short category"}",
   "title": "${isAr ? "عنوان دقيق" : "accurate title"}",
   "sub": "${isAr ? "وصف سطر" : "one-line summary"}",
+  "hero": {"icon":"${isAr ? "إيموجي معبّر عن الموضوع" : "expressive emoji"}","value":"${isAr ? "القيمة البطل (قصيرة جداً: 38° أو 2-1 أو 1994)" : "hero value (very short)"}","label":"${isAr ? "وصف قصير للقيمة" : "short label"}","sub":"${isAr ? "سطر ثانوي اختياري" : "optional secondary line"}"},
   "tabs": [{"label":"${isAr ? "اسم" : "name"}","type":"${isAr ? "النوع" : "type"}","data":{}}],
   "followUps": ["${isAr ? "سؤال 1" : "q1"}", "${isAr ? "سؤال 2" : "q2"}", "${isAr ? "سؤال 3" : "q3"}"]
 }
 \`\`\`
+${isAr ? "حقل **hero إلزامي في كل إجابة**: أهم رقم/قيمة في الموضوع مع إيموجي معبّر — هو ما يظهر ضخماً في أعلى الشاشة (مثل درجة الحرارة في تطبيق الطقس)." : "The **hero field is MANDATORY in every answer**: the single most important value with an expressive emoji — it is shown huge at the top of the screen (like the temperature in a weather app)."}
 
 # ${isAr ? "🚫 قاعدة حديدية: نوع المحتوى داخل كل تبويب" : "Iron Rule: content type per tab"}
 ${isAr ? `هذه القاعدة لا تُكسر أبداً:
@@ -365,6 +367,7 @@ Output JSON ONLY: {"accent":"knowledge","kicker":"Fatwa","title":"...","sub":"..
 {
   "accent": "knowledge",
   "kicker": "فتوى",
+  "hero": {"icon":"🕌","value":"<الحكم بكلمة أو كلمتين>","label":"<وصف قصير>"},
   "title": "<عنوان السؤال باختصار>",
   "sub": "<ملخّص الحكم في سطر>",
   "tabs": [
@@ -408,6 +411,7 @@ function buildNibrasPrompt(lang, searchBlock, profileBlock) {
 {
   "accent": "knowledge",
   "kicker": "شرح تعليمي",
+  "hero": {"icon":"📘","value":"<المفهوم/الرقم البطل قصيراً>","label":"<وصف قصير>"},
   "title": "<الموضوع>",
   "sub": "<ملخّص في سطر>",
   "tabs": [
