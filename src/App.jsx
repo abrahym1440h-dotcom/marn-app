@@ -770,12 +770,16 @@ export default function App() {
                 })}
               </div>
 
-              {/* خشبة العرض */}
+              {/* خشبة العرض — تتلوّن بموضوع الإجابة كأنها تطبيق خاص */}
+              {(() => {
+                const stageCard = activeTurn && activeTurn.ci != null ? currentMessages[activeTurn.ci]?.card : null;
+                const sa = stageCard ? (ACCENTS[stageCard.accent] || ACCENTS.knowledge) : currentAgent.color;
+                return (
               <div style={{
-                flex: 1, overflowY: "auto", padding: "0 14px", position: "relative",
-                backgroundImage: `radial-gradient(120% 55% at 85% 0%, ${currentAgent.color}0f, transparent 60%)`,
+                flex: 1, overflowY: "auto", padding: isMobile ? "0 12px" : "0 20px", position: "relative",
+                backgroundImage: `linear-gradient(180deg, ${sa}1f, transparent 300px), radial-gradient(110% 50% at 50% 0%, ${sa}14, transparent 65%)`,
               }}>
-                <div style={{ maxWidth: 820, margin: "0 auto", padding: "14px 0 24px" }}>
+                <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "10px 0 20px" : "14px 0 26px" }}>
                   {/* تنقّل الجولات */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
                     <button onClick={() => setStageIdx(Math.max(0, stageSafe - 1))} disabled={stageSafe === 0} className="press" style={navBtn(T, stageSafe === 0)}>›</button>
@@ -810,6 +814,8 @@ export default function App() {
                   <div ref={endRef} />
                 </div>
               </div>
+                );
+              })()}
             </>
           )}
         </div>
@@ -1660,7 +1666,7 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
       <div style={{ position: "relative", marginBottom: stage ? 22 : 16 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 7 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0, flexWrap: "wrap" }}>
-            {card.kicker && <div style={{ color: a, fontSize: F.label, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.5 }}>{card.kicker}</div>}
+            {card.kicker && <div style={{ color: a, fontSize: F.label, fontWeight: 800, background: `${a}14`, border: `1px solid ${a}33`, padding: "3px 11px", borderRadius: 999, letterSpacing: 0.4 }}>{card.kicker}</div>}
             {searched && (
               <div style={{
                 fontSize: F.label - 1, fontWeight: 600, color: "#34D399",
@@ -1722,7 +1728,6 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
   if (stage) {
     return (
       <div style={{ width: "100%" }}>
-        <div style={{ width: 36, height: 4, borderRadius: 3, background: a, marginBottom: 18 }} />
         {inner}
       </div>
     );
