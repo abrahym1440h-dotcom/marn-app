@@ -192,9 +192,24 @@ ${isAr
   : `RULE #1 — Every answer must contain EVERYTHING the user might want to know, in ONE response. Minimum 4 tabs, ideally 5-6. Never ask for clarification. Break large info into separate lists.`
 }
 
+# ${isAr ? "🎯 اختيار القالب المتخصّص (إلزامي قبل أي شيء)" : "Specialized template selection (mandatory)"}
+${isAr ? `لكل موضوع قالب بصري متخصّص يجعل الإجابة تبدو **تطبيقاً كاملاً** لذلك الموضوع. القاعدة: إذا انطبق قالب متخصّص فاستخدامه **إجباري** ويكون **التبويب الأول**، ولا تكتفِ بـstats/facts العامة إلا حين لا يوجد قالب مناسب:
+- طقس/حرارة/أمطار → weather (كامل الحقول + forecast)
+- مباراة/منتخب/دوري → match + standings + lineup
+- لاعب → player_profile | سهم/سوق → stock | عملة رقمية → crypto
+- وصفة/أكلة → recipe + nutrition | مطعم → restaurant
+- وجهة/سياحة → destination + itinerary | رحلة طيران → flight
+- سيارة → car | عقار → real_estate | وظيفة → job
+- تمرين/لياقة → workout | أعراض/صحة → symptoms + nutrition
+- كتاب → book_review | فيلم/مسلسل → movie_review | بودكاست → podcast
+- تطبيق/جهاز/تقنية → app_card / app_review / tech_compare | مستودع كود → github
+- أخبار → news | اقتصاد → economy | طاقة → energy | مرور → traffic
+- أمن سيبراني → security | تعلّم لغة → language_learning | شخصية عامة → profile
+أكمل بعد القالب المتخصّص بتبويبات داعمة (timeline/compare/facts) حسب الحاجة. المعلومات تبقى صحيحة وشاملة — القالب لا يلغي الدقة.` : `Every topic has a specialized visual template that makes the answer feel like a full APP for that topic. If a specialized template applies, using it is MANDATORY and it must be the FIRST tab; use generic stats/facts only when nothing fits: weather→weather; match/team/league→match+standings+lineup; player→player_profile; stock→stock; crypto→crypto; recipe→recipe+nutrition; restaurant→restaurant; destination→destination+itinerary; flight→flight; car→car; real estate→real_estate; job→job; workout→workout; symptoms→symptoms+nutrition; book→book_review; movie→movie_review; podcast→podcast; app/tech→app_card/app_review/tech_compare; repo→github; news→news; economy→economy; energy→energy; traffic→traffic; security→security; language→language_learning; public figure→profile. Follow with supporting tabs (timeline/compare/facts). Accuracy and completeness still required.`}
+
 # ${isAr ? "🎛️ قاعدة لوحة البيانات (الأهم للشكل)" : "Dashboard Rule (most important for layout)"}
 ${isAr ? `اجعل كل إجابة تبدو **لوحة بيانات بصرية / إنفوجرافيك** لا نصاً مكتوباً:
-- التبويب الأول إلزامياً نوعه "stats" أو "facts" — وليس "text".
+- التبويب الأول إلزامياً هو **القالب المتخصّص** إن وُجد، وإلا "stats" أو "facts" — وليس "text" أبداً.
 - استخدم بكثرة: stats و facts و timeline و compare و steps. اجعل "text" جملة واحدة قصيرة كحد أقصى.
 - **الاختصار إلزامي**: التسميات والقيم كلمات قصيرة (٤ كلمات أو أقل)، وعناصر القوائم نقاط مكثّفة (٨ كلمات أو أقل) — لا جُمل طويلة ولا فقرات.
 - في "stats": القيمة value يجب أن تكون **رقماً أو رمزاً قصيراً جداً** (مثل: ٦، ٢-١، ١٩٩٤، ٪٤٢). أي معلومة نصية (مكان، منافس، اسم) ضعها في "facts" لا في stats.
