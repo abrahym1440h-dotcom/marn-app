@@ -34,8 +34,8 @@ function setCache(question, lang, agent, data) {
 
 /* ===== نماذج الذكاء ===== */
 const MODELS_TO_TRY = [
-  "llama-3.3-70b",
   "qwen-3-235b-a22b-instruct-2507",
+  "llama-3.3-70b",
   "gpt-oss-120b",
   "qwen-3-32b",
   "llama-4-scout-17b-16e-instruct",
@@ -70,7 +70,7 @@ function needsSearch(q) {
   return SEARCH_PATTERNS.some(p => p.test(q));
 }
 
-async function searchWeb(query, key) {
+async function searchWeb(query, key, domains) {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 18000);
@@ -82,6 +82,7 @@ async function searchWeb(query, key) {
         search_depth: "advanced",
         max_results: 8,
         include_answer: "advanced",
+        ...(Array.isArray(domains) && domains.length ? { include_domains: domains } : {}),
       }),
       signal: ctrl.signal,
     });
@@ -238,7 +239,7 @@ ${isAr ? `اجعل كل إجابة تبدو **لوحة بيانات بصرية /
   "followUps": ["${isAr ? "سؤال 1" : "q1"}", "${isAr ? "سؤال 2" : "q2"}", "${isAr ? "سؤال 3" : "q3"}"]
 }
 \`\`\`
-${isAr ? "حقل **hero إلزامي في كل إجابة**: أهم رقم/قيمة في الموضوع مع إيموجي معبّر — هو ما يظهر ضخماً في أعلى الشاشة (مثل درجة الحرارة في تطبيق الطقس)." : "The **hero field is MANDATORY in every answer**: the single most important value with an expressive emoji — it is shown huge at the top of the screen (like the temperature in a weather app)."}
+${isAr ? "حقل **hero إلزامي في كل إجابة**: أهم رقم/قيمة في الموضوع مع إيموجي معبّر — هو ما يظهر ضخماً في أعلى الشاشة (مثل درجة الحرارة في تطبيق الطقس). **استثناء وحيد — الدردشة العادية**: إذا كانت الرسالة تحية أو مجاملة أو سوالف قصيرة (السلام عليكم، كيفك، شكراً…) فرُدّ رداً بشرياً طبيعياً قصيراً: تبويب text واحد فقط، **بدون hero وبدون أي بطاقات أو تقسيمات**." : "The **hero field is MANDATORY in every answer**: the single most important value with an expressive emoji — shown huge at the top (like the temperature in a weather app). **Single exception — casual chat**: for greetings/small talk reply naturally and briefly: one text tab only, NO hero, NO cards or sections."}
 
 # ${isAr ? "🚫 قاعدة حديدية: نوع المحتوى داخل كل تبويب" : "Iron Rule: content type per tab"}
 ${isAr ? `هذه القاعدة لا تُكسر أبداً:
@@ -355,6 +356,9 @@ Output JSON ONLY: {"accent":"knowledge","kicker":"Fatwa","title":"...","sub":"..
 - سؤال شرعي/فقهي → طبّق القاعدة الكاملة أدناه.
 
 # ⭐ القاعدة الأهم — الدليل المرتبط (إلزامية، وكسرها فشل تام)
+0. **أنت ناقل أمين عن العلماء، ولست مفتياً تجتهد برأيك.** مهمتك نقل أحكام العلماء المعتبرين (ابن باز، ابن عثيمين، اللجنة الدائمة للإفتاء، وأمثالهم) بأمانة:
+   - عند وجود قسم «فتاوى ونصوص من مصادر موثوقة» في هذه الرسالة: **انقل الحكم والأدلة منه حصراً** وانسب القول لقائله («قال الشيخ ابن باز…»، «أفتت اللجنة الدائمة…»)، ولا تخالفه ولا تضف من عندك.
+   - إن لم تتوفر نصوص موثوقة ولم تكن متيقناً يقيناً تاماً من الحكم ونصوص أدلته: **قل صراحة** إن المسألة تحتاج الرجوع لأهل العلم، واذكر ما يُعرف من تأصيل عام فقط دون جزم — الامتناع أفضل ألف مرة من حكم أو نصٍّ غير موثوق.
 1. كل فتوى يجب أن تتضمّن **دليلاً واحداً على الأقل**: آية، أو حديث صحيح، أو إجماع/قول معتبر لأهل العلم.
 2. الدليل يجب أن يكون **متعلّقاً مباشرة بالسؤال المطروح بعينه** ويُثبت الحكم الذي ذكرته.
    🚫 ممنوع منعاً باتاً إيراد آية أو حديث **لا صلة له بالسؤال**. إن لم تجد دليلاً مرتبطاً، فلا تأتِ بدليل غير مرتبط أبداً — بل اذكر الحكم بتعليله الفقهي ووجّه لأهل العلم.
@@ -458,12 +462,14 @@ export default async function handler(req, res) {
   const apiKey = ((KEY_BY_AGENT[agent] || process.env.CEREBRAS_API_KEY) || "").trim();
   if (!apiKey.startsWith("csk-")) return res.status(500).json({ error: "Invalid key", agent });
 
-  // ===== توجيه ذكي: سؤال خارج مجال الوكيل → يجاوب كـ«مرن» =====
-  const GENERAL_DOMAINS = /طقس|حرار|مطر|رياح|مباراة|مباريات|الدوري|كأس|نتيجة|ترتيب|تشكيلة|سعر|أسعار|سهم|أسهم|عملة|دولار|بتكوين|ذهب|نفط|أخبار|خبر|الآن|اليوم|weather|temperature|rain|match|league|score|standings|stock|price|bitcoin|news/i;
+  // ===== توجيه ذكي حسب نية السؤال — ينتقل تلقائياً بين المساعدين =====
+  const GENERAL_DOMAINS = /طقس|حرار|مطر|رياح|مباراة|مباريات|الدوري|كأس|نتيجة|ترتيب|تشكيلة|سعر|أسعار|سهم|أسهم|عملة|دولار|بتكوين|ذهب|نفط|أخبار|خبر|weather|temperature|rain|match|league|score|standings|stock|price|bitcoin|news/i;
+  const RELIGIOUS_INTENT = /ما حكم|حكم |هل يجوز|يجوز |حرام|حلال|الصلا[ةه]|صلاة|أصلي|الصيام|الصوم|أصوم|زكا[ةه]|وضوء|طهار|الغسل|عمر[ةه]|الحج|فتوى|أذكار|القرآن|سور[ةه]|آي[ةه]|حديث|السن[ةه] النبوي|بدع[ةه]|نكاح|طلاق|ميراث|ربا|يمين|حلفت|نذر|كفار[ةه]|قضاء الصلا|الجمع والقصر|سجود السهو/;
+  const EDU_INTENT = /اشرح|درس |الدرس|مذاكر|أذاكر|اختبار|امتحان|واجب|منهج|رياضيات|فيزياء|كيمياء|أحياء|نحو|إعراب|بلاغ[ةه]|مسأل[ةه]|حل تمرين|تمارين|خط[ةه] دراس|خطة مذاكرة|بطاقات مراجع|فلاش كارد|معادل[ةه]|نظري[ةه]|قانون نيوتن|جدول الضرب/;
   let effectiveAgent = agent;
-  if ((agent === "nibras" || agent === "fatwa") && GENERAL_DOMAINS.test(question)) {
-    effectiveAgent = "marn";
-  }
+  if (GENERAL_DOMAINS.test(question)) effectiveAgent = "marn";
+  else if (RELIGIOUS_INTENT.test(question)) effectiveAgent = "fatwa";
+  else if (EDU_INTENT.test(question)) effectiveAgent = "nibras";
 
   // فحص الكاش
   if (!forceSearch) {
@@ -481,11 +487,15 @@ export default async function handler(req, res) {
   let searchBlock = "";
   let didSearch = false;
   let sources = [];
-  const autoSearch = effectiveAgent !== "fatwa"; // فتوى: لا بحث تلقائي (يجيب ضوضاء غير شرعية)
-  if (!isCasualChat && tavilyKey && (forceSearch || (autoSearch && needsSearch(question)))) {
-    const results = await searchWeb(question, tavilyKey);
+  const isFatwa = effectiveAgent === "fatwa";
+  const FATWA_DOMAINS = ["binbaz.org.sa", "alifta.gov.sa", "islamqa.info", "islamweb.net", "dorar.net"];
+  const shouldSearch = !isCasualChat && tavilyKey && (forceSearch || isFatwa || needsSearch(question));
+  if (shouldSearch) {
+    const results = await searchWeb(question, tavilyKey, isFatwa ? FATWA_DOMAINS : null);
     if (results && results.text) {
-      searchBlock = `\n\n===== WEB SEARCH RESULTS =====\n⚠️ AUTHORITATIVE FACTS ONLY. Follow them. Never contradict.\n${results.text}\n===== END =====`;
+      searchBlock = isFatwa
+        ? `\n\n===== فتاوى ونصوص من مصادر موثوقة (ابن باز، اللجنة الدائمة، إسلام ويب، الدرر السنية) =====\n⚠️ انقل الحكم والأدلة من هذه النصوص حصراً مع نسبتها. لا تجتهد من عندك.\n${results.text}\n===== END =====`
+        : `\n\n===== WEB SEARCH RESULTS =====\n⚠️ AUTHORITATIVE FACTS ONLY. Follow them. Never contradict.\n${results.text}\n===== END =====`;
       didSearch = true;
       sources = results.sources || [];
     }
@@ -643,7 +653,7 @@ export default async function handler(req, res) {
           return tab;
         });
 
-        const result = { card, model_used: model, searched: didSearch, sources };
+        const result = { card, model_used: model, searched: didSearch, sources, agent_used: effectiveAgent };
         setCache(question, lang, agent, result);
         return res.status(200).json(result);
 
