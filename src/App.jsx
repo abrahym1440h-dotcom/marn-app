@@ -797,13 +797,13 @@ export default function App() {
         <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
           {empty ? (
             <div style={{ flex: 1, overflowY: "auto", padding: "0 14px" }}>
-              <div style={{ maxWidth: 760, margin: "0 auto", padding: "18px 0 16px" }}>
+              <div style={{ maxWidth: 760, margin: "0 auto", padding: "18px 0 170px" }}>
                 <EmptyState T={T} t={t} F={F} send={send} settings={settings} userProfile={userProfile} onOpenView={(v)=>setAppView(v)} agent={currentAgent} onTool={handleAgentTool} isMobile={isMobile} />
               </div>
             </div>
           ) : (
             <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "0 14px" : "0 22px", position: "relative" }}>
-              <div style={{ maxWidth: 860, margin: "0 auto", padding: isMobile ? "14px 0 22px" : "18px 0 28px" }}>
+              <div style={{ maxWidth: 860, margin: "0 auto", padding: isMobile ? "14px 0 180px" : "18px 0 190px" }}>
                 {currentMessages.map((m, i) => (
                   <MessageItem key={i} m={m} idx={i} T={T} t={t} F={F}
                     isRTL={isRTL} lang={settings.lang} stage={m.role === "card"}
@@ -827,9 +827,9 @@ export default function App() {
           )}
         </div>
 
-        {/* مربع الكتابة — عائم شفاف */}
-        <div style={{ flexShrink: 0, position: "relative", zIndex: 5, background: "transparent" }}>
-          <div style={{ maxWidth: 760, margin: "0 auto", padding: "12px 14px" }}>
+        {/* مربع الكتابة — طافٍ فوق الرسائل، تمر من تحته */}
+        <div style={{ position: "absolute", insetInline: 0, bottom: 0, zIndex: 5, background: "transparent", pointerEvents: "none" }}>
+          <div style={{ maxWidth: 760, margin: "0 auto", padding: "12px 14px", pointerEvents: "auto" }}>
             {!empty && currentAgent.tools && currentAgent.tools.length > 0 && (
               <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 10, scrollbarWidth: "none" }}>
                 {currentAgent.tools.map(tool => {
@@ -862,7 +862,8 @@ export default function App() {
               </div>
             )}
             <div style={{
-              background: T.inputBg || T.glassFill,
+              background: /^#[01]/i.test(T.pageBg||"") ? "rgba(15,22,40,0.6)" : "rgba(255,255,255,0.6)",
+              backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)",
               border: `1.5px solid ${T.line}`,
               borderRadius: 14,
               padding: "10px 10px 10px 14px",
