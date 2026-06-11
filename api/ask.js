@@ -71,6 +71,38 @@ function needsSearch(q) {
   return SEARCH_PATTERNS.some(p => p.test(q));
 }
 
+/* ===== المدقق الآلي: يراجع البطاقة ضد نصوص البحث ويحذف غير المدعوم ===== */
+async function groundCard(card, sourceText, apiKey) {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 25000);
+    const sys = `أنت مدقق حقائق صارم لا يجامل. ستستلم بطاقة إجابة (JSON) ونصوص المصادر التي يجب أن تستند إليها.
+مهمتك الوحيدة:
+1) أي معلومة خبرية/نتيجة مباراة/منتج/رقم/اسم حدث وردت في البطاقة ولا يدعمها نص المصادر صراحةً → احذفها أو استبدل العنصر بعبارة "غير متوفر في المصادر".
+2) صحّح أي رقم أو اسم يخالف المصادر ليطابقها حرفياً.
+3) لا تضف معلومات جديدة، ولا تغيّر بنية JSON (نفس الحقول والأنواع والتبويبات قدر الإمكان).
+4) المعرفة الثابتة (تعريفات، تواريخ تاريخية مستقرة) اتركها.
+أعد JSON فقط بلا أي نص آخر.`;
+    const usr = `## نصوص المصادر:\n${String(sourceText).slice(0, 9000)}\n\n## البطاقة:\n${JSON.stringify(card)}`;
+    const r = await fetch("https://api.cerebras.ai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + apiKey },
+      body: JSON.stringify({ model: "llama-3.3-70b", messages: [{ role: "system", content: sys }, { role: "user", content: usr }], temperature: 0, max_tokens: 7000 }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(t);
+    if (!r.ok) return null;
+    const j = await r.json();
+    let txt = j?.choices?.[0]?.message?.content || "";
+    txt = txt.replace(/```json|```/g, "").trim();
+    const i = txt.indexOf("{"); const e = txt.lastIndexOf("}");
+    if (i === -1 || e === -1) return null;
+    const fixed = JSON.parse(txt.slice(i, e + 1));
+    if (fixed && Array.isArray(fixed.tabs) && fixed.tabs.length && fixed.title) return fixed;
+    return null;
+  } catch { return null; }
+}
+
 async function searchWeb(query, key, domains) {
   try {
     const ctrl = new AbortController();
@@ -225,6 +257,7 @@ ${isAr ? `اجعل كل إجابة تبدو **لوحة بيانات بصرية /
 - في "stats": القيمة value يجب أن تكون **رقماً أو رمزاً قصيراً جداً** (مثل: ٦، ٢-١، ١٩٩٤، ٪٤٢). أي معلومة نصية (مكان، منافس، اسم) ضعها في "facts" لا في stats.
 - **ممنوع الإيموجي نهائياً في أي حقل** (تصميم رسمي): حقول icon تقبل فقط أسماء من هذه القائمة: sun, moon, cloud, rain, storm, snow, wind, humidity, temp, calendar, location, trophy, clock, book, mosque, chart, money, star, info, check, flag, user, plane, food, shield, bolt.
 - للسلاسل الرقمية (توقعات أيام، أهداف عبر سنوات، أسعار عبر فترات) أضف تبويب "chart": {"intro":"...","labels":["..."],"values":[أرقام],"unit":"°"} — رسم أعمدة احترافي.
+- **عدد التبويبات يتبع ما تملكه من معلومات موثوقة فقط**: تبويبان صادقان أفضل من خمسة محشوة بالتأليف. لا تنشئ تبويب فئة (رياضة/تقنية/ترفيه…) إلا إذا كانت لديك معلومات حقيقية مصدرها نتائج البحث لتلك الفئة.
 - **لا تكرر الوحدة أو الاتجاه داخل القيمة**: القيمة رقم + وحدة واحدة فقط (12 كم/س)، والاتجاه أو التفصيل في label أو hint — ممنوع مثل «12 كم/س غرب-شمال غرب كم/س».
 - في "facts": لكل عنصر {icon (إيموجي مناسب)، label (كلمة)، value (كلمة/كلمتان)}.
 - أي أرقام/تواريخ/مقارنات/تسلسل → حوّلها إلى البطاقة البصرية المناسبة، لا إلى فقرة.
@@ -508,7 +541,23 @@ export default async function handler(req, res) {
       const prevQs = history.filter(h => h.role === "user").map(h => String(h.content || "")).slice(-2);
       if (prevQs.length) searchQuery = `${prevQs.join(" ")} — ${question}`;
     }
-    const results = await searchWeb(searchQuery, tavilyKey, isFatwa ? FATWA_DOMAINS : null);
+    // الأسئلة الإخبارية الواسعة: عدة استعلامات بالتوازي لتغطية أوسع (تقلل فجوات التأليف)
+    const BROAD_NEWS = /أحداث|الأحداث|أخبار|ملخص اليوم|وش صاير|مستجدات|تطورات/.test(question) && !isFatwa;
+    let results;
+    if (BROAD_NEWS) {
+      const dateTag = new Intl.DateTimeFormat("ar", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date());
+      const queries = [searchQuery, `أهم أخبار اليوم ${dateTag}`, `أخبار السعودية والعالم اليوم عاجل`];
+      const batch = await Promise.all(queries.map(q => searchWeb(q, tavilyKey, null).catch(() => null)));
+      const seen = new Set(); const texts = []; const srcs = [];
+      for (const r of batch) {
+        if (!r) continue;
+        if (r.text) texts.push(r.text);
+        for (const s of (r.sources || [])) { if (s.url && !seen.has(s.url)) { seen.add(s.url); srcs.push(s); } }
+      }
+      results = texts.length ? { text: texts.join("\n\n---\n\n").slice(0, 14000), sources: srcs.slice(0, 10) } : null;
+    } else {
+      results = await searchWeb(searchQuery, tavilyKey, isFatwa ? FATWA_DOMAINS : null);
+    }
     if (results && results.text) {
       searchBlock = isFatwa
         ? `\n\n===== فتاوى ونصوص من مصادر موثوقة (ابن باز، اللجنة الدائمة، إسلام ويب، الدرر السنية) =====\n⚠️ انقل الحكم والأدلة من هذه النصوص حصراً مع نسبتها. لا تجتهد من عندك.\n${results.text}\n===== END =====`
@@ -681,6 +730,15 @@ export default async function handler(req, res) {
           if (tab.data && tab.data.followUps) delete tab.data.followUps;
           return tab;
         });
+
+        // ===== المدقق الآلي: للأخبار والوقائع، راجع البطاقة ضد المصادر واحذف غير المدعوم =====
+        if (didSearch && searchBlock && !isCasualChat) {
+          const audited = await groundCard(card, searchBlock, apiKey);
+          if (audited) {
+            if (!Array.isArray(audited.followUps)) audited.followUps = card.followUps;
+            card = audited;
+          }
+        }
 
         const result = { card, model_used: model, searched: didSearch, sources, agent_used: effectiveAgent };
         setCache(question, lang, agent, result);
