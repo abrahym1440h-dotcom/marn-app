@@ -521,11 +521,23 @@ export default async function handler(req, res) {
     if (hasProfile) profileBlock += `\n${lang === "ar" ? "استخدم هذا الملف الشخصي لتخصيص إجاباتك — خاطب المستخدم باسمه، واذكر اهتماماته عند الملاءمة، وخصّص الأمثلة لحياته." : "Use this profile to personalize your responses."}\n`;
   }
 
-  const systemPrompt = effectiveAgent === "fatwa"
+  // ===== الوعي بالزمن والسياق — يُحقن لكل المساعدين =====
+  let timeBlock = "";
+  try {
+    const now = new Date();
+    const greg = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(now);
+    const hijri = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(now);
+    const clock = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Riyadh" }).format(now);
+    timeBlock = lang === "ar"
+      ? `\n\n# الوعي بالزمن والسياق (إلزامي)\n- تاريخ اليوم الفعلي: ${greg} م — الموافق ${hijri} — الساعة ${clock} بتوقيت الرياض. اعتمده حصراً لكل «اليوم/أمس/غداً/الآن» ولا تخمّن تاريخاً آخر.\n- اقرأ سجل المحادثة كاملاً قبل الإجابة: الضمائر والإشارات («هذي»، «اللي ذكرتها»، «نفس الموضوع») تعود لمحتوى رسائلك السابقة في هذا السجل — أجب عنها من ذلك المحتوى نفسه، وممنوع اختراع أحداث أو أسماء أو برامج لم ترد فيه.\n- إذا سُئلت «بتاريخ كم» عن أشياء ذكرتها سابقاً فالمطلوب تواريخ تلك الأشياء نفسها، لا تاريخ اليوم.\n- «أهم الأشياء/الأحداث اليوم» في سياق إخباري تعني أخبار العالم اليوم، وليست نصائح عامة.\n- افهم اللهجة السعودية العامية (وش، ابغا، ليه، كذا) وفسّرها بسليقة أهلها.`
+      : `\n\n# Time & context awareness (mandatory)\n- Today is ${greg} (${hijri} AH), ${clock} Riyadh time. Use this for any "today/yesterday/tomorrow/now".\n- Read the conversation history before answering: pronouns and references point to YOUR previous answers' content — answer from that content and never invent events or names not present in it.\n- "Date of the things you mentioned" means the dates of those things, not today's date.`;
+  } catch (_) {}
+
+  const systemPrompt = (effectiveAgent === "fatwa"
     ? buildFatwaPrompt(lang, searchBlock, profileBlock)
     : effectiveAgent === "nibras"
       ? buildNibrasPrompt(lang, searchBlock, profileBlock)
-      : buildSystemPrompt(lang, searchBlock, profileBlock, didSearch);
+      : buildSystemPrompt(lang, searchBlock, profileBlock, didSearch)) + timeBlock;
 
   const userContent = imageBase64
     ? [
@@ -669,4 +681,3 @@ export default async function handler(req, res) {
 
   return res.status(502).json({ error: lang === "ar" ? "الخدمة مزدحمة حالياً — جرّب بعد لحظات" : "Service busy — try again shortly", detail: lastError });
 }
-
