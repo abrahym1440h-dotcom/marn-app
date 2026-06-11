@@ -323,12 +323,13 @@ export default function App() {
   const currentMessages = activeChat ? (chats[activeChat]?.messages || []) : [];
   const empty = currentMessages.length === 0;
 
+  const activeAgentId = (activeChat && chats[activeChat]?.agent) || agent;
+  const currentAgent = AGENTS[activeAgentId] || AGENTS.marn;
+
   // ===== صبغة المشهد: لون شفاف قريب من الثيم مستمد من آخر إجابة =====
   const lastCardMsg = [...currentMessages].reverse().find(x => x.role === "card" && x.card);
   const sceneOn = !empty && !!lastCardMsg;
   const sceneAccent = lastCardMsg ? (ACCENTS[lastCardMsg.card.accent] || ACCENTS.knowledge) : currentAgent.color;
-  const activeAgentId = (activeChat && chats[activeChat]?.agent) || agent;
-  const currentAgent = AGENTS[activeAgentId] || AGENTS.marn;
   const sortedChats = useMemo(() => {
     let list = Object.values(chats).sort((a, b) => b.createdAt - a.createdAt);
     if (chatSearch.trim()) {
@@ -1660,7 +1661,11 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
         <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "2px 0 20px" }}>
           {hero.icon && <div style={{ fontSize: 44, lineHeight: 1 }}>{hero.icon}</div>}
           <div style={{ minWidth: 0 }}>
-            {hero.value && <div style={{ fontSize: F.h1 + 14, fontWeight: 800, lineHeight: 1, color: a, wordBreak: "break-word" }}>{hero.value}</div>}
+            {hero.value && (() => {
+              const v = String(hero.value);
+              const fs = v.length <= 4 ? F.h1 + 14 : v.length <= 10 ? F.h1 + 6 : F.h2 + 2;
+              return <div style={{ fontSize: fs, fontWeight: 800, lineHeight: 1.1, color: a, wordBreak: "break-word" }}>{v}</div>;
+            })()}
             {hero.label && <div style={{ fontSize: F.base, fontWeight: 600, color: TT.text, marginTop: 7 }}>{hero.label}</div>}
             {hero.sub && <div style={{ fontSize: F.base - 1, color: TT.sub, marginTop: 2 }}>{hero.sub}</div>}
           </div>
