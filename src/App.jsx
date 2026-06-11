@@ -543,7 +543,18 @@ export default function App() {
     const trimmed = typeof replaceFromIndex === "number" ? baseMessages.slice(0, replaceFromIndex) : baseMessages;
     const history = trimmed.slice(-6).map(m => ({
       role: m.role === "user" ? "user" : "assistant",
-      content: m.role === "user" ? m.text : (m.card?.title || ""),
+      content: m.role === "user" ? m.text : (() => {
+        const c = m.card; if (!c) return "";
+        const bits = [c.title, c.sub];
+        if (c.hero?.value) bits.push(`${c.hero.label || "القيمة"}: ${c.hero.value}`);
+        (c.tabs || []).slice(0, 3).forEach(tb => {
+          const d = tb.data || {};
+          if (Array.isArray(d.items)) bits.push(`${tb.label}: ` + d.items.slice(0, 5).map(it => typeof it === "string" ? it : (it.text || it.title || `${it.label ?? ""} ${it.value ?? ""}`)).join("؛ "));
+          else if (d.body) bits.push(`${tb.label}: ${String(d.body).slice(0, 200)}`);
+          else if (Array.isArray(d.events)) bits.push(`${tb.label}: ` + d.events.slice(0, 4).map(e => `${e.date ?? ""} ${e.title ?? e.text ?? ""}`).join("؛ "));
+        });
+        return bits.filter(Boolean).join(" | ").slice(0, 600);
+      })(),
     }));
 
     try {
@@ -816,13 +827,8 @@ export default function App() {
           )}
         </div>
 
-        {/* مربع الكتابة */}
-        <div style={{
-          flexShrink: 0, position: "relative", zIndex: 5,
-          background: sceneOn ? "transparent" : T.composerBg,
-          borderTop: `1px solid ${T.line}`,
-          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-        }}>
+        {/* مربع الكتابة — عائم شفاف */}
+        <div style={{ flexShrink: 0, position: "relative", zIndex: 5, background: "transparent" }}>
           <div style={{ maxWidth: 760, margin: "0 auto", padding: "12px 14px" }}>
             {!empty && currentAgent.tools && currentAgent.tools.length > 0 && (
               <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 10, scrollbarWidth: "none" }}>
