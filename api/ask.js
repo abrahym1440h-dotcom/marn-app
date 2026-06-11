@@ -215,6 +215,8 @@ ${isAr ? `اجعل كل إجابة تبدو **لوحة بيانات بصرية /
 - استخدم بكثرة: stats و facts و timeline و compare و steps. اجعل "text" جملة واحدة قصيرة كحد أقصى.
 - **الاختصار إلزامي**: التسميات والقيم كلمات قصيرة (٤ كلمات أو أقل)، وعناصر القوائم نقاط مكثّفة (٨ كلمات أو أقل) — لا جُمل طويلة ولا فقرات.
 - في "stats": القيمة value يجب أن تكون **رقماً أو رمزاً قصيراً جداً** (مثل: ٦، ٢-١، ١٩٩٤، ٪٤٢). أي معلومة نصية (مكان، منافس، اسم) ضعها في "facts" لا في stats.
+- **ممنوع الإيموجي نهائياً في أي حقل** (تصميم رسمي): حقول icon تقبل فقط أسماء من هذه القائمة: sun, moon, cloud, rain, storm, snow, wind, humidity, temp, calendar, location, trophy, clock, book, mosque, chart, money, star, info, check, flag, user, plane, food, shield, bolt.
+- للسلاسل الرقمية (توقعات أيام، أهداف عبر سنوات، أسعار عبر فترات) أضف تبويب "chart": {"intro":"...","labels":["..."],"values":[أرقام],"unit":"°"} — رسم أعمدة احترافي.
 - **لا تكرر الوحدة أو الاتجاه داخل القيمة**: القيمة رقم + وحدة واحدة فقط (12 كم/س)، والاتجاه أو التفصيل في label أو hint — ممنوع مثل «12 كم/س غرب-شمال غرب كم/س».
 - في "facts": لكل عنصر {icon (إيموجي مناسب)، label (كلمة)، value (كلمة/كلمتان)}.
 - أي أرقام/تواريخ/مقارنات/تسلسل → حوّلها إلى البطاقة البصرية المناسبة، لا إلى فقرة.
@@ -235,7 +237,7 @@ ${isAr ? `اجعل كل إجابة تبدو **لوحة بيانات بصرية /
   "kicker": "${isAr ? "تصنيف قصير" : "short category"}",
   "title": "${isAr ? "عنوان دقيق" : "accurate title"}",
   "sub": "${isAr ? "وصف سطر" : "one-line summary"}",
-  "hero": {"icon":"${isAr ? "إيموجي معبّر عن الموضوع" : "expressive emoji"}","value":"${isAr ? "القيمة البطل (قصيرة جداً: 38° أو 2-1 أو 1994)" : "hero value (very short)"}","label":"${isAr ? "وصف قصير للقيمة" : "short label"}","sub":"${isAr ? "سطر ثانوي اختياري" : "optional secondary line"}"},
+  "hero": {"icon":"${isAr ? "اسم أيقونة من القائمة أدناه" : "icon name from the list below"}","value":"${isAr ? "القيمة البطل (قصيرة جداً: 38° أو 2-1 أو 1994)" : "hero value (very short)"}","label":"${isAr ? "وصف قصير للقيمة" : "short label"}","sub":"${isAr ? "سطر ثانوي اختياري" : "optional secondary line"}"},
   "tabs": [{"label":"${isAr ? "اسم" : "name"}","type":"${isAr ? "النوع" : "type"}","data":{}}],
   "followUps": ["${isAr ? "سؤال 1" : "q1"}", "${isAr ? "سؤال 2" : "q2"}", "${isAr ? "سؤال 3" : "q3"}"]
 }
@@ -288,7 +290,7 @@ ${isAr ? `هذه القاعدة لا تُكسر أبداً:
 - **stats**: {"items":[{"value":"100","label":"${isAr ? "عنوان" : "title"}","hint":"${isAr ? "تفصيل" : "detail"}"}]}
 - **timeline**: {"events":[["${isAr ? "التاريخ" : "date"}","${isAr ? "عنوان" : "title"}","${isAr ? "وصف" : "desc"}"]]}
 - **compare**: {"cols":["${isAr ? "وجه" : "aspect"}","A","B"],"rows":[["${isAr ? "صف" : "row"}","val","val"]]}
-- **facts**: {"items":[{"icon":"📍","label":"${isAr ? "المكان" : "label"}","value":"${isAr ? "الرياض" : "value"}"}]}
+- **facts**: {"items":[{"icon":"location","label":"${isAr ? "المكان" : "label"}","value":"${isAr ? "الرياض" : "value"}"}]}
 
 ## ${isAr ? "بطاقات رياضية" : "Sports Cards"}
 - **match**: {"team1":"${isAr ? "الفريق الأول" : "Team A"}","score1":2,"team2":"${isAr ? "الفريق الثاني" : "Team B"}","score2":1,"status":"${isAr ? "انتهت" : "FT"}","venue":"${isAr ? "الملعب" : "stadium"}","date":"${isAr ? "التاريخ" : "date"}","details":[{"label":"${isAr ? "تفصيل" : "detail"}","value":"${isAr ? "قيمة" : "value"}"}]}
@@ -373,7 +375,7 @@ Output JSON ONLY: {"accent":"knowledge","kicker":"Fatwa","title":"...","sub":"..
 {
   "accent": "knowledge",
   "kicker": "فتوى",
-  "hero": {"icon":"🕌","value":"<الحكم بكلمة أو كلمتين>","label":"<وصف قصير>"},
+  "hero": {"icon":"mosque","value":"<الحكم بكلمة أو كلمتين>","label":"<وصف قصير>"},
   "title": "<عنوان السؤال باختصار>",
   "sub": "<ملخّص الحكم في سطر>",
   "tabs": [
@@ -417,7 +419,7 @@ function buildNibrasPrompt(lang, searchBlock, profileBlock) {
 {
   "accent": "knowledge",
   "kicker": "شرح تعليمي",
-  "hero": {"icon":"📘","value":"<المفهوم/الرقم البطل قصيراً>","label":"<وصف قصير>"},
+  "hero": {"icon":"book","value":"<المفهوم/الرقم البطل قصيراً>","label":"<وصف قصير>"},
   "title": "<الموضوع>",
   "sub": "<ملخّص في سطر>",
   "tabs": [
@@ -667,3 +669,4 @@ export default async function handler(req, res) {
 
   return res.status(502).json({ error: lang === "ar" ? "الخدمة مزدحمة حالياً — جرّب بعد لحظات" : "Service busy — try again shortly", detail: lastError });
 }
+
