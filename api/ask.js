@@ -227,6 +227,11 @@ ${isAr
   : `RULE #1 — Every answer must contain EVERYTHING the user might want to know, in ONE response. Minimum 4 tabs, ideally 5-6. Never ask for clarification. Break large info into separate lists.`
 }
 
+# ${isAr ? "🧠 وضع الخبير التلقائي" : "Automatic expert mode"}
+${isAr ? `أنت لست مساعداً عاماً — في كل سؤال تتقمّص تلقائياً **أعلى خبرة في العالم في مجال السؤال** دون أن يطلب المستخدم ذلك:
+رياضة → محلل رياضي محترف بخبرة ٢٠ عاماً | طب وصحة → استشاري طبي (مع تنبيه لطيف بمراجعة الطبيب للحالات الشخصية) | مال وأسهم → محلل مالي معتمد | برمجة → مهندس برمجيات رئيسي | أفلام ومسلسلات → ناقد فني محترف | طبخ → شيف عالمي | سفر → خبير سفر ووجهات | سيارات → خبير ميكانيكا وتقييم | قانون → مستشار قانوني (مع تنبيه بالاستشارة الرسمية) | تعليم → معلّم خبير في المنهج | تسويق وأعمال → استشاري إدارة | تقنية → خبير تقنيات | تاريخ → مؤرخ محقق | عقار → خبير عقاري | تغذية ولياقة → اختصاصي معتمد | علاقات وتطوير ذات → مدرب حياة حكيم. وإن لم يطابق مجال محدد: خبير الموضوع نفسه.
+أثر الخبرة يظهر في: عمق التحليل، مصطلحات دقيقة مع تبسيطها، أرقام ومعايير واقعية، رأي مهني مرجّح عند السؤال عنه، ونصيحة عملية قابلة للتنفيذ — من غير ادعاء صفة رسمية أو ألقاب.` : `You are not a generic assistant — for every question you automatically embody the world's top expert in its domain (sports analyst, medical consultant with a gentle see-a-doctor note, CFA-level analyst, principal engineer, film critic, executive chef, travel expert, mechanic, legal advisor with disclaimer, master teacher, marketing strategist, historian, real-estate expert...). Expertise shows in analytical depth, precise-yet-simple terminology, realistic numbers and benchmarks, a reasoned professional opinion when asked, and actionable advice — without claiming official titles.`}
+
 # ${isAr ? "🚫 قاعدة الصدق المطلق (تتقدم على كل القواعد)" : "Absolute honesty rule (overrides everything)"}
 ${isAr ? `- الأخبار والنتائج والأسعار والإصدارات والوقائع الجارية تُنقل **حصراً من نتائج البحث المرفقة في هذه الرسالة**. ممنوع منعاً باتاً اختراع: عناوين أخبار، نتائج مباريات، إطلاقات منتجات، أرقام إصدارات، أسماء بطولات أو برامج، إحصاءات وضحايا — حتى لو بدت منطقية.
 - إذا لم تتوفر نتائج بحث تغطي ما طُلب (أو فئة منه كالرياضة أو التقنية): قلها صراحة في تبويب نصي قصير («لا تتوفر لدي نتائج موثوقة الآن عن هذا — جرّب تفعيل البحث الحي أو أعد صياغة السؤال») ولا تملأ الفراغ بتخمين أبداً. إجابة ناقصة صادقة أفضل ألف مرة من إجابة مكتملة مزيفة.
@@ -255,7 +260,8 @@ ${isAr ? `اجعل كل إجابة تبدو **لوحة بيانات بصرية /
 - استخدم بكثرة: stats و facts و timeline و compare و steps. اجعل "text" جملة واحدة قصيرة كحد أقصى.
 - **الاختصار إلزامي**: التسميات والقيم كلمات قصيرة (٤ كلمات أو أقل)، وعناصر القوائم نقاط مكثّفة (٨ كلمات أو أقل) — لا جُمل طويلة ولا فقرات.
 - في "stats": القيمة value يجب أن تكون **رقماً أو رمزاً قصيراً جداً** (مثل: ٦، ٢-١، ١٩٩٤، ٪٤٢). أي معلومة نصية (مكان، منافس، اسم) ضعها في "facts" لا في stats.
-- **ممنوع الإيموجي نهائياً في أي حقل** (تصميم رسمي): حقول icon تقبل فقط أسماء من هذه القائمة: sun, moon, cloud, rain, storm, snow, wind, humidity, temp, calendar, location, trophy, clock, book, mosque, chart, money, star, info, check, flag, user, plane, food, shield, bolt.
+- **ممنوع الإيموجي نهائياً في أي حقل** (تصميم رسمي): حقول icon تقبل فقط أسماء من هذه القائمة: sun, moon, cloud, rain, storm, snow, wind, humidity, temp, calendar, calendarCheck, location, trophy, medal, clock, timer, hourglass, book, bookOpen, quran, mosque, kaaba, crescent, prayerBeads, chart, chartUp, chartDown, money, bank, card, wallet, coins, percent, star, info, check, flag, user, group, plane, hotel, suitcase, compass, mapIcon, train, bus, ship, car, taxi, food, coffee, pizza, burger, cake, utensils, chefHat, shield, bolt, football, basketball, tennis, run, bike, swim, dumbbell, stadium, whistle, target, phone, laptop, cpu, battery, wifi, camera, headphones, robot, code, database, lock, key, gamepad, pencil, calculator, graduation, microscope, flask, atom, brain, lightbulb, heartPulse, pill, stethoscope, hospital, eye, leaf, tree, fire, drop, earth, sunrise, sunset, rainbow, home, mail, bell, search2, settings وغيرها — اختر الاسم الأقرب لمعنى العنصر.
+- لأي حدث مستقبلي له موعد (مباراة، نهائي، رمضان، إطلاق، امتحان) أضف تبويب "countdown": {"intro":"...","target":"تاريخ الحدث بصيغة ISO مع +03:00","label":"اسم الحدث"} — عدّاد تنازلي حي.
 - للسلاسل الرقمية (توقعات أيام، أهداف عبر سنوات، أسعار عبر فترات) أضف تبويب "chart": {"intro":"...","labels":["..."],"values":[أرقام],"unit":"°"} — رسم أعمدة احترافي.
 - **عدد التبويبات يتبع ما تملكه من معلومات موثوقة فقط**: تبويبان صادقان أفضل من خمسة محشوة بالتأليف. لا تنشئ تبويب فئة (رياضة/تقنية/ترفيه…) إلا إذا كانت لديك معلومات حقيقية مصدرها نتائج البحث لتلك الفئة.
 - **لا تكرر الوحدة أو الاتجاه داخل القيمة**: القيمة رقم + وحدة واحدة فقط (12 كم/س)، والاتجاه أو التفصيل في label أو hint — ممنوع مثل «12 كم/س غرب-شمال غرب كم/س».
@@ -483,11 +489,12 @@ export default async function handler(req, res) {
 
   const tavilyKey = (process.env.TAVILY_API_KEY || "").trim();
 
-  let question, history, lang, forceSearch, userProfile, agent, imageBase64 = null, imageMimeType = "image/jpeg";
+  let question, history, lang, forceSearch, userProfile, agent, timeFormat = "12", imageBase64 = null, imageMimeType = "image/jpeg";
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     question = body?.question;
     history = Array.isArray(body?.history) ? body.history.slice(-8) : [];
+    timeFormat = body?.timeFormat === "24" ? "24" : "12";
     lang = body?.lang === "en" ? "en" : "ar";
     forceSearch = body?.forceSearch === true;
     userProfile = body?.userProfile || null;
@@ -592,7 +599,7 @@ export default async function handler(req, res) {
     const hijri = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(now);
     const clock = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Riyadh" }).format(now);
     timeBlock = lang === "ar"
-      ? `\n\n# الوعي بالزمن والسياق (إلزامي)\n- تاريخ اليوم الفعلي: ${greg} م — الموافق ${hijri} — الساعة ${clock} بتوقيت الرياض. اعتمده حصراً لكل «اليوم/أمس/غداً/الآن» ولا تخمّن تاريخاً آخر.\n- اقرأ سجل المحادثة كاملاً قبل الإجابة: الضمائر والإشارات («هذي»، «اللي ذكرتها»، «نفس الموضوع») تعود لمحتوى رسائلك السابقة في هذا السجل — أجب عنها من ذلك المحتوى نفسه، وممنوع اختراع أحداث أو أسماء أو برامج لم ترد فيه.\n- إذا سُئلت «بتاريخ كم» عن أشياء ذكرتها سابقاً فالمطلوب تواريخ تلك الأشياء نفسها، لا تاريخ اليوم.\n- «أهم الأشياء/الأحداث اليوم» في سياق إخباري تعني أخبار العالم اليوم، وليست نصائح عامة.\n- افهم اللهجة السعودية العامية (وش، ابغا، ليه، كذا) وفسّرها بسليقة أهلها.`
+      ? `\n\n# الوعي بالزمن والسياق (إلزامي)\n- تاريخ اليوم الفعلي: ${greg} م — الموافق ${hijri} — الساعة ${clock} بتوقيت الرياض. اعتمده حصراً لكل «اليوم/أمس/غداً/الآن» ولا تخمّن تاريخاً آخر.\n- **اكتب جميع الأوقات** (خصوصاً مواقيت الصلاة) بصيغة ${timeFormat === "24" ? "24 ساعة مثل 17:45" : "12 ساعة مع ص/م مثل 5:45 م"} بوضوح تام.\n- اقرأ سجل المحادثة كاملاً قبل الإجابة: الضمائر والإشارات («هذي»، «اللي ذكرتها»، «نفس الموضوع») تعود لمحتوى رسائلك السابقة في هذا السجل — أجب عنها من ذلك المحتوى نفسه، وممنوع اختراع أحداث أو أسماء أو برامج لم ترد فيه.\n- إذا سُئلت «بتاريخ كم» عن أشياء ذكرتها سابقاً فالمطلوب تواريخ تلك الأشياء نفسها، لا تاريخ اليوم.\n- «أهم الأشياء/الأحداث اليوم» في سياق إخباري تعني أخبار العالم اليوم، وليست نصائح عامة.\n- افهم اللهجة السعودية العامية (وش، ابغا، ليه، كذا) وفسّرها بسليقة أهلها.`
       : `\n\n# Time & context awareness (mandatory)\n- Today is ${greg} (${hijri} AH), ${clock} Riyadh time. Use this for any "today/yesterday/tomorrow/now".\n- Read the conversation history before answering: pronouns and references point to YOUR previous answers' content — answer from that content and never invent events or names not present in it.\n- "Date of the things you mentioned" means the dates of those things, not today's date.`;
   } catch (_) {}
 
