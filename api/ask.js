@@ -215,6 +215,7 @@ ${isAr ? `اجعل كل إجابة تبدو **لوحة بيانات بصرية /
 - استخدم بكثرة: stats و facts و timeline و compare و steps. اجعل "text" جملة واحدة قصيرة كحد أقصى.
 - **الاختصار إلزامي**: التسميات والقيم كلمات قصيرة (٤ كلمات أو أقل)، وعناصر القوائم نقاط مكثّفة (٨ كلمات أو أقل) — لا جُمل طويلة ولا فقرات.
 - في "stats": القيمة value يجب أن تكون **رقماً أو رمزاً قصيراً جداً** (مثل: ٦، ٢-١، ١٩٩٤، ٪٤٢). أي معلومة نصية (مكان، منافس، اسم) ضعها في "facts" لا في stats.
+- **لا تكرر الوحدة أو الاتجاه داخل القيمة**: القيمة رقم + وحدة واحدة فقط (12 كم/س)، والاتجاه أو التفصيل في label أو hint — ممنوع مثل «12 كم/س غرب-شمال غرب كم/س».
 - في "facts": لكل عنصر {icon (إيموجي مناسب)، label (كلمة)، value (كلمة/كلمتان)}.
 - أي أرقام/تواريخ/مقارنات/تسلسل → حوّلها إلى البطاقة البصرية المناسبة، لا إلى فقرة.
 - كل إجابة يجب أن تحتوي على الأقل تبويب stats أو facts واحد.` : `Make every answer a visual DASHBOARD/infographic, not prose. First tab MUST be stats or facts (never text). Use stats/facts/timeline/compare/steps heavily; text = one short sentence max. BREVITY MANDATORY: labels/values ≤4 words, list items ≤8 words, no paragraphs. stats.value MUST be a number/short token (6, 2-1, 1994, 42%); put textual info (place, opponent, name) in facts (icon+label+value), never as a stats value. Every answer includes at least one stats or facts tab.`}
