@@ -598,7 +598,7 @@ function PrayerView() {
     for (const k of order) {
       if (k === 'Sunrise') continue;
       const [h, m] = (times[k] || '00:00').split(':').map(Number);
-      if (h * 60 + m > mins) return { key: k, time: times[k] };
+      if (h * 60 + m > mins) return { key: k, time: fmtClock(times[k]) };
     }
     return { key: 'Fajr', time: times.Fajr };
   }, [times, now]);
@@ -622,7 +622,7 @@ function PrayerView() {
           const isNext = p.key === next?.key;
           return (
             <div key={p.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: isNext ? T.accentSoft : T.surface, border: `1px solid ${isNext ? T.accentLine : T.border}`, borderRadius: 14, padding: '14px 18px' }}>
-              <span style={{ fontWeight: 800, fontSize: 16, color: isNext ? T.accent : T.text }}>{times[p.key]}</span>
+              <span style={{ fontWeight: 800, fontSize: 16, color: isNext ? T.accent : T.text }}>{fmtClock(times[p.key])}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontWeight: 700, color: isNext ? T.accent : T.text, fontSize: 16 }}>{p.name}</span>
                 <p.Icon size={20} color={isNext ? T.accent : T.textDim} />
@@ -633,6 +633,14 @@ function PrayerView() {
       </div>
     </div>
   );
+}
+function fmtClock(t) {
+  if (!t || !/^\d{1,2}:\d{2}/.test(String(t))) return t;
+  const fmt = (typeof window !== 'undefined' && window.__marnTimeFmt) || '12';
+  if (fmt === '24') return t;
+  const [h, m] = String(t).split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return t;
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'م' : 'ص'}`;
 }
 const FALLBACK_TIMES = { Fajr: '04:15', Sunrise: '05:40', Dhuhr: '12:25', Asr: '15:43', Maghrib: '19:07', Isha: '20:27' };
 
