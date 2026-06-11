@@ -802,6 +802,7 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           timeFormat: settings.timeFmt || "12",
+          cachedKnowledge: (() => { const hit = knowMatch(q); return hit ? `السؤال السابق: ${hit.raw}\nالخلاصة المحفوظة:\n${hit.text}` : undefined; })(),
           question: (() => {
             const pre = [];
             if (agentDirective) pre.push(agentDirective);
@@ -823,6 +824,7 @@ export default function App() {
         if (!cur) return prev;
         let newMsg;
         if (r.ok && data?.card) {
+          if (data.searched === true) knowSave(q, data.card);
           newMsg = { role: "card", card: data.card, searched: data.searched, sources: Array.isArray(data.sources) ? data.sources : [], agentUsed: data.agent_used || agentId, at: Date.now(), forSearchQuery: q, followUps: Array.isArray(data.card?.followUps) ? data.card.followUps : [] };
         } else {
           const errMsg = (data && data.error)
@@ -1931,7 +1933,7 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
                 background: "rgba(52,211,153,0.1)", padding: "2px 8px",
                 borderRadius: 6, border: "1px solid rgba(52,211,153,0.2)", display: "flex", alignItems: "center", gap: 4,
               }}>
-                <Icon.Search /> {t.liveSearch}
+                <Icon.Search /> {searched === "cache" ? "من الذاكرة" : t.liveSearch}
               </div>
             )}
           </div>
@@ -3263,6 +3265,52 @@ function RenameModal({ T, t, F, isRTL, currentTitle, onSave, onCancel }) {
   );
 }
 
+/* ===== ذاكرة معرفية: يتعلم من كل بحث ويوفر تكلفة البحث المكرر ===== */
+const KNOW_KEY = "marn_knowledge_v1";
+function knowTokens(str) {
+  return String(str || "").replace(/[\u064B-\u0652]/g, "").replace(/[^\u0621-\u064AA-Za-z0-9 ]/g, " ").toLowerCase().split(/\s+/).filter(w => w.length > 1);
+}
+function knowLoad() { try { return JSON.parse(localStorage.getItem(KNOW_KEY)) || []; } catch { return []; } }
+function knowSave(q, card) {
+  try {
+    if (!card || !card.title) return;
+    const parts = [card.title, card.sub];
+    if (card.hero) parts.push(`${card.hero.label || ""}: ${card.hero.value || ""}`);
+    for (const tb of (card.tabs || []).slice(0, 4)) {
+      const d = tb.data || {}; const seg = [];
+      if (d.body) seg.push(String(d.body).slice(0, 240));
+      if (Array.isArray(d.items)) seg.push(d.items.slice(0, 6).join("؛ "));
+      if (Array.isArray(d.stats)) seg.push(d.stats.map(x => `${x.label}: ${x.value}${x.unit ? " " + x.unit : ""}`).join("، "));
+      if (Array.isArray(d.facts)) seg.push(d.facts.map(x => `${x.label}: ${x.value}`).join("، "));
+      if (seg.length) parts.push(`${tb.label}: ${seg.join(" | ")}`);
+    }
+    const arr = knowLoad();
+    arr.unshift({ tok: knowTokens(q), raw: String(q).slice(0, 200), text: parts.filter(Boolean).join("\n").slice(0, 1400), at: Date.now() });
+    localStorage.setItem(KNOW_KEY, JSON.stringify(arr.slice(0, 80)));
+  } catch {}
+}
+function knowMatch(q) {
+  try {
+    const qt = new Set(knowTokens(q)); if (qt.size < 2) return null;
+    let best = null, bs = 0;
+    for (const e of knowLoad()) {
+      const et = new Set(e.tok || []); let inter = 0;
+      qt.forEach(w => { if (et.has(w)) inter++; });
+      const sc = inter / Math.max(qt.size, et.size);
+      if (sc > bs) { bs = sc; best = e; }
+    }
+    return best && bs >= 0.6 && (Date.now() - best.at) < 6 * 3600 * 1000 ? best : null;
+  } catch { return null; }
+}
+
+function fmtClock(t) {
+  if (!t || !/^\d{1,2}:\d{2}/.test(String(t))) return t;
+  const fmt = (typeof window !== "undefined" && window.__marnTimeFmt) || "12";
+  if (fmt === "24") return t;
+  const [h, m] = String(t).split(":").map(Number);
+  if (isNaN(h) || isNaN(m)) return t;
+  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "م" : "ص"}`;
+}
 function formatTime(ts, lang, fmt) {
   if (!ts) return "";
   const d = new Date(ts);
@@ -3840,7 +3888,7 @@ ${q}
                       <div style={{ ...cardWrap, overflow:"hidden" }}>
                         {day.items.map((item,ii)=>(
                           <div key={item.id||ii} style={{ display:"flex", gap:13, padding:"13px 16px", borderBottom: ii<day.items.length-1?`1px solid ${C.border2}`:"none", alignItems:"flex-start" }}>
-                            <div style={{ fontSize:12, color:C.blue, fontWeight:700, minWidth:46, fontFamily:"monospace", paddingTop:1 }}>{item.time}</div>
+                            <div style={{ fontSize:12, color:C.blue, fontWeight:700, minWidth:46, fontFamily:"monospace", paddingTop:1 }}>{fmtClock(item.time)}</div>
                             <div style={{ flex:1 }}>
                               <div style={{ fontSize:14, color:C.text, fontWeight:500 }}>{item.act}</div>
                               {item.note && <div style={{ fontSize:12, color:C.faint, marginTop:2 }}>{item.note}</div>}
@@ -4528,7 +4576,7 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
             <span style={{ fontSize:11, color:dim?C.faint:C.blue, background:dim?C.card:`${C.blue}15`, padding:"3px 9px", borderRadius:7, fontWeight:700 }}>{remainLabel(e.date)}</span>
             <span style={{ fontSize:12, color:C.faint }}>{dayName} {parseInt(e.date.slice(8))} {MONTHS[parseInt(e.date.slice(5,7))-1]}</span>
             {e.time && <span style={{ fontSize:12, color:C.sub, display:"flex", alignItems:"center", gap:3, fontWeight:600 }}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{e.time}
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{fmtClock(e.time)}
             </span>}
           </div>
           {e.note && <div style={{ fontSize:12, color:C.faint, marginTop:4 }}>{e.note}</div>}
