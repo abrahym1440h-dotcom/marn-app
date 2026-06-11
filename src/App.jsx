@@ -73,6 +73,219 @@ const PICTO_PATHS = {
   food: <><path d="M7 3.5v7a2 2 0 0 0 4 0v-7"/><line x1="9" y1="3.5" x2="9" y2="20.5"/><path d="M16.5 3.5c-1.8 1.2-2.5 3.6-2.5 6 0 1.6 1 2.5 2.5 2.5V20.5"/></>,
   shield: <path d="M12 3l7 2.8v5.4c0 4.6-3 8-7 9.8-4-1.8-7-5.2-7-9.8V5.8z"/>,
   bolt: <polyline points="13 3 6 13.5 11 13.5 10.5 21 17.5 10.5 12.5 10.5 13 3"/>,
+  /* ===== رياضة ===== */
+  football: <><circle cx="12" cy="12" r="8.5"/><path d="M12 8l3.4 2.5-1.3 4h-4.2l-1.3-4z"/><path d="M12 3.5v4.5M18.5 6.8l-3.1 3.7M20.4 13.9l-4.3-.4M15 20.5l-2-3.9M9 20.5l2-3.9M3.6 13.9l4.3-.4M5.5 6.8l3.1 3.7"/></>,
+  basketball: <><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5v17M6 6c3 2.5 3 9.5 0 12M18 6c-3 2.5-3 9.5 0 12"/></>,
+  tennis: <><circle cx="12" cy="12" r="8.5"/><path d="M4.5 7.5c4 1.5 4 7.5 0 9M19.5 7.5c-4 1.5-4 7.5 0 9"/></>,
+  volleyball: <><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5c1 3.5-.5 7-3.5 9M20 9.5c-3.5 1-7.5.2-10-2M16 19.5c-2-3-2-7 .5-10"/></>,
+  run: <><circle cx="14.5" cy="5" r="2"/><path d="M11 9.5l3-1.5 2.5 3 3 1M14 8l-2 5-4 2-3 4M12 13l2.5 3-1 4.5"/></>,
+  bike: <><circle cx="6" cy="16.5" r="3.5"/><circle cx="18" cy="16.5" r="3.5"/><path d="M6 16.5L10 9h5l3 7.5M10 9l3 7.5h-7M14 6h3"/></>,
+  swim: <><path d="M3 17.5c1.5 1.2 3 1.2 4.5 0s3-1.2 4.5 0 3 1.2 4.5 0 3-1.2 4.5 0"/><circle cx="16" cy="7.5" r="2"/><path d="M4 13l5-4 4 3"/></>,
+  dumbbell: <><rect x="2.5" y="9" width="3" height="6" rx="1"/><rect x="18.5" y="9" width="3" height="6" rx="1"/><rect x="5.5" y="7" width="3" height="10" rx="1"/><rect x="15.5" y="7" width="3" height="10" rx="1"/><line x1="8.5" y1="12" x2="15.5" y2="12"/></>,
+  medal: <><circle cx="12" cy="14.5" r="5"/><path d="M12 12.2l.9 1.8 2 .3-1.4 1.4.3 2-1.8-1-1.8 1 .3-2-1.4-1.4 2-.3z" fill="currentColor" stroke="none"/><path d="M8.5 10L5.5 3.5h4L12 8.5 14.5 3.5h4L15.5 10"/></>,
+  whistle: <><circle cx="8.5" cy="14.5" r="5"/><path d="M8.5 9.5H20a1 1 0 0 1 1 1v2.5a1 1 0 0 1-1 1h-6.5M14 9.5V7"/></>,
+  stadium: <><ellipse cx="12" cy="17" rx="9" ry="3.5"/><path d="M3 17V9.5C3 7.5 7 6 12 6s9 1.5 9 3.5V17M7.5 8v7M16.5 8v7M12 8.5V16"/></>,
+  target: <><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></>,
+  timer: <><circle cx="12" cy="13.5" r="7.5"/><polyline points="12 9.5 12 13.5 14.8 15"/><line x1="9.5" y1="3" x2="14.5" y2="3"/><line x1="12" y1="3" x2="12" y2="6"/></>,
+  golf: <><line x1="9" y1="3.5" x2="9" y2="18"/><path d="M9 3.5l7 2.8L9 9"/><ellipse cx="11" cy="19.5" rx="6.5" ry="2"/></>,
+  boxing: <><path d="M6 11V7.5A4.5 4.5 0 0 1 10.5 3h3A4.5 4.5 0 0 1 18 7.5V11a6 6 0 0 1-12 0z"/><path d="M6 9H4.5A1.5 1.5 0 0 0 3 10.5v1A1.5 1.5 0 0 0 4.5 13H6M9 17v3.5h6V17"/></>,
+  chess: <><path d="M9 20.5h6M10 20.5v-3h4v3M8.5 9.5C8.5 6 10 4 12 3.5c2 .5 3.5 2.5 3.5 6L14 17.5h-4z"/></>,
+  /* ===== مال وأعمال ===== */
+  bank: <><path d="M3.5 9.5L12 4l8.5 5.5z"/><line x1="5" y1="9.5" x2="5" y2="17"/><line x1="9.5" y1="9.5" x2="9.5" y2="17"/><line x1="14.5" y1="9.5" x2="14.5" y2="17"/><line x1="19" y1="9.5" x2="19" y2="17"/><line x1="3.5" y1="17.5" x2="20.5" y2="17.5"/><line x1="2.5" y1="20.5" x2="21.5" y2="20.5"/></>,
+  card: <><rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/><line x1="2.5" y1="10" x2="21.5" y2="10"/><line x1="6" y1="14.5" x2="10" y2="14.5"/></>,
+  wallet: <><path d="M20 8V6.5a2 2 0 0 0-2-2H5.5A2 2 0 0 0 3.5 6.5v11a2 2 0 0 0 2 2H18a2 2 0 0 0 2-2V8z"/><path d="M16 11.5h4.5v4H16a2 2 0 0 1 0-4z"/></>,
+  coins: <><ellipse cx="9" cy="7" rx="6" ry="3"/><path d="M3 7v5c0 1.7 2.7 3 6 3s6-1.3 6-3V7"/><path d="M3 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5M15 9.8c3.2.2 6 1.5 6 3.2v5c0 1.7-2.7 3-6 3-1.5 0-2.9-.3-4-.8"/></>,
+  chartUp: <><line x1="4" y1="20" x2="20" y2="20"/><polyline points="5 15 10 10 13 13 19 6"/><polyline points="15 6 19 6 19 10"/></>,
+  chartDown: <><line x1="4" y1="20" x2="20" y2="20"/><polyline points="5 7 10 12 13 9 19 16"/><polyline points="19 12 19 16 15 16"/></>,
+  percent: <><line x1="6" y1="18" x2="18" y2="6"/><circle cx="7.5" cy="7.5" r="2.6"/><circle cx="16.5" cy="16.5" r="2.6"/></>,
+  receipt: <><path d="M6 3.5h12v17l-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4-2 1.4z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="11.5" x2="15" y2="11.5"/><line x1="9" y1="15" x2="13" y2="15"/></>,
+  safe: <><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="12" cy="12" r="3.6"/><line x1="12" y1="8.4" x2="12" y2="10"/><line x1="12" y1="14" x2="12" y2="15.6"/><line x1="8.4" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="15.6" y2="12"/></>,
+  briefcase: <><rect x="3" y="7.5" width="18" height="12.5" rx="2"/><path d="M8.5 7.5V5.5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2M3 12.5h18"/></>,
+  handshake: <><path d="M3 8l4-2 5 2.5L17 6l4 2v7l-4 3-4.5-2.5L8 18l-5-3z" fill="none"/><path d="M12 8.5l-3.5 3a1.4 1.4 0 0 0 2 2L12 12l2.5 2"/></>,
+  scale: <><line x1="12" y1="3.5" x2="12" y2="18"/><line x1="5" y1="6.5" x2="19" y2="6.5"/><path d="M5 6.5L2.5 12a2.8 2.8 0 0 0 5 0zM19 6.5L16.5 12a2.8 2.8 0 0 0 5 0z"/><line x1="8" y1="20.5" x2="16" y2="20.5"/></>,
+  diamond: <><path d="M7 3.5h10l4 5.5-9 11.5L3 9z"/><path d="M3 9h18M9.5 9L12 20.5 14.5 9M7 3.5L9.5 9 12 3.5 14.5 9 17 3.5"/></>,
+  /* ===== سفر ومواصلات ===== */
+  hotel: <><rect x="4" y="3.5" width="16" height="17"/><line x1="2.5" y1="20.5" x2="21.5" y2="20.5"/><path d="M10 20.5v-4h4v4"/><line x1="8" y1="7" x2="10" y2="7"/><line x1="14" y1="7" x2="16" y2="7"/><line x1="8" y1="10.5" x2="10" y2="10.5"/><line x1="14" y1="10.5" x2="16" y2="10.5"/></>,
+  beach: <><path d="M13.5 4c-4 0-7.5 3-8 7l16-2c-1-3.2-4-5-8-5z"/><path d="M13.5 4L11 11M13.5 4c2 1.5 3.5 4 3.5 6.5M13.5 4C10.5 4.5 8 6.5 7 9"/><line x1="11" y1="11" x2="9" y2="20.5"/><path d="M3 20.5c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/></>,
+  mountain: <><path d="M3 19.5L9.5 7l4 7 2.5-4 5 9.5z"/><path d="M8 10l1.5 2 1.5-2"/></>,
+  mapIcon: <><path d="M9 4.5L3.5 6.5v13L9 17.5l6 2 5.5-2v-13L15 6.5z"/><line x1="9" y1="4.5" x2="9" y2="17.5"/><line x1="15" y1="6.5" x2="15" y2="19.5"/></>,
+  compass: <><circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></>,
+  suitcase: <><rect x="5" y="7" width="14" height="13" rx="2"/><path d="M9 7V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5v2"/><line x1="9" y1="7" x2="9" y2="20"/><line x1="15" y1="7" x2="15" y2="20"/></>,
+  train: <><rect x="5.5" y="3.5" width="13" height="13.5" rx="3"/><line x1="5.5" y1="10" x2="18.5" y2="10"/><circle cx="9" cy="13.8" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="13.8" r="1.1" fill="currentColor" stroke="none"/><path d="M8 17l-2.5 3.5M16 17l2.5 3.5"/></>,
+  bus: <><rect x="4.5" y="4" width="15" height="13.5" rx="2.5"/><line x1="4.5" y1="11" x2="19.5" y2="11"/><circle cx="8.5" cy="14.3" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="14.3" r="1.1" fill="currentColor" stroke="none"/><line x1="7" y1="17.5" x2="7" y2="20"/><line x1="17" y1="17.5" x2="17" y2="20"/></>,
+  ship: <><path d="M4 17.5L3 12l9-2.5L21 12l-1 5.5"/><path d="M12 9.5V4.5h4l-1.5 2.5L16 9.5M7 9.8V6.5h5"/><path d="M3 20.5c1.8-1.4 3.7-1.4 5.5 0s3.7 1.4 5.5 0 3.7-1.4 5.5 0"/></>,
+  taxi: <><path d="M5 13l1.5-4.5A2 2 0 0 1 8.4 7h7.2a2 2 0 0 1 1.9 1.5L19 13"/><rect x="3.5" y="13" width="17" height="5.5" rx="1.5"/><circle cx="7.5" cy="18.5" r="1.8"/><circle cx="16.5" cy="18.5" r="1.8"/><path d="M10 7V5h4v2"/></>,
+  car: <><path d="M4.5 13l1.7-5A2 2 0 0 1 8.1 6.5h7.8a2 2 0 0 1 1.9 1.5l1.7 5"/><rect x="3" y="13" width="18" height="5" rx="1.5"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></>,
+  fuel: <><rect x="4" y="4" width="9" height="16.5" rx="1.5"/><line x1="4" y1="10" x2="13" y2="10"/><path d="M13 8h2.5l3 3v6a1.8 1.8 0 0 1-3.6 0V13"/></>,
+  passport: <><rect x="5" y="3.5" width="14" height="17" rx="2"/><circle cx="12" cy="10" r="3"/><line x1="8.5" y1="16.5" x2="15.5" y2="16.5"/></>,
+  tent: <><path d="M12 4L2.5 19.5h19z"/><path d="M12 8l-4.5 11.5M12 8l4.5 11.5"/></>,
+  parachute: <><path d="M12 3a9 9 0 0 0-9 8c3-2 6-2 9 0 3-2 6-2 9 0a9 9 0 0 0-9-8z"/><path d="M3 11l8 7.5M21 11l-8 7.5M12 11v7.5"/><rect x="10.5" y="18.5" width="3" height="2.5" rx="0.6"/></>,
+  /* ===== طعام ===== */
+  coffee: <><path d="M5 9h11v6a4.5 4.5 0 0 1-4.5 4.5h-2A4.5 4.5 0 0 1 5 15z"/><path d="M16 10h2a2.5 2.5 0 0 1 0 5h-2M8 5.5c0-1 .8-1 .8-2M11.5 5.5c0-1 .8-1 .8-2"/></>,
+  tea: <><path d="M5.5 10h10v5a4 4 0 0 1-4 4h-2a4 4 0 0 1-4-4z"/><path d="M15.5 11h1.8a2.2 2.2 0 0 1 0 4.4h-1.8M9 7.5C9 6 11 6 11 4.5"/><line x1="4" y1="21" x2="17" y2="21"/></>,
+  pizza: <><path d="M12 3.5c3.5 0 6.8.9 9 2.5L12 20.5 3 6c2.2-1.6 5.5-2.5 9-2.5z"/><path d="M4.8 8.2C7 7 9.4 6.3 12 6.3s5 .7 7.2 1.9"/><circle cx="10" cy="10.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="13.5" cy="14" r="1.1" fill="currentColor" stroke="none"/></>,
+  burger: <><path d="M4 9.5C4 6 7.5 3.5 12 3.5S20 6 20 9.5z"/><line x1="4" y1="13" x2="20" y2="13"/><path d="M4 16.5h16v1A3 3 0 0 1 17 20.5H7a3 3 0 0 1-3-3z"/><circle cx="9" cy="6.8" r=".3" fill="currentColor"/><circle cx="13" cy="6" r=".3" fill="currentColor"/><circle cx="15.7" cy="7.3" r=".3" fill="currentColor"/></>,
+  cake: <><path d="M4.5 12h15v8.5h-15z"/><path d="M4.5 15c1.3 1.2 2.4 1.2 3.7 0s2.5-1.2 3.8 0 2.5 1.2 3.8 0 2.4-1.2 3.7 0"/><line x1="12" y1="12" x2="12" y2="8.5"/><path d="M12 8.5c-1 0-1.6-.9-1.2-1.8L12 4l1.2 2.7c.4.9-.2 1.8-1.2 1.8z"/></>,
+  apple: <><path d="M12 8c-1-2-3.5-2.7-5.4-1.5C4 8.2 3.6 12 5.2 15.3c1.3 2.8 3.5 5 5.3 4.6.6-.1 1-.4 1.5-.4s.9.3 1.5.4c1.8.4 4-1.8 5.3-4.6 1.6-3.3 1.2-7.1-1.4-8.8C15.5 5.3 13 6 12 8z"/><path d="M12 8c0-2.5 1.2-4 3-4.5"/></>,
+  dates: <><ellipse cx="8.5" cy="14" rx="3" ry="4.5"/><ellipse cx="15.5" cy="14" rx="3" ry="4.5"/><path d="M8.5 9.5C8.5 6 10 4 12 3.5c2 .5 3.5 2.5 3.5 6"/></>,
+  utensils: <><path d="M7 3.5v6.5a2 2 0 0 0 4 0V3.5M9 3.5v17"/><path d="M16.5 3.5c-1.7 1-2.5 3.3-2.5 5.5 0 1.6 1 2.5 2.5 2.5V20.5"/></>,
+  chefHat: <><path d="M7 13.5C5 13.5 3.5 12 3.5 10S5 6.5 7 6.6C7.5 4.8 9.5 3.5 12 3.5s4.5 1.3 5 3.1c2-.1 3.5 1.4 3.5 3.4S19 13.5 17 13.5v4H7z"/><line x1="7" y1="20.5" x2="17" y2="20.5"/><line x1="10" y1="13.5" x2="10" y2="17.5"/><line x1="14" y1="13.5" x2="14" y2="17.5"/></>,
+  iceCream: <><path d="M7.5 11.5a4.5 4.5 0 1 1 9 0z"/><path d="M7.5 11.5h9L12 20.5z"/></>,
+  /* ===== تقنية ===== */
+  phone: <><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><line x1="10" y1="18.5" x2="14" y2="18.5"/></>,
+  laptop: <><rect x="4.5" y="4.5" width="15" height="11" rx="1.5"/><path d="M2.5 19.5h19l-2-4h-15z"/></>,
+  cpu: <><rect x="6.5" y="6.5" width="11" height="11" rx="1.5"/><rect x="10" y="10" width="4" height="4"/><path d="M9 6.5V3.5M15 6.5V3.5M9 20.5v-3M15 20.5v-3M6.5 9H3.5M6.5 15H3.5M20.5 9h-3M20.5 15h-3"/></>,
+  battery: <><rect x="2.5" y="8" width="16" height="8" rx="2"/><line x1="21.5" y1="10.5" x2="21.5" y2="13.5"/><rect x="5" y="10.2" width="7" height="3.6" rx="0.8" fill="currentColor" stroke="none"/></>,
+  wifi: <><path d="M3 9.5c5-4.7 13-4.7 18 0M6 13c3.4-3.2 8.6-3.2 12 0M9 16.3a4.4 4.4 0 0 1 6 0"/><circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/></>,
+  camera: <><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M8.5 7L10 4.5h4L15.5 7"/><circle cx="12" cy="13.3" r="3.6"/></>,
+  headphones: <><path d="M4 14.5v-2a8 8 0 0 1 16 0v2"/><rect x="3.5" y="13.5" width="4" height="6.5" rx="1.8"/><rect x="16.5" y="13.5" width="4" height="6.5" rx="1.8"/></>,
+  robot: <><rect x="5" y="8" width="14" height="11" rx="2.5"/><circle cx="9.5" cy="12.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="12.5" r="1.1" fill="currentColor" stroke="none"/><path d="M9.5 16h5M12 8V5M12 5a1.3 1.3 0 1 0-.1 0M3 12v3M21 12v3"/></>,
+  code: <><polyline points="8.5 7 4 12 8.5 17"/><polyline points="15.5 7 20 12 15.5 17"/><line x1="13.3" y1="5" x2="10.7" y2="19"/></>,
+  database: <><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6.5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V5.5"/><path d="M4.5 12v6.5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V12"/></>,
+  cloudTech: <><path d="M17.5 17.5H7a4.5 4.5 0 1 1 .8-8.93A6 6 0 0 1 19.4 11a3.5 3.5 0 0 1-1.9 6.5z"/><polyline points="9.5 13.7 12 11.2 14.5 13.7"/><line x1="12" y1="11.5" x2="12" y2="17"/></>,
+  lock: <><rect x="5.5" y="10.5" width="13" height="10" rx="2"/><path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7"/><circle cx="12" cy="15" r="1.2" fill="currentColor" stroke="none"/><line x1="12" y1="16" x2="12" y2="17.8"/></>,
+  key: <><circle cx="8" cy="14.5" r="4.5"/><path d="M11.5 11L20 2.5M16.5 6l3 3M14 8.5l2.5 2.5"/></>,
+  bug: <><ellipse cx="12" cy="13.5" rx="5.5" ry="6.5"/><path d="M12 7V20M8 4l2 2.5M16 4l-2 2.5M6.5 11H3M6.5 16H3.5M17.5 11H21M17.5 16h3"/></>,
+  chip: <><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M10 7V4M14 7V4M10 20v-3M14 20v-3M7 10H4M7 14H4M20 10h-3M20 14h-3"/></>,
+  satellite: <><rect x="9" y="9" width="6" height="6" rx="1" transform="rotate(45 12 12)"/><path d="M5 5l4 4M19 19l-4-4M15 5.5L18.5 9M5.5 15L9 18.5"/><path d="M16.5 3.5L20.5 7.5M3.5 16.5l4 4"/></>,
+  printer: <><path d="M7 8V3.5h10V8"/><rect x="3.5" y="8" width="17" height="8" rx="1.5"/><rect x="7" y="13" width="10" height="7.5"/></>,
+  gamepad: <><path d="M7 7.5h10a5.5 5.5 0 0 1 5.5 6.7c-.4 2-2.7 3-4.4 1.8L15.5 14h-7l-2.6 2c-1.7 1.2-4-.2-4.4-2.2A5.5 5.5 0 0 1 7 7.5z"/><line x1="8" y1="10" x2="8" y2="13"/><line x1="6.5" y1="11.5" x2="9.5" y2="11.5"/><circle cx="16" cy="10.5" r=".9" fill="currentColor" stroke="none"/><circle cx="18" cy="12.5" r=".9" fill="currentColor" stroke="none"/></>,
+  vr: <><path d="M3.5 8.5h17a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-4.8a1.5 1.5 0 0 1-1.2-.6l-1.3-1.7a1.5 1.5 0 0 0-2.4 0l-1.3 1.7a1.5 1.5 0 0 1-1.2.6H3.5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z"/></>,
+  /* ===== تعليم وعلوم ===== */
+  pencil: <><path d="M16.5 4l3.5 3.5L8 19.5l-4.5 1 1-4.5z"/><line x1="14" y1="6.5" x2="17.5" y2="10"/></>,
+  ruler: <><rect x="2" y="13" width="20" height="6" rx="1" transform="rotate(-25 12 16)"/><path d="M7 16.7l1-2.2M10.5 15l1-2.2M14 13.4l1-2.2M17.5 11.7l1-2.2" transform="rotate(0)"/></>,
+  calculator: <><rect x="5.5" y="3" width="13" height="18" rx="2"/><rect x="8" y="5.5" width="8" height="3.5" rx="0.8"/><circle cx="9" cy="12.5" r=".6" fill="currentColor"/><circle cx="12" cy="12.5" r=".6" fill="currentColor"/><circle cx="15" cy="12.5" r=".6" fill="currentColor"/><circle cx="9" cy="16" r=".6" fill="currentColor"/><circle cx="12" cy="16" r=".6" fill="currentColor"/><circle cx="15" cy="16" r=".6" fill="currentColor"/></>,
+  graduation: <><path d="M2.5 9L12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11.5v4.5c0 1.4 2.5 2.5 5.5 2.5s5.5-1.1 5.5-2.5v-4.5"/><line x1="21.5" y1="9" x2="21.5" y2="14"/></>,
+  microscope: <><path d="M13.5 4l3 3-5.5 5.5-3-3z"/><line x1="10" y1="11.5" x2="8.5" y2="13"/><path d="M16 12.5a6 6 0 0 1-5 9H6"/><line x1="4.5" y1="21.5" x2="17" y2="21.5"/><line x1="8" y1="18.5" x2="11" y2="18.5"/></>,
+  flask: <><path d="M9.5 3.5h5M10.5 3.5v5L5 18a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18L13.5 8.5v-5"/><line x1="7.5" y1="14.5" x2="16.5" y2="14.5"/></>,
+  atom: <><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><ellipse cx="12" cy="12" rx="9" ry="3.8"/><ellipse cx="12" cy="12" rx="9" ry="3.8" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.8" transform="rotate(120 12 12)"/></>,
+  brain: <><path d="M9.5 4A3 3 0 0 0 6.5 7c-2 0-3.5 1.6-3.5 3.5 0 1.2.6 2.3 1.5 2.9-.6.6-1 1.5-1 2.4A3.2 3.2 0 0 0 6.7 19c.3 1.2 1.4 2 2.7 2 1.6 0 2.6-1.2 2.6-2.7V6.7C12 5.2 11 4 9.5 4z"/><path d="M14.5 4A3 3 0 0 1 17.5 7c2 0 3.5 1.6 3.5 3.5 0 1.2-.6 2.3-1.5 2.9.6.6 1 1.5 1 2.4A3.2 3.2 0 0 1 17.3 19c-.3 1.2-1.4 2-2.7 2-1.6 0-2.6-1.2-2.6-2.7V6.7C12 5.2 13 4 14.5 4z"/></>,
+  globe2: <><circle cx="12" cy="12" r="8.5"/><ellipse cx="12" cy="12" rx="3.8" ry="8.5"/><line x1="3.5" y1="12" x2="20.5" y2="12"/></>,
+  telescope: <><path d="M3 11l13-7 3 5.5L6 16.5z"/><line x1="14" y1="13" x2="11" y2="21"/><line x1="9.5" y1="14.8" x2="12" y2="21"/><circle cx="11.5" cy="21" r=".01"/></>,
+  dna: <><path d="M7 3.5c0 5 10 6.5 10 12M17 3.5c0 2-1.5 3.5-3.7 4.7M7 20.5c0-2 1.5-3.5 3.7-4.7M17 20.5c0-5-10-6.5-10-12"/><line x1="8.5" y1="6.5" x2="15.5" y2="6.5"/><line x1="8.5" y1="17.5" x2="15.5" y2="17.5"/></>,
+  lightbulb: <><path d="M12 3a6.5 6.5 0 0 0-3.8 11.8c.8.6 1.3 1.4 1.3 2.2h5c0-.8.5-1.6 1.3-2.2A6.5 6.5 0 0 0 12 3z"/><line x1="9.5" y1="19.5" x2="14.5" y2="19.5"/><line x1="10.2" y1="21.5" x2="13.8" y2="21.5"/></>,
+  bookOpen: <><path d="M12 6.5C10.5 5 8.5 4.5 6 4.5c-1 0-2 .1-3 .4v14c1-.3 2-.4 3-.4 2.5 0 4.5.5 6 2 1.5-1.5 3.5-2 6-2 1 0 2 .1 3 .4v-14c-1-.3-2-.4-3-.4-2.5 0-4.5.5-6 2z"/><line x1="12" y1="6.5" x2="12" y2="20.5"/></>,
+  library: <><path d="M4 4.5h3v15H4zM9 4.5h3v15H9z"/><path d="M14.5 5.5l3-1 4 14.5-3 1z"/></>,
+  /* ===== دين وروحانيات ===== */
+  kaaba: <><rect x="5" y="6.5" width="14" height="13.5"/><path d="M5 6.5L12 3.5l7 3"/><line x1="5" y1="11" x2="19" y2="11"/><line x1="5" y1="13.5" x2="19" y2="13.5"/></>,
+  prayerBeads: <><path d="M12 4a8 8 0 0 0-8 8M12 4a8 8 0 0 1 8 8" fill="none"/><circle cx="4" cy="12" r="1.3"/><circle cx="5.7" cy="16.5" r="1.3"/><circle cx="9" cy="19.5" r="1.3"/><circle cx="15" cy="19.5" r="1.3"/><circle cx="18.3" cy="16.5" r="1.3"/><circle cx="20" cy="12" r="1.3"/><circle cx="12" cy="3.5" r="1.5"/></>,
+  quran: <><rect x="4.5" y="3.5" width="15" height="17" rx="2"/><path d="M12 7.5a3.6 3.6 0 1 0 2.8 5.9 2.9 2.9 0 1 1 0-4.6A3.6 3.6 0 0 0 12 7.5z"/><line x1="8" y1="17" x2="16" y2="17"/></>,
+  minaret: <><line x1="12" y1="2.5" x2="12" y2="5"/><path d="M9.5 7.5C9.5 6 10.5 5 12 5s2.5 1 2.5 2.5z"/><path d="M10 7.5h4l-1 13h-2z"/><line x1="8.5" y1="20.5" x2="15.5" y2="20.5"/></>,
+  crescent: <path d="M19 14.5A8.5 8.5 0 1 1 9.5 5a7 7 0 0 0 9.5 9.5z"/>,
+  prayerMat: <><rect x="6" y="3" width="12" height="18" rx="1.5"/><path d="M12 7l4 5.5h-8z"/><line x1="6" y1="17.5" x2="18" y2="17.5"/></>,
+  zamzam: <><path d="M12 3.5s5.5 6 5.5 10a5.5 5.5 0 0 1-11 0c0-4 5.5-10 5.5-10z"/><path d="M9.5 13.5a2.5 2.5 0 0 0 2.5 2.5"/></>,
+  /* ===== صحة ===== */
+  heartPulse: <><path d="M12 20s-8-5-8-10.5C4 6.5 6 4.5 8.5 4.5c1.6 0 3 .9 3.5 2 .5-1.1 1.9-2 3.5-2C18 4.5 20 6.5 20 9.5 20 15 12 20 12 20z"/><polyline points="5.5 12 9 12 10.5 9 13 15 14.5 12 18.5 12"/></>,
+  pill: <><rect x="3" y="9" width="18" height="6.5" rx="3.25" transform="rotate(-40 12 12)"/><line x1="9" y1="9" x2="15" y2="15" transform="rotate(0)"/></>,
+  stethoscope: <><path d="M5 3.5v5a4.5 4.5 0 0 0 9 0v-5"/><path d="M9.5 13v3.5a4.5 4.5 0 0 0 9 0V14"/><circle cx="18.5" cy="11.5" r="2.4"/></>,
+  hospital: <><rect x="4" y="5" width="16" height="15.5"/><line x1="2.5" y1="20.5" x2="21.5" y2="20.5"/><path d="M12 8.5v5M9.5 11h5"/><path d="M10 20.5v-3.5h4v3.5"/></>,
+  tooth: <><path d="M12 5.5C10.5 4 8.5 3.5 7 4.5 5 5.8 4.5 8.6 5.5 11c1 2.5 1 5 1.5 8 .2 1.2 1.8 1.3 2.2.1L10.5 15c.4-1.2 2.6-1.2 3 0l1.3 4.1c.4 1.2 2 1.1 2.2-.1.5-3 .5-5.5 1.5-8 1-2.4.5-5.2-1.5-6.5-1.5-1-3.5-.5-5 1z"/></>,
+  eye: <><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></>,
+  sleep: <><path d="M3.5 18.5v-9M3.5 14.5h17v4"/><path d="M3.5 12.5h7v2"/><circle cx="7" cy="10.5" r="1.6"/><path d="M15 4h4l-4 4h4"/></>,
+  yoga: <><circle cx="12" cy="5" r="2"/><path d="M12 8v5M12 13l-5 3.5M12 13l5 3.5M7 11l5 1.5L17 11"/><path d="M5 20.5c2.3-1.6 4.6-2.4 7-2.4s4.7.8 7 2.4"/></>,
+  /* ===== طبيعة وطقس إضافي ===== */
+  sunrise: <><path d="M5 16.5a7 7 0 0 1 14 0"/><line x1="3" y1="19.5" x2="21" y2="19.5"/><line x1="12" y1="3" x2="12" y2="6"/><line x1="5" y1="6.5" x2="6.8" y2="8.3"/><line x1="19" y1="6.5" x2="17.2" y2="8.3"/><polyline points="9.5 4.8 12 2.5 14.5 4.8"/></>,
+  sunset: <><path d="M5 16.5a7 7 0 0 1 14 0"/><line x1="3" y1="19.5" x2="21" y2="19.5"/><line x1="12" y1="6.5" x2="12" y2="3"/><line x1="5" y1="6.5" x2="6.8" y2="8.3"/><line x1="19" y1="6.5" x2="17.2" y2="8.3"/><polyline points="9.5 4.5 12 7 14.5 4.5"/></>,
+  fog: <><path d="M17.5 10.5H7a4 4 0 1 1 .8-7.93A6 6 0 0 1 19.4 5a3.2 3.2 0 0 1-1.9 5.5z"/><line x1="4" y1="14.5" x2="20" y2="14.5"/><line x1="6" y1="18" x2="18" y2="18"/><line x1="9" y1="21.5" x2="15" y2="21.5"/></>,
+  rainbow: <><path d="M3.5 17a8.5 8.5 0 0 1 17 0"/><path d="M7 17a5 5 0 0 1 10 0"/><path d="M10.5 17a1.5 1.5 0 0 1 3 0"/></>,
+  leaf: <><path d="M5 19C5 9 11 4 20 4c0 10-5 15-13 15"/><path d="M5 19c2-5 6-9 11-11"/></>,
+  tree: <><path d="M12 3l5 6h-3l4 5.5h-3.5L18 19.5H6L9.5 14.5H6L10 9H7z"/><line x1="12" y1="19.5" x2="12" y2="21.5"/></>,
+  flower: <><circle cx="12" cy="10" r="2.2"/><path d="M12 7.8C10.5 6 10.8 3.5 12 3.5s1.5 2.5 0 4.3zM14.2 10c1.8-1.5 4.3-1.2 4.3 0s-2.5 1.5-4.3 0zM12 12.2c1.5 1.8 1.2 4.3 0 4.3s-1.5-2.5 0-4.3zM9.8 10C8 11.5 5.5 11.2 5.5 10s2.5-1.5 4.3 0z"/><path d="M12 16.5v5M12 19c-1.8 0-3.2-1-3.7-2.5"/></>,
+  drop: <path d="M12 3.2s6.2 6.6 6.2 11a6.2 6.2 0 1 1-12.4 0c0-4.4 6.2-11 6.2-11z"/>,
+  fire: <><path d="M12 21.5c-3.6 0-6.5-2.7-6.5-6.2 0-2.5 1.4-4.4 2.7-6.2.9 1 1.4 1.7 2.3 2.4C10.8 8.4 11.5 5 14 3c.3 2.3 1.2 3.7 2.5 5.2 1.2 1.5 2 3.3 2 5.1 0 3.5-2.9 6.2-6.5 6.2z"/><path d="M12 21.5c-1.8 0-3.2-1.4-3.2-3.2 0-1.5 1-2.5 2-3.8.7.9 1.2 1.3 2 2 .8-.7 1.3-1.5 1.6-2.7 1 1.3 1.8 2.8 1.8 4.5 0 1.8-1.4 3.2-3.2 3.2z" fill="none"/></>,
+  wave: <><path d="M2.5 12c2.3-4 5.5-4 7 0s4.7 4 7 0 4-3.3 5-2"/><path d="M2.5 18c2.3-4 5.5-4 7 0s4.7 4 7 0"/></>,
+  earth: <><circle cx="12" cy="12" r="8.5"/><path d="M4 10c2 .5 3 2 5 1.5S11.5 9 11 7.5 9.5 5 10.5 3.8M20.3 9.5c-2 .8-3.8 2.2-3.3 4s2.5 1.5 3 3.2M9 20c.5-1.8 2.5-2 3-3.8"/></>,
+  paw: <><ellipse cx="7" cy="8.5" rx="1.8" ry="2.3"/><ellipse cx="17" cy="8.5" rx="1.8" ry="2.3"/><ellipse cx="4.5" cy="13" rx="1.6" ry="2"/><ellipse cx="19.5" cy="13" rx="1.6" ry="2"/><path d="M12 11c2.8 0 5.5 2.8 5.5 5.5 0 2-1.3 3.5-3 3.5-1 0-1.7-.5-2.5-.5s-1.5.5-2.5.5c-1.7 0-3-1.5-3-3.5C6.5 13.8 9.2 11 12 11z"/></>,
+  bird: <><path d="M16.5 4.5a3.5 3.5 0 0 0-3.5 3.5v2L3.5 13l4 1 1 4 3-2.5c5.5 0 9-3.5 9-8.5l1.5-1.5-2-.5a3.5 3.5 0 0 0-3.5-.5z"/><circle cx="16.8" cy="7" r=".4" fill="currentColor"/></>,
+  /* ===== واجهة وأدوات عامة ===== */
+  search2: <><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></>,
+  settings: <><circle cx="12" cy="12" r="3"/><path d="M12 2.5l1.2 2.6 2.8-.6 1 2.7 2.7 1-.6 2.8 2.6 1.2-2.6 1.2.6 2.8-2.7 1-1 2.7-2.8-.6L12 21.5l-1.2-2.6-2.8.6-1-2.7-2.7-1 .6-2.8L2.3 12l2.6-1.2-.6-2.8 2.7-1 1-2.7 2.8.6z"/></>,
+  bell: <><path d="M18 9.5a6 6 0 0 0-12 0c0 6-2.5 7-2.5 7h17S18 15.5 18 9.5z"/><path d="M10 19.5a2.2 2.2 0 0 0 4 0"/></>,
+  home: <><path d="M3.5 11L12 3.5 20.5 11"/><path d="M5.5 9.5v11h13v-11"/><path d="M10 20.5v-6h4v6"/></>,
+  mail: <><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3.5 7 12 13 20.5 7"/></>,
+  phoneCall: <><path d="M20.5 16.8v2.7a1.8 1.8 0 0 1-2 1.8C9 20.5 3.5 15 2.7 5.5a1.8 1.8 0 0 1 1.8-2h2.7a1.8 1.8 0 0 1 1.8 1.5c.1 1 .4 2 .7 2.9a1.8 1.8 0 0 1-.4 1.9L8 11.1a14 14 0 0 0 4.9 4.9l1.3-1.3a1.8 1.8 0 0 1 1.9-.4c.9.3 1.9.6 2.9.7a1.8 1.8 0 0 1 1.5 1.8z"/></>,
+  link: <><path d="M9.5 14.5l5-5"/><path d="M11 7l1.5-1.5a4 4 0 0 1 6 6L17 13M13 17l-1.5 1.5a4 4 0 0 1-6-6L7 11"/></>,
+  download: <><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/><polyline points="7.5 11 12 15.5 16.5 11"/><line x1="12" y1="3.5" x2="12" y2="15.5"/></>,
+  upload: <><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/><polyline points="7.5 8 12 3.5 16.5 8"/><line x1="12" y1="3.5" x2="12" y2="15.5"/></>,
+  share: <><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="5.5" r="2.6"/><circle cx="18" cy="18.5" r="2.6"/><line x1="8.4" y1="10.8" x2="15.6" y2="6.7"/><line x1="8.4" y1="13.2" x2="15.6" y2="17.3"/></>,
+  trash: <><polyline points="3.5 6.5 20.5 6.5"/><path d="M8.5 6.5V4.5a1.5 1.5 0 0 1 1.5-1.5h4a1.5 1.5 0 0 1 1.5 1.5v2"/><path d="M6 6.5l1 14h10l1-14"/><line x1="10" y1="10.5" x2="10" y2="17"/><line x1="14" y1="10.5" x2="14" y2="17"/></>,
+  edit: <><path d="M11 4.5H5a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h12.5a2 2 0 0 0 2-2v-6"/><path d="M17.5 3.5a2.1 2.1 0 0 1 3 3L11 16l-4 1 1-4z"/></>,
+  filterIcon: <polygon points="3.5 5 20.5 5 14 12.5 14 19 10 21 10 12.5"/>,
+  layers: <><polygon points="12 3 21.5 8 12 13 2.5 8"/><polyline points="2.5 12.5 12 17.5 21.5 12.5"/><polyline points="2.5 17 12 22 21.5 17"/></>,
+  gift: <><rect x="3.5" y="8.5" width="17" height="4"/><rect x="5" y="12.5" width="14" height="8.5"/><line x1="12" y1="8.5" x2="12" y2="21"/><path d="M12 8.5C10 8.5 7.5 8 7.5 5.8 7.5 4.2 9 3.5 10 4c1.5.8 2 3 2 4.5zM12 8.5c2 0 4.5-.5 4.5-2.7 0-1.6-1.5-2.3-2.5-1.8-1.5.8-2 3-2 4.5z"/></>,
+  crown: <><path d="M3.5 17.5L2.5 7l5 3.5L12 4l4.5 6.5 5-3.5-1 10.5z"/><line x1="3.5" y1="20.5" x2="20.5" y2="20.5"/></>,
+  rocket: <><path d="M12 2.5c3.5 2 5 6 5 9.5l-2.5 3h-5L7 12c0-3.5 1.5-7.5 5-9.5z"/><circle cx="12" cy="9" r="1.8"/><path d="M7 12l-3 3 3.5.5M17 12l3 3-3.5.5M10 16.5L9 21l3-2 3 2-1-4.5"/></>,
+  puzzle: <><path d="M10 3.5h4v3a2 2 0 1 0 0 3.4V13h3a2 2 0 1 1 3.4 0h.1v4.5a2 2 0 0 1-2 2H14v-3a2 2 0 1 0-4 0v3H5.5a2 2 0 0 1-2-2V13h3a2 2 0 1 0 0-3.5h-3v-4a2 2 0 0 1 2-2z" fill="none"/></>,
+  hammer: <><path d="M14 5L9.5 9.5l3 3L17 8M14 5l1.5-1.5c1.5 0 4 1 5 3L19 8l-2-0M14 5l3 3"/><path d="M11 11L3.5 18.5a1.8 1.8 0 0 0 2.5 2.5L13.5 13.5"/></>,
+  wrench: <><path d="M14.5 6.5a4.5 4.5 0 0 0 5.7 5.7L13 19.5a2.5 2.5 0 0 1-3.5-3.5l7.3-7.2A4.5 4.5 0 0 0 11 3.2l3.3 3.3z"/></>,
+  truck: <><rect x="2.5" y="6.5" width="12" height="9.5"/><path d="M14.5 10h4l2.5 3.5v2.5h-6.5"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></>,
+  box: <><path d="M12 3l8.5 4.5v9L12 21l-8.5-4.5v-9z"/><polyline points="3.5 7.5 12 12 20.5 7.5"/><line x1="12" y1="12" x2="12" y2="21"/></>,
+  scissors: <><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="6.5" cy="17.5" r="2.5"/><line x1="8.7" y1="7.8" x2="20.5" y2="15.5"/><line x1="8.7" y1="16.2" x2="20.5" y2="8.5"/></>,
+  megaphone: <><path d="M3.5 10v4l11 4.5v-13z"/><path d="M14.5 8.5c2.5.5 4 1.8 4 3.5s-1.5 3-4 3.5"/><path d="M5.5 14.5l1 5a1.4 1.4 0 0 0 2.7-.5l-.7-4"/></>,
+  pin: <><path d="M12 21s-7-5.6-7-11a7 7 0 1 1 14 0c0 5.4-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></>,
+  bookmark: <path d="M6.5 3.5h11V21L12 17l-5.5 4z"/>,
+  ticket: <><path d="M3.5 8.5v-2a1 1 0 0 1 1-1h15a1 1 0 0 1 1 1v2a2.5 2.5 0 0 0 0 7v2a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1v-2a2.5 2.5 0 0 0 0-7z"/><line x1="13.5" y1="5.5" x2="13.5" y2="18.5" strokeDasharray="2.5 2.5"/></>,
+  camera2: <><path d="M3 8.5l5-1 1.5 2.5h6L17 7.5l4 1v11H3z"/><circle cx="12" cy="14" r="3"/></>,
+  music: <><circle cx="6.5" cy="17.5" r="3"/><circle cx="17.5" cy="15.5" r="3"/><path d="M9.5 17.5v-11L20.5 4v11.5"/><line x1="9.5" y1="9.5" x2="20.5" y2="7"/></>,
+  mic: <><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0"/><line x1="12" y1="18" x2="12" y2="21"/><line x1="9" y1="21" x2="15" y2="21"/></>,
+  film: <><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><line x1="7.5" y1="4.5" x2="7.5" y2="19.5"/><line x1="16.5" y1="4.5" x2="16.5" y2="19.5"/><line x1="3.5" y1="9" x2="7.5" y2="9"/><line x1="3.5" y1="14" x2="7.5" y2="14"/><line x1="16.5" y1="9" x2="20.5" y2="9"/><line x1="16.5" y1="14" x2="20.5" y2="14"/></>,
+  tv: <><rect x="3" y="6.5" width="18" height="12.5" rx="2"/><polyline points="8.5 3 12 6.5 15.5 3"/></>,
+  newspaper: <><path d="M4.5 4.5h13v15a1.5 1.5 0 0 0 1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M17.5 8h2.5v11.5a1.5 1.5 0 0 1-1.5 1.5"/><line x1="7.5" y1="8" x2="14.5" y2="8"/><line x1="7.5" y1="11.5" x2="14.5" y2="11.5"/><line x1="7.5" y1="15" x2="11.5" y2="15"/></>,
+  palette: <><path d="M12 3a9 9 0 0 0 0 18c1.5 0 2-.9 2-2 0-1.5-1.5-2 0-3.5 1-1 6 1.5 7-4A9 9 0 0 0 12 3z"/><circle cx="7.5" cy="11" r="1" fill="currentColor" stroke="none"/><circle cx="10" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="7" r="1" fill="currentColor" stroke="none"/><circle cx="17" cy="10.5" r="1" fill="currentColor" stroke="none"/></>,
+  glasses: <><circle cx="7" cy="14.5" r="3.5"/><circle cx="17" cy="14.5" r="3.5"/><path d="M10.5 14.5a1.8 1.8 0 0 1 3 0M3.5 14.5L5 7h2M20.5 14.5L19 7h-2"/></>,
+  shirt: <><path d="M9 4L4 7l2 4 2-1v10h8V10l2 1 2-4-5-3a3 3 0 0 1-6 0z"/></>,
+  shoppingBag: <><path d="M5.5 8h13l-1 12.5h-11z"/><path d="M9 10.5V6.5a3 3 0 0 1 6 0v4"/></>,
+  cart: <><circle cx="9.5" cy="19.5" r="1.6"/><circle cx="17.5" cy="19.5" r="1.6"/><path d="M3 4h2.5L8 15h11l2.5-8.5H6"/></>,
+  storefront: <><path d="M4 10v10.5h16V10"/><path d="M3 7l1.5-3.5h15L21 7a2.6 2.6 0 0 1-5.2 0 2.7 2.7 0 0 1-3.8.2A2.7 2.7 0 0 1 8.2 7 2.6 2.6 0 0 1 3 7z"/><path d="M9.5 20.5v-6h5v6"/></>,
+  baby: <><circle cx="12" cy="8" r="4.5"/><path d="M12 3.5c.4-.8 1.4-1.2 2-1M5.5 13.5c-1.4.6-2 2.2-1.3 3.5.6 1.2 2.2 1.6 3.4.8M18.5 13.5c1.4.6 2 2.2 1.3 3.5-.6 1.2-2.2 1.6-3.4.8"/><path d="M8 14.5c0 4 1.8 6 4 6s4-2 4-6"/></>,
+  group: <><circle cx="8.5" cy="8.5" r="3"/><path d="M3 19a5.5 5.5 0 0 1 11 0"/><circle cx="16.5" cy="9.5" r="2.5"/><path d="M15.5 14.6a5 5 0 0 1 5.5 4.4"/></>,
+  idCard: <><rect x="2.5" y="5" width="19" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><path d="M5 16.5a3.3 3.3 0 0 1 6 0"/><line x1="14" y1="9.5" x2="19" y2="9.5"/><line x1="14" y1="13" x2="19" y2="13"/></>,
+  fingerprint: <><path d="M7 19.5c-1-3 .2-5 .2-7.5a4.8 4.8 0 0 1 9.6 0c0 3.5-.3 6-1.3 8.5"/><path d="M12 12c0 3-.3 6-1.5 9M4.5 15c-.4-1.2-.5-2-.5-3a8 8 0 0 1 13-6.2M19.5 9.5c.4.8.5 1.6.5 2.5 0 2.5-.2 4.5-.7 6.5"/></>,
+  qr: <><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><line x1="13.5" y1="13.5" x2="13.5" y2="17"/><line x1="17" y1="13.5" x2="20.5" y2="13.5"/><line x1="17" y1="17" x2="17" y2="20.5"/><line x1="20.5" y1="17" x2="20.5" y2="20.5"/></>,
+  signal: <><line x1="5" y1="20" x2="5" y2="16"/><line x1="9.5" y1="20" x2="9.5" y2="12.5"/><line x1="14" y1="20" x2="14" y2="9"/><line x1="18.5" y1="20" x2="18.5" y2="5"/></>,
+  battery2: <><rect x="2.5" y="8" width="16" height="8" rx="2"/><line x1="21.5" y1="10.5" x2="21.5" y2="13.5"/><line x1="6" y1="10.5" x2="6" y2="13.5"/><line x1="9" y1="10.5" x2="9" y2="13.5"/><line x1="12" y1="10.5" x2="12" y2="13.5"/></>,
+  hourglass: <><path d="M6.5 3.5h11M6.5 20.5h11M7.5 3.5v3.5L12 12l4.5-5V3.5M7.5 20.5V17L12 12l4.5 5v3.5"/></>,
+  infinity: <path d="M9.4 9.4a3.7 3.7 0 1 0 0 5.2L14.6 9.4a3.7 3.7 0 1 1 0 5.2z"/>,
+  anchor: <><circle cx="12" cy="5.5" r="2.5"/><line x1="12" y1="8" x2="12" y2="21"/><path d="M4 13a8 8 0 0 0 16 0M4 13H2.5M20 13h1.5"/></>,
+  feather: <><path d="M19.5 4.5c-5-1.5-10 1.5-12 6.5-1 2.5-1 5-1 7l-2.5 2.5"/><path d="M19.5 4.5c1.5 5-1.5 10-6.5 12-2.5 1-5 1-7 1"/><line x1="7.5" y1="16" x2="16" y2="7.5"/></>,
+  umbrella: <><path d="M12 3a9.5 9.5 0 0 1 9.5 9H2.5A9.5 9.5 0 0 1 12 3z"/><path d="M12 12v6.5a2 2 0 0 0 4 0"/><line x1="12" y1="3" x2="12" y2="2"/></>,
+  snowman: <><circle cx="12" cy="7" r="3.5"/><circle cx="12" cy="16" r="5"/><circle cx="12" cy="14.5" r=".5" fill="currentColor"/><circle cx="12" cy="17.5" r=".5" fill="currentColor"/><line x1="7" y1="13.5" x2="3.5" y2="11.5"/><line x1="17" y1="13.5" x2="20.5" y2="11.5"/></>,
+  thermometerSun: <><path d="M16.5 4a2 2 0 0 1 4 0v9.2a4.2 4.2 0 1 1-4 0z"/><line x1="18.5" y1="8" x2="18.5" y2="15"/><circle cx="7" cy="8" r="3"/><line x1="7" y1="2.5" x2="7" y2="4"/><line x1="2.5" y1="8" x2="4" y2="8"/><line x1="3.7" y1="4.7" x2="4.8" y2="5.8"/><line x1="7" y1="12" x2="7" y2="13.5"/><line x1="3.7" y1="11.3" x2="4.8" y2="10.2"/></>,
+  binoculars: <><circle cx="6.5" cy="15.5" r="3.5"/><circle cx="17.5" cy="15.5" r="3.5"/><path d="M10 15.5v-9a1.5 1.5 0 0 0-3 0L6.5 12M14 15.5v-9a1.5 1.5 0 0 1 3 0l.5 5.5M10 12.5h4"/></>,
+  flagCheckered: <><line x1="5" y1="3" x2="5" y2="21"/><path d="M5 4h14l-2.5 4L19 12H5"/><path d="M8.5 4v8M12 4v8M15.5 4.6v7.6"/><path d="M5 8h14" strokeDasharray="3 3"/></>,
+  alarm: <><circle cx="12" cy="13.5" r="7"/><polyline points="12 9.5 12 13.5 15 15"/><path d="M4.5 5.5L7 3.5M19.5 5.5L17 3.5"/></>,
+  stamp: <><path d="M9.5 9.5C8.5 8 8 6.8 8 5.8a4 4 0 0 1 8 0c0 1-.5 2.2-1.5 3.7L14 13h-4z"/><path d="M5 17a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1.5H5z"/><line x1="5" y1="21" x2="19" y2="21"/></>,
+  balloon: <><ellipse cx="12" cy="9" rx="5.5" ry="6.5"/><path d="M12 15.5l-1 1.5h2zM12 17c0 2-1.5 2.5-1.5 4.5"/></>,
+  confetti: <><path d="M6.5 10.5L3 21l10.5-3.5z"/><path d="M7.5 13.5c1 1.5 2 2.5 3.5 3.5"/><line x1="14" y1="6" x2="14.5" y2="4"/><line x1="18" y1="9" x2="20" y2="8.5"/><path d="M15.5 11.5c1.5-1.5 3-1.5 4.5-3M13 8.5c0-2 1-3 .5-5"/></>,
+  trophy2: <><path d="M8 4h8v6a4 4 0 0 1-8 0z"/><path d="M8 5.5H4.8a3.2 3.2 0 0 0 3.4 3.4M16 5.5h3.2a3.2 3.2 0 0 1-3.4 3.4"/><line x1="12" y1="14" x2="12" y2="17"/><path d="M8.5 20.5v-1.5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5z"/></>,
+  speed: <><path d="M3.5 17a8.5 8.5 0 1 1 17 0"/><line x1="12" y1="14" x2="16.5" y2="8.5"/><circle cx="12" cy="15" r="1.4" fill="currentColor" stroke="none"/></>,
+  recycle: <><path d="M7 9.5L9.5 5h3l-2 4M14 5l3.5 6-2.5 1.5M19 14l1.5 3-2.5 4h-4M16 21l-2-3.5 2.5-1.5M8 21H5l-2-3.5L5 14M4 16.5L6.5 15l1.5 2.5"/></>,
+  sword: <><line x1="4" y1="20" x2="14.5" y2="9.5"/><path d="M14.5 9.5L19.5 3l1.5 1.5-6.5 5"/><line x1="6.5" y1="14" x2="10" y2="17.5"/><line x1="4" y1="16.5" x2="7.5" y2="20"/></>,
+  castle: <><path d="M5 20.5V8l2-1.5V4h2v2h2V4h2v2h2V4h2v2.5L19 8v12.5"/><line x1="3.5" y1="20.5" x2="20.5" y2="20.5"/><path d="M10 20.5v-4.5a2 2 0 0 1 4 0v4.5"/></>,
+  pyramid: <><path d="M12 3.5L21.5 19.5H2.5z"/><line x1="12" y1="3.5" x2="9" y2="19.5"/></>,
+  scroll: <><path d="M6 4.5h11a2.5 2.5 0 0 1 2.5 2.5v10"/><path d="M19.5 17a2.5 2.5 0 0 1-5 0V7a2.5 2.5 0 0 0-2.5-2.5"/><path d="M14.5 17a2.5 2.5 0 0 1-2.5 2.5H6A2.5 2.5 0 0 1 3.5 17v-1h11z"/></>,
+  hieroglyph: <><circle cx="12" cy="7" r="3.5"/><path d="M12 10.5v10M8 14h8M9 20.5h6"/></>,
+  lantern: <><line x1="12" y1="2.5" x2="12" y2="4.5"/><path d="M8 4.5h8M8.5 4.5C7 6.5 6 9 6 11.5c0 3.7 2.5 6 6 6s6-2.3 6-6c0-2.5-1-5-2.5-7"/><line x1="12" y1="4.5" x2="12" y2="17.5"/><path d="M9.5 20.5h5M12 17.5v3"/></>,
+  mirror: <><ellipse cx="12" cy="10" rx="6" ry="7.5"/><line x1="12" y1="17.5" x2="12" y2="21"/><line x1="9" y1="21" x2="15" y2="21"/><path d="M9 7.5c.5-1.5 1.5-2.5 3-3"/></>,
+  perfume: <><rect x="8" y="10" width="8" height="10.5" rx="2.5"/><path d="M10.5 10V7.5h3V10M12 7.5v-2"/><path d="M15.5 4.5h3M17 3v3"/></>,
+  ring2: <><circle cx="12" cy="14" r="6.5"/><path d="M9.5 7.5L12 3.5l2.5 4-2.5 1.5z"/></>,
+  hanger: <><path d="M12 6a2 2 0 1 1 2-2"/><path d="M12 6L3 13.5a1.5 1.5 0 0 0 1 2.6h16a1.5 1.5 0 0 0 1-2.6z"/></>,
+  bed: <><path d="M3.5 18.5v-12"/><path d="M3.5 14.5h17v4"/><path d="M3.5 11.5h7v3"/><circle cx="7" cy="9.5" r="1.7"/><path d="M10.5 11.5h7a3 3 0 0 1 3 3"/></>,
+  sofa: <><path d="M5.5 11V8.5a3 3 0 0 1 3-3h7a3 3 0 0 1 3 3V11"/><path d="M3.5 16.5v-3a2 2 0 0 1 4 0v.5h9v-.5a2 2 0 0 1 4 0v3a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><line x1="6" y1="18.5" x2="6" y2="20.5"/><line x1="18" y1="18.5" x2="18" y2="20.5"/></>,
+  door: <><rect x="6.5" y="3.5" width="11" height="17"/><line x1="3.5" y1="20.5" x2="20.5" y2="20.5"/><circle cx="14.5" cy="12" r=".8" fill="currentColor" stroke="none"/></>,
+  window2: <><rect x="4.5" y="4.5" width="15" height="15" rx="1"/><line x1="12" y1="4.5" x2="12" y2="19.5"/><line x1="4.5" y1="12" x2="19.5" y2="12"/></>,
+  broom: <><line x1="18.5" y1="3.5" x2="11.5" y2="10.5"/><path d="M11.5 10.5L5 17c-1 1-1.5 3 0 3.5 2.5.8 6-1 8-3l1.5-4z"/><line x1="8" y1="15" x2="10.5" y2="17.5"/></>,
+  soap: <><rect x="5" y="9.5" width="10" height="11" rx="2.5"/><path d="M8 9.5V8a2 2 0 0 1 2-2h1"/><circle cx="17.5" cy="6" r="1.4"/><circle cx="19.5" cy="10" r="1"/></>,
+  towel: <><path d="M7 3.5h12v14H9"/><path d="M7 3.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10v-3"/><line x1="7" y1="3.5" x2="7" y2="17.5"/></>,
+  basket: <><path d="M4.5 9.5h15l-1.5 11h-12z"/><path d="M8.5 9.5L12 3.5l3.5 6M7.5 13l.7 4M12 13v4M16.5 13l-.7 4"/></>,
+  candle: <><rect x="9" y="10.5" width="6" height="10"/><line x1="12" y1="10.5" x2="12" y2="8"/><path d="M12 7.5c-1 0-1.6-.9-1.2-1.8L12 3.5l1.2 2.2c.4.9-.2 1.8-1.2 1.8z"/><line x1="6.5" y1="20.5" x2="17.5" y2="20.5"/></>,
+  clock24: <><circle cx="12" cy="12" r="8.5"/><polyline points="12 7.5 12 12 8.5 14"/></>,
+  calendarCheck: <><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><line x1="3.5" y1="9.7" x2="20.5" y2="9.7"/><line x1="8" y1="3" x2="8" y2="6.6"/><line x1="16" y1="3" x2="16" y2="6.6"/><polyline points="9 14.5 11.2 16.7 15.3 12.6"/></>,
+  pinwheel: <><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><path d="M12 12C12 7 9 5 5.5 5 5.5 9.5 8 12 12 12zM12 12c5 0 7-3 7-6.5C14.5 5.5 12 8 12 12zM12 12c0 5 3 7 6.5 7 0-4.5-2.5-7-6.5-7zM12 12c-5 0-7 3-7 6.5 4.5 0 7-2.5 7-6.5z"/></>,
+  honeycomb: <><path d="M9 3.5h6l3 5-3 5H9l-3-5z"/><path d="M9 13.5h6l3 5-1.8 3H7.8L6 18.5z" fill="none"/></>,
+  spark: <><path d="M12 3l1.8 5.7L19.5 10.5l-5.7 1.8L12 18l-1.8-5.7L4.5 10.5l5.7-1.8z"/><circle cx="19" cy="18" r="1.6"/></>,
+  orbit: <><circle cx="12" cy="12" r="3.2"/><ellipse cx="12" cy="12" rx="9.2" ry="4.6" transform="rotate(-25 12 12)"/><circle cx="19.5" cy="7" r="1.3" fill="currentColor" stroke="none"/></>,
+  badge: <><circle cx="12" cy="9.5" r="6"/><path d="M12 6.7l.9 1.8 2 .3-1.4 1.4.3 2-1.8-1-1.8 1 .3-2L9.1 8.8l2-.3z" fill="currentColor" stroke="none"/><path d="M8.5 14.5l-1.5 7 5-3 5 3-1.5-7"/></>,
 };
 const EMOJI_TO_PICTO = { "☀️":"sun","🌞":"sun","⛅":"cloud","☁️":"cloud","🌧":"rain","🌧️":"rain","⛈":"storm","🌩":"storm","❄️":"snow","🌨":"snow","🌬️":"wind","💨":"wind","💧":"humidity","🌡️":"temp","🌡":"temp","📅":"calendar","🗓️":"calendar","📍":"location","🏆":"trophy","🥇":"trophy","⏰":"clock","🕐":"clock","📘":"book","📚":"book","📖":"book","🕌":"mosque","📊":"chart","📈":"chart","💰":"money","💵":"money","⭐":"star","🌟":"star","ℹ️":"info","✅":"check","✔️":"check","🚩":"flag","🏁":"flag","👤":"user","✈️":"plane","🍽️":"food","🍴":"food","🛡️":"shield","⚡":"bolt","🌙":"moon","🌜":"moon" };
 function pictoName(v) {
@@ -81,6 +294,30 @@ function pictoName(v) {
   if (EMOJI_TO_PICTO[v]) return EMOJI_TO_PICTO[v];
   return null;
 }
+/* ============ عدّاد تنازلي حي ============ */
+function Countdown({ target, T, a, F }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
+  const ms = new Date(target).getTime() - now;
+  if (isNaN(ms)) return null;
+  const done = ms <= 0;
+  const d = Math.max(0, Math.floor(ms / 86400000));
+  const h = Math.max(0, Math.floor(ms / 3600000) % 24);
+  const m = Math.max(0, Math.floor(ms / 60000) % 60);
+  const sNum = Math.max(0, Math.floor(ms / 1000) % 60);
+  const cells = [[d, "يوم"], [h, "ساعة"], [m, "دقيقة"], [sNum, "ثانية"]];
+  return (
+    <div dir="ltr" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 9 }}>
+      {cells.map(([v, l], i) => (
+        <div key={i} style={{ background: T.pillFill, border: `1px solid ${T.line}`, borderRadius: 13, padding: "13px 6px", textAlign: "center" }}>
+          <div style={{ fontSize: F.h1 + 2, fontWeight: 800, color: done ? T.faint : a, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{String(v).padStart(2, "0")}</div>
+          <div style={{ fontSize: F.label, color: T.sub, marginTop: 6, fontWeight: 600 }}>{l}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function Pictogram({ name, size = 18, color = "currentColor", strokeWidth = 1.8 }) {
   const p = PICTO_PATHS[name] || PICTO_PATHS.info;
   return (
@@ -259,6 +496,7 @@ export default function App() {
     mode: "auto",        // light | dark | auto
     lang: "ar",          // ar | en
     fontSize: "medium",  // small | medium | large
+    timeFmt: "12",       // 12 | 24
     showSuggestions: true,
   });
 
@@ -306,6 +544,7 @@ export default function App() {
   const T = THEMES[effectiveMode];
   const t = TRANSLATIONS[settings.lang];
   const F = FONT_SIZES[settings.fontSize];
+  if (typeof window !== "undefined") window.__marnTimeFmt = settings.timeFmt || "12";
   const isRTL = settings.lang === "ar";
 
   /* ===== التحميل ===== */
@@ -562,6 +801,7 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          timeFormat: settings.timeFmt || "12",
           question: (() => {
             const pre = [];
             if (agentDirective) pre.push(agentDirective);
@@ -1284,6 +1524,11 @@ function SettingsPanel({ T, t, F, settings, setSettings, effectiveMode, clearAll
         { value: "large", label: t.large },
       ], v => setSettings({ ...settings, fontSize: v })))}
 
+      {setItem(<Icon.Globe />, settings.lang === "ar" ? "صيغة الوقت" : "Time format", segmented(settings.timeFmt || "12", [
+        { value: "12", label: settings.lang === "ar" ? "١٢ س" : "12h" },
+        { value: "24", label: settings.lang === "ar" ? "٢٤ س" : "24h" },
+      ], v => setSettings({ ...settings, timeFmt: v })))}
+
       {section(t.language)}
       {setItem(<Icon.Globe />, t.language, segmented(settings.lang, [
         { value: "ar", label: "AR" },
@@ -1516,7 +1761,7 @@ function EmptyState({ T, t, F, send, settings, userProfile, onOpenView, agent, o
 /* ============ عنصر الرسالة ============ */
 function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard, activeChat,
   editingMsg, setEditingMsg, onEditSend, onRegenerate, onSelect, thinking, stage }) {
-  const timeStr = m.at ? formatTime(m.at, lang) : "";
+  const timeStr = m.at ? formatTime(m.at, lang, (typeof window !== "undefined" && window.__marnTimeFmt) || "12") : "";
   const isEditing = editingMsg && editingMsg.idx === idx;
   const [editDraft, setEditDraft] = useState(m.text || "");
 
@@ -2891,6 +3136,15 @@ function TabContent({ tab, a, T, F }) {
         </div>
       );
 
+    case "countdown":
+      return (
+        <div>
+          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 14px", lineHeight:1.7 }}>{d.intro}</p>}
+          <Countdown target={d.target} T={T} a={a} F={F} />
+          {d.label && <div style={{ textAlign:"center", marginTop:12, fontSize:F.base-1, color:T.sub, fontWeight:600 }}>{d.label}</div>}
+        </div>
+      );
+
     case "chart": {
       const labels = d.labels || [];
       const vals = (d.values || []).map(Number);
@@ -3009,10 +3263,10 @@ function RenameModal({ T, t, F, isRTL, currentTitle, onSave, onCancel }) {
   );
 }
 
-function formatTime(ts, lang) {
+function formatTime(ts, lang, fmt) {
   if (!ts) return "";
   const d = new Date(ts);
-  const opts = { hour: "2-digit", minute: "2-digit" };
+  const opts = { hour: "2-digit", minute: "2-digit", hour12: fmt !== "24" };
   return d.toLocaleTimeString(lang === "ar" ? "ar-SA" : "en-US", opts);
 }
 
