@@ -44,6 +44,7 @@ const MODELS_TO_TRY = [
 /* ===== كشف البحث ===== */
 const SEARCH_PATTERNS = [
   /اليوم|أمس|الآن|حالي|الحالية|أحدث|آخر|جديد|مؤخر|قادم|المقبل/i,
+  /أحداث|الأحداث|حدث |مستجدات|تطورات|عاجل|وش صاير|ايش صاير|وش الجديد/i,
   /today|yesterday|now|current|latest|recent|breaking|upcoming/i,
   /متى|أين|كم|من هو|من هي|من فاز|ما هو|ما هي/i,
   /when|where|how many|how much|who is|who won|what is/i,
@@ -193,6 +194,13 @@ ${isAr
 ✨ كن سخياً بالإضافات: لا تكتفِ بالمطلوب حرفياً. أضف كل ما يثري الإجابة ويفاجئ المستخدم — لو عشر إضافات، ضيفها. اسأل نفسك "وش الشي اللي بيخلي المستخدم يقول: واو، ما توقعت!" وأضفه. مثال: سؤال عن لاعب → أضف إنجازاته وأرقامه وراتبه ومقارنته. سؤال عن مدينة → أضف الطقس والمعالم والمطاعم وأفضل وقت للزيارة وحقائق مدهشة.`
   : `RULE #1 — Every answer must contain EVERYTHING the user might want to know, in ONE response. Minimum 4 tabs, ideally 5-6. Never ask for clarification. Break large info into separate lists.`
 }
+
+# ${isAr ? "🚫 قاعدة الصدق المطلق (تتقدم على كل القواعد)" : "Absolute honesty rule (overrides everything)"}
+${isAr ? `- الأخبار والنتائج والأسعار والإصدارات والوقائع الجارية تُنقل **حصراً من نتائج البحث المرفقة في هذه الرسالة**. ممنوع منعاً باتاً اختراع: عناوين أخبار، نتائج مباريات، إطلاقات منتجات، أرقام إصدارات، أسماء بطولات أو برامج، إحصاءات وضحايا — حتى لو بدت منطقية.
+- إذا لم تتوفر نتائج بحث تغطي ما طُلب (أو فئة منه كالرياضة أو التقنية): قلها صراحة في تبويب نصي قصير («لا تتوفر لدي نتائج موثوقة الآن عن هذا — جرّب تفعيل البحث الحي أو أعد صياغة السؤال») ولا تملأ الفراغ بتخمين أبداً. إجابة ناقصة صادقة أفضل ألف مرة من إجابة مكتملة مزيفة.
+- المعرفة الثابتة (تواريخ تاريخية، مفاهيم علمية، حقائق مستقرة) مسموح بها من معرفتك مع الدقة.` : `- News, scores, prices, releases and current events must come EXCLUSIVELY from the attached search results. Inventing headlines, match scores, product launches, version numbers, tournament names, or casualty figures is strictly forbidden — even if plausible.
+- If search results don't cover what was asked (or a category of it): say so explicitly in a short text tab and never fill gaps with guesses. An honest incomplete answer beats a fabricated complete one.
+- Stable knowledge (historical dates, scientific concepts) may come from your training, accurately.`}
 
 # ${isAr ? "🎯 اختيار القالب المتخصّص (إلزامي قبل أي شيء)" : "Specialized template selection (mandatory)"}
 ${isAr ? `لكل موضوع قالب بصري متخصّص يجعل الإجابة تبدو **تطبيقاً كاملاً** لذلك الموضوع. القاعدة: إذا انطبق قالب متخصّص فاستخدامه **إجباري** ويكون **التبويب الأول**، ولا تكتفِ بـstats/facts العامة إلا حين لا يوجد قالب مناسب:
@@ -494,7 +502,13 @@ export default async function handler(req, res) {
   const FATWA_DOMAINS = ["binbaz.org.sa", "alifta.gov.sa", "islamqa.info", "islamweb.net", "dorar.net"];
   const shouldSearch = !isCasualChat && tavilyKey && (forceSearch || isFatwa || needsSearch(question));
   if (shouldSearch) {
-    const results = await searchWeb(question, tavilyKey, isFatwa ? FATWA_DOMAINS : null);
+    // الأسئلة التكميلية القصيرة: ابنِ استعلام البحث من سياق المحادثة
+    let searchQuery = question;
+    if (question.length < 70 && Array.isArray(history) && history.length) {
+      const prevQs = history.filter(h => h.role === "user").map(h => String(h.content || "")).slice(-2);
+      if (prevQs.length) searchQuery = `${prevQs.join(" ")} — ${question}`;
+    }
+    const results = await searchWeb(searchQuery, tavilyKey, isFatwa ? FATWA_DOMAINS : null);
     if (results && results.text) {
       searchBlock = isFatwa
         ? `\n\n===== فتاوى ونصوص من مصادر موثوقة (ابن باز، اللجنة الدائمة، إسلام ويب، الدرر السنية) =====\n⚠️ انقل الحكم والأدلة من هذه النصوص حصراً مع نسبتها. لا تجتهد من عندك.\n${results.text}\n===== END =====`
