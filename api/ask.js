@@ -495,6 +495,7 @@ export default async function handler(req, res) {
     question = body?.question;
     history = Array.isArray(body?.history) ? body.history.slice(-8) : [];
     timeFormat = body?.timeFormat === "24" ? "24" : "12";
+    var cachedKnowledge = typeof body?.cachedKnowledge === "string" ? body.cachedKnowledge.slice(0, 4000) : "";
     lang = body?.lang === "en" ? "en" : "ar";
     forceSearch = body?.forceSearch === true;
     userProfile = body?.userProfile || null;
@@ -515,7 +516,7 @@ export default async function handler(req, res) {
 
   // ===== توجيه ذكي حسب نية السؤال — ينتقل تلقائياً بين المساعدين =====
   const GENERAL_DOMAINS = /طقس|حرار|مطر|رياح|مباراة|مباريات|الدوري|كأس|نتيجة|ترتيب|تشكيلة|سعر|أسعار|سهم|أسهم|عملة|دولار|بتكوين|ذهب|نفط|أخبار|خبر|weather|temperature|rain|match|league|score|standings|stock|price|bitcoin|news/i;
-  const RELIGIOUS_INTENT = /ما حكم|حكم |هل يجوز|يجوز |حرام|حلال|الصلا[ةه]|صلاة|أصلي|الصيام|الصوم|أصوم|زكا[ةه]|وضوء|طهار|الغسل|عمر[ةه]|الحج|فتوى|أذكار|القرآن|سور[ةه]|آي[ةه]|حديث|السن[ةه] النبوي|بدع[ةه]|نكاح|طلاق|ميراث|ربا|يمين|حلفت|نذر|كفار[ةه]|قضاء الصلا|الجمع والقصر|سجود السهو/;
+  const RELIGIOUS_INTENT = /(?<![\u0621-\u064A])(?:ما حكم|حكم|هل يجوز|يجوز|حرام|حلال|صلاة|الصلاه|أصلي|الصيام|الصوم|أصوم|زكاة|زكاه|وضوء|طهارة|الغسل|عمرة|عمره|الحج|فتوى|أذكار|القرآن|سورة|سوره|آية|آيه|حديث|السنة النبوية|بدعة|بدعه|نكاح|طلاق|ميراث|ربا|يمين|حلفت|نذر|كفارة|كفاره|قضاء الصلاة|الجمع والقصر|سجود السهو)(?![\u0621-\u064A])/;
   const EDU_INTENT = /اشرح|درس |الدرس|مذاكر|أذاكر|اختبار|امتحان|واجب|منهج|رياضيات|فيزياء|كيمياء|أحياء|نحو|إعراب|بلاغ[ةه]|مسأل[ةه]|حل تمرين|تمارين|خط[ةه] دراس|خطة مذاكرة|بطاقات مراجع|فلاش كارد|معادل[ةه]|نظري[ةه]|قانون نيوتن|جدول الضرب/;
   let effectiveAgent = agent;
   if (GENERAL_DOMAINS.test(question)) effectiveAgent = "marn";
@@ -541,7 +542,13 @@ export default async function handler(req, res) {
   const isFatwa = effectiveAgent === "fatwa";
   const FATWA_DOMAINS = ["binbaz.org.sa", "alifta.gov.sa", "islamqa.info", "islamweb.net", "dorar.net"];
   const shouldSearch = !isCasualChat && tavilyKey && (forceSearch || isFatwa || needsSearch(question));
-  if (shouldSearch) {
+  let servedFromCache = false;
+  if (shouldSearch && cachedKnowledge && !isFatwa) {
+    // 🧠 اقتصاد البحث: معرفة محفوظة حديثة من بحث سابق — لا حاجة لبحث جديد
+    searchBlock = "\n\n# 🧠 معرفة محفوظة من بحث حي سابق قريب (هذا مصدرك الوحيد للوقائع — انقل منه ولا تؤلف ما ليس فيه، وإن لم يغطِّ جزءاً من السؤال فقل ذلك):\n" + cachedKnowledge;
+    servedFromCache = true;
+  }
+  if (shouldSearch && !servedFromCache) {
     // الأسئلة التكميلية القصيرة: ابنِ استعلام البحث من سياق المحادثة
     let searchQuery = question;
     if (question.length < 70 && Array.isArray(history) && history.length) {
@@ -747,7 +754,7 @@ export default async function handler(req, res) {
           }
         }
 
-        const result = { card, model_used: model, searched: didSearch, sources, agent_used: effectiveAgent };
+        const result = { card, model_used: model, searched: servedFromCache ? "cache" : didSearch, sources, agent_used: effectiveAgent };
         setCache(question, lang, agent, result);
         return res.status(200).json(result);
 
