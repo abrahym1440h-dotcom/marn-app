@@ -45,6 +45,52 @@ const SCENE_T = {
   dotIdle: "rgba(255,255,255,0.45)",
 };
 
+/* ============ نظام الأيقونات الرسمي (SVG — بلا إيموجي) ============ */
+const PICTO_PATHS = {
+  sun: <><circle cx="12" cy="12" r="4.2"/><line x1="12" y1="2.5" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="21.5"/><line x1="2.5" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="21.5" y2="12"/><line x1="5.3" y1="5.3" x2="7" y2="7"/><line x1="17" y1="17" x2="18.7" y2="18.7"/><line x1="5.3" y1="18.7" x2="7" y2="17"/><line x1="17" y1="7" x2="18.7" y2="5.3"/></>,
+  moon: <path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z"/>,
+  cloud: <path d="M17.5 18.5H7a4.5 4.5 0 1 1 .8-8.93A6 6 0 0 1 19.4 12a3.5 3.5 0 0 1-1.9 6.5z"/>,
+  rain: <><path d="M17.5 14.5H7a4.5 4.5 0 1 1 .8-8.93A6 6 0 0 1 19.4 8a3.5 3.5 0 0 1-1.9 6.5z"/><line x1="8.5" y1="18" x2="8" y2="20.5"/><line x1="12.5" y1="18" x2="12" y2="20.5"/><line x1="16.5" y1="18" x2="16" y2="20.5"/></>,
+  storm: <><path d="M17.5 13.5H7a4.5 4.5 0 1 1 .8-8.93A6 6 0 0 1 19.4 7a3.5 3.5 0 0 1-1.9 6.5z"/><polyline points="12.5 14.5 10 18.5 13 18.5 11 22"/></>,
+  snow: <><path d="M17.5 14.5H7a4.5 4.5 0 1 1 .8-8.93A6 6 0 0 1 19.4 8a3.5 3.5 0 0 1-1.9 6.5z"/><line x1="8.5" y1="18.6" x2="8.5" y2="18.7"/><line x1="12.5" y1="20.2" x2="12.5" y2="20.3"/><line x1="16.5" y1="18.6" x2="16.5" y2="18.7"/></>,
+  wind: <><path d="M3.5 8h10a2.6 2.6 0 1 0-2.6-2.6"/><path d="M3.5 12.5h14.5a2.8 2.8 0 1 1-2.8 2.8"/><path d="M3.5 17h7a2.3 2.3 0 1 1-2.3 2.3"/></>,
+  humidity: <path d="M12 3.2s6.2 6.6 6.2 11a6.2 6.2 0 1 1-12.4 0c0-4.4 6.2-11 6.2-11z"/>,
+  temp: <><path d="M10.5 4a2 2 0 0 1 4 0v9.2a4.2 4.2 0 1 1-4 0z"/><line x1="12.5" y1="8" x2="12.5" y2="15"/></>,
+  calendar: <><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><line x1="3.5" y1="9.7" x2="20.5" y2="9.7"/><line x1="8" y1="3" x2="8" y2="6.6"/><line x1="16" y1="3" x2="16" y2="6.6"/></>,
+  location: <><path d="M12 21s-7-5.6-7-11a7 7 0 1 1 14 0c0 5.4-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></>,
+  trophy: <><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 5.5H4.8a3.2 3.2 0 0 0 3.4 3.4"/><path d="M16 5.5h3.2a3.2 3.2 0 0 1-3.4 3.4"/><line x1="12" y1="13" x2="12" y2="17"/><line x1="8.5" y1="20" x2="15.5" y2="20"/></>,
+  clock: <><circle cx="12" cy="12" r="8.5"/><polyline points="12 7 12 12 15.5 14"/></>,
+  book: <><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15.5H6.5A2.5 2.5 0 0 0 4 21z"/><line x1="4" y1="18.5" x2="4" y2="5.5"/></>,
+  mosque: <><path d="M12 3c2.6 2 4.5 3.7 4.5 6H7.5C7.5 6.7 9.4 5 12 3z"/><path d="M5 9.5h14v4H5z" fill="none"/><path d="M4 13.5h16V20a1 1 0 0 1-1 1h-4v-4a3 3 0 0 0-6 0v4H5a1 1 0 0 1-1-1z"/></>,
+  chart: <><line x1="4" y1="20" x2="20" y2="20"/><rect x="6" y="11" width="3" height="9" rx="0.8"/><rect x="11" y="6" width="3" height="14" rx="0.8"/><rect x="16" y="14" width="3" height="6" rx="0.8"/></>,
+  money: <><rect x="3" y="6.5" width="18" height="11" rx="2"/><circle cx="12" cy="12" r="2.6"/><line x1="6.4" y1="12" x2="6.4" y2="12.01"/><line x1="17.6" y1="12" x2="17.6" y2="12.01"/></>,
+  star: <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>,
+  info: <><circle cx="12" cy="12" r="8.5"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8.01"/></>,
+  check: <><circle cx="12" cy="12" r="8.5"/><polyline points="8.5 12.3 11 14.8 15.8 9.6"/></>,
+  flag: <><line x1="5" y1="3.5" x2="5" y2="21"/><path d="M5 4.5h13l-3 4 3 4H5"/></>,
+  user: <><circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/></>,
+  plane: <path d="M10.5 13.5L4 11l1.5-1.5 5.5.8 4.6-4.6a1.6 1.6 0 0 1 2.3 2.3l-4.6 4.6.8 5.5L12.5 20l-2.5-6.5z"/>,
+  food: <><path d="M7 3.5v7a2 2 0 0 0 4 0v-7"/><line x1="9" y1="3.5" x2="9" y2="20.5"/><path d="M16.5 3.5c-1.8 1.2-2.5 3.6-2.5 6 0 1.6 1 2.5 2.5 2.5V20.5"/></>,
+  shield: <path d="M12 3l7 2.8v5.4c0 4.6-3 8-7 9.8-4-1.8-7-5.2-7-9.8V5.8z"/>,
+  bolt: <polyline points="13 3 6 13.5 11 13.5 10.5 21 17.5 10.5 12.5 10.5 13 3"/>,
+};
+const EMOJI_TO_PICTO = { "☀️":"sun","🌞":"sun","⛅":"cloud","☁️":"cloud","🌧":"rain","🌧️":"rain","⛈":"storm","🌩":"storm","❄️":"snow","🌨":"snow","🌬️":"wind","💨":"wind","💧":"humidity","🌡️":"temp","🌡":"temp","📅":"calendar","🗓️":"calendar","📍":"location","🏆":"trophy","🥇":"trophy","⏰":"clock","🕐":"clock","📘":"book","📚":"book","📖":"book","🕌":"mosque","📊":"chart","📈":"chart","💰":"money","💵":"money","⭐":"star","🌟":"star","ℹ️":"info","✅":"check","✔️":"check","🚩":"flag","🏁":"flag","👤":"user","✈️":"plane","🍽️":"food","🍴":"food","🛡️":"shield","⚡":"bolt","🌙":"moon","🌜":"moon" };
+function pictoName(v) {
+  if (!v) return null;
+  if (PICTO_PATHS[v]) return v;
+  if (EMOJI_TO_PICTO[v]) return EMOJI_TO_PICTO[v];
+  return null;
+}
+function Pictogram({ name, size = 18, color = "currentColor", strokeWidth = 1.8 }) {
+  const p = PICTO_PATHS[name] || PICTO_PATHS.info;
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
+      strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block" }}>
+      {p}
+    </svg>
+  );
+}
+
 /* ============ الثيمات الاحترافية ============ */
 const THEMES = {
   light: {
@@ -651,7 +697,7 @@ export default function App() {
     <div dir={isRTL ? "rtl" : "ltr"} style={{
       height: "100dvh", display: "flex", position: "relative",
       background: T.pageBg, color: T.text,
-      fontFamily: "'Noto Sans Arabic','SF Pro Text','Segoe UI',sans-serif",
+      fontFamily: "'IBM Plex Sans Arabic','Noto Sans Arabic','Segoe UI',sans-serif",
       WebkitFontSmoothing: "antialiased",
       transition: "background .5s ease, color .4s ease",
       overflow: "hidden",
@@ -912,6 +958,7 @@ export default function App() {
       )}
 
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; }
         .card-surface { transition: box-shadow .15s ease; }
         .press { transition: opacity .15s ease; }
@@ -1656,10 +1703,14 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
         {card.sub && <div style={{ color: TT.sub, fontSize: F.base - 1, marginTop: 6, lineHeight: 1.6 }}>{card.sub}</div>}
       </div>
 
-      {/* البطل — أهم قيمة بلون الموضوع */}
+      {/* البطل — أهم قيمة بتصميم رسمي */}
       {hero && (
         <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "2px 0 20px" }}>
-          {hero.icon && <div style={{ fontSize: 44, lineHeight: 1 }}>{hero.icon}</div>}
+          {pictoName(hero.icon) && (
+            <div style={{ flexShrink: 0, width: 58, height: 58, borderRadius: 16, background: `${a}10`, border: `1px solid ${a}2e`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Pictogram name={pictoName(hero.icon)} size={30} color={a} strokeWidth={1.6} />
+            </div>
+          )}
           <div style={{ minWidth: 0 }}>
             {hero.value && (() => {
               const v = String(hero.value);
@@ -1868,7 +1919,9 @@ function TabContent({ tab, a, T, F }) {
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))", gap:9 }}>
           {(d.items||[]).map((f,i) => (
             <div key={i} style={{ display:"flex", alignItems:"center", gap:11, padding:"12px 13px", borderRadius:12, background:T.pillFill, border:`1px solid ${T.line}` }}>
-              <span style={{ flexShrink:0, width:34, height:34, borderRadius:10, background:`${a}14`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:17 }}>{f.icon||"•"}</span>
+              <span style={{ flexShrink:0, width:34, height:34, borderRadius:10, background:`${a}12`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <Pictogram name={pictoName(f.icon) || "info"} size={17} color={a} />
+              </span>
               <div style={{ flex:1, minWidth:0 }}>
                 {f.label && <div style={{ fontSize:F.label, color:T.sub, marginBottom:2 }}>{f.label}</div>}
                 <div style={{ fontSize:F.base-0.5, fontWeight:700, color:T.text, lineHeight:1.4, wordBreak:"break-word" }}>{f.value || f.text || ""}</div>
@@ -2003,11 +2056,13 @@ function TabContent({ tab, a, T, F }) {
     // ========== الطقس ==========
 
     case "weather":
-      const isDark = T.pageBg === "#0f0f11" || T.pageBg === "#111111" || T.pageBg === "#000000";
+      const isDark = /^#[01]/i.test(T.pageBg || "");
       const skyGrad = isDark
         ? "linear-gradient(175deg, #0f2744 0%, #1a3a5c 50%, #0d1f35 100%)"
         : "linear-gradient(175deg, #1a6bb5 0%, #2e86de 50%, #54a0e0 100%)";
-      const weatherIcon = d.icon || (d.condition?.includes("غيم") || d.condition?.includes("cloud") ? "⛅" : d.condition?.includes("مطر") || d.condition?.includes("rain") ? "🌧" : "☀️");
+      const wName = pictoName(d.icon) || ((d.condition||"").includes("غيم") || (d.condition||"").includes("cloud") ? "cloud" : (d.condition||"").includes("مطر") || (d.condition||"").includes("rain") ? "rain" : "sun");
+      const fcText = isDark ? "rgba(255,255,255,0.75)" : T.sub;
+      const fcStrong = isDark ? "#fff" : T.text;
       return (
         <div style={{ margin:"-14px -20px -16px", overflow:"hidden", borderRadius:"0 0 12px 12px" }}>
           {/* Hero الطقس */}
@@ -2017,28 +2072,28 @@ function TabContent({ tab, a, T, F }) {
             <div style={{ position:"relative" }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
                 <div>
-                  {d.city && <div style={{ fontSize:13, opacity:0.75, fontWeight:500, marginBottom:4 }}>{d.city}</div>}
-                  <div style={{ fontSize:72, fontWeight:200, lineHeight:1, letterSpacing:-3 }}>{d.temp}°</div>
-                  <div style={{ fontSize:17, fontWeight:500, marginTop:6, opacity:0.9 }}>{d.condition}</div>
-                  {d.feels_like && <div style={{ fontSize:13, opacity:0.65, marginTop:3 }}>يحس بـ {d.feels_like}°</div>}
-                  {(d.high || d.low) && <div style={{ fontSize:13, opacity:0.65, marginTop:2 }}>
+                  {d.city && <div style={{ fontSize:13, opacity:0.78, fontWeight:500, marginBottom:4 }}>{d.city}</div>}
+                  <div style={{ fontSize:64, fontWeight:300, lineHeight:1, letterSpacing:-2 }}>{d.temp}°</div>
+                  <div style={{ fontSize:17, fontWeight:600, marginTop:6, opacity:0.92 }}>{d.condition}</div>
+                  {d.feels_like && <div style={{ fontSize:13, opacity:0.7, marginTop:3 }}>يحس بـ {d.feels_like}°</div>}
+                  {(d.high || d.low) && <div style={{ fontSize:13, opacity:0.7, marginTop:2 }}>
                     {d.high && `أعلى ${d.high}°`}{d.high && d.low && " • "}{d.low && `أدنى ${d.low}°`}
                   </div>}
                 </div>
-                <div style={{ fontSize:64, opacity:0.9, lineHeight:1 }}>{weatherIcon}</div>
+                <div style={{ opacity:0.95 }}><Pictogram name={wName} size={58} color="#fff" strokeWidth={1.3} /></div>
               </div>
             </div>
           </div>
-          {/* التوقعات الساعية */}
+          {/* التوقعات */}
           {d.forecast && d.forecast.length > 0 && (
-            <div style={{ background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.06)", backdropFilter:"blur(10px)", borderTop:"0.5px solid rgba(255,255,255,0.1)", padding:"12px 4px" }}>
+            <div style={{ background: isDark ? "rgba(255,255,255,0.05)" : T.pillFill, borderTop:`1px solid ${isDark ? "rgba(255,255,255,0.1)" : T.line}`, padding:"13px 4px" }}>
               <div style={{ display:"flex", justifyContent:"space-around" }}>
                 {d.forecast.map((f,i) => (
-                  <div key={i} style={{ textAlign:"center", flex:1 }}>
-                    <div style={{ fontSize:12, color:"rgba(255,255,255,0.7)", fontWeight:500 }}>{f.day}</div>
-                    <div style={{ fontSize:22, margin:"6px 0" }}>{f.icon || "☀️"}</div>
-                    <div style={{ fontSize:15, fontWeight:600, color:"#fff" }}>{f.high}°</div>
-                    {f.low != null && <div style={{ fontSize:12, color:"rgba(255,255,255,0.5)", marginTop:1 }}>{f.low}°</div>}
+                  <div key={i} style={{ textAlign:"center", flex:1, display:"flex", flexDirection:"column", alignItems:"center" }}>
+                    <div style={{ fontSize:12, color:fcText, fontWeight:600 }}>{f.day}</div>
+                    <div style={{ margin:"7px 0" }}><Pictogram name={pictoName(f.icon) || "sun"} size={21} color={isDark ? "#fff" : (ACCENTS.knowledge)} strokeWidth={1.6} /></div>
+                    <div style={{ fontSize:15, fontWeight:700, color:fcStrong }}>{f.high}°</div>
+                    {f.low != null && <div style={{ fontSize:12, color:fcText, marginTop:1 }}>{f.low}°</div>}
                   </div>
                 ))}
               </div>
@@ -2828,6 +2883,32 @@ function TabContent({ tab, a, T, F }) {
           ))}
         </div>
       );
+
+    case "chart": {
+      const labels = d.labels || [];
+      const vals = (d.values || []).map(Number);
+      const maxV = Math.max(...vals, 1);
+      return (
+        <div>
+          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 14px", lineHeight:1.7 }}>{d.intro}</p>}
+          <div style={{ background:T.pillFill, border:`1px solid ${T.line}`, borderRadius:13, padding:"18px 16px 12px" }}>
+            <div style={{ display:"flex", alignItems:"flex-end", gap:10, height:130 }}>
+              {vals.map((v,i) => (
+                <div key={i} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"flex-end", height:"100%", minWidth:0 }}>
+                  <div style={{ fontSize:F.label, fontWeight:700, color:a, marginBottom:5 }}>{d.unit ? `${v}${d.unit}` : v}</div>
+                  <div style={{ width:"100%", maxWidth:38, height:`${Math.max((v/maxV)*100,4)}%`, borderRadius:"7px 7px 2px 2px", background:`linear-gradient(180deg, ${a}, ${a}77)` }}/>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:"flex", gap:10, borderTop:`1px solid ${T.line}`, marginTop:0, paddingTop:8 }}>
+              {labels.map((l,i) => (
+                <div key={i} style={{ flex:1, textAlign:"center", fontSize:F.label-0.5, color:T.sub, fontWeight:600, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{l}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     default:
       return <p style={{ color:T.text, lineHeight:1.9, margin:0, fontSize:F.base-0.5, whiteSpace:"pre-wrap" }}>{d.body||""}</p>;
