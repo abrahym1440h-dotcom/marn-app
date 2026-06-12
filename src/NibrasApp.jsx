@@ -122,7 +122,19 @@ function parseJSON(raw) {
   if (start >= 0) { const end = t.lastIndexOf(close); if (end > start) t = t.slice(start, end + 1); }
   try { return JSON.parse(t); } catch { return null; }
 }
-async function genJSON(userPrompt) { return parseJSON(await ask(userPrompt)); }
+async function genJSON(userPrompt) {
+  let r = parseJSON(await ask(userPrompt));
+  if (!r) r = parseJSON(await ask(userPrompt + '\n\nمهم: أعد JSON صالحاً فقط بدون أي نص قبله أو بعده وبدون أسوار كود.'));
+  return r;
+}
+
+function ErrBox({ msg, onRetry }) {
+  if (!msg) return null;
+  return (<div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 12, padding: '12px 14px', margin: '12px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+    <span style={{ color: '#f87171', fontSize: 13.5, fontWeight: 600 }}>{msg}</span>
+    {onRetry && <button onClick={onRetry} style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: 'none', borderRadius: 8, padding: '6px 12px', fontWeight: 700, cursor: 'pointer', fontFamily: FONT, fontSize: 12.5 }}>أعد المحاولة</button>}
+  </div>);
+}
 
 // ---------------------------------------------------------------------------
 // عناصر واجهة
@@ -233,20 +245,22 @@ function PlanView({ store, setStore }) {
   const toggle = (id) => setStore((s) => ({ ...s, tasks: s.tasks.map((t) => t.id === id ? { ...t, done: !t.done } : t) }));
   const remove = (id) => setStore((s) => ({ ...s, tasks: s.tasks.filter((t) => t.id !== id) }));
 
+  const [perr, setPerr] = useState('');
   const generate = async () => {
     if (!subject.trim() || busy) return;
-    setBusy(true);
+    setBusy(true); setPerr('');
     try {
       const arr = await genJSON(`أنشئ خطة مذاكرة لمادة "${subject}"${goal.trim() ? ` بهدف: ${goal}` : ''}. أعد JSON فقط بالشكل: [{"title":"اسم المهمة"}] من 5 إلى 8 مهام مرتبة منطقياً. بدون أي نص خارج JSON.`);
       if (Array.isArray(arr)) {
         const newTasks = arr.filter((x) => x && x.title).map((x) => ({ id: uid(), subject: subject.trim(), title: String(x.title), done: false, at: Date.now() }));
         setStore((s) => ({ ...s, tasks: [...s.tasks, ...newTasks] }));
-      }
-    } catch { /* ignore */ } finally { setBusy(false); }
+      } else { setPerr('تعذّر توليد الخطة — جرّب صياغة أوضح وأعد المحاولة.'); }
+    } catch { setPerr('تعذّر الاتصال بالخادم — تأكد من الإنترنت وأعد المحاولة.'); } finally { setBusy(false); }
   };
 
   return (<div style={{ padding: 18 }}>
     <Heading title="الخطة الدراسية" subtitle="نظّم وقتك وحقق أهدافك الأكاديمية" />
+    <ErrBox msg={perr} onRetry={generate} />
     <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 18, marginBottom: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontWeight: 800, fontSize: 22, color: T.accent }}>{pct}%</span>
@@ -347,14 +361,15 @@ function QuizView({ store, setStore }) {
 
   useEffect(() => { if (store.pendingContent) { setTopic(store.pendingContent); setMode('setup'); setStore((s) => ({ ...s, pendingContent: '' })); } }, []);
 
+  const [err, setErr] = useState('');
   const start = async () => {
-    if (!topic.trim()) return; setMode('loading');
+    if (!topic.trim()) return; setMode('loading'); setErr('');
     try {
       const arr = await genJSON(`أنشئ اختباراً من ${count} أسئلة اختيار من متعدد حول: "${topic}". أعد JSON فقط بالشكل: [{"q":"السؤال","options":["خيار1","خيار2","خيار3","خيار4"],"answer":0}] حيث answer رقم الخيار الصحيح يبدأ من 0. بدون أي نص خارج JSON.`);
       const valid = Array.isArray(arr) ? arr.filter((x) => x && x.q && Array.isArray(x.options) && x.options.length >= 2) : [];
-      if (!valid.length) { setMode('setup'); return; }
+      if (!valid.length) { setErr('تعذّر توليد الأسئلة — جرّب موضوعاً أوضح أو أعد المحاولة.'); setMode('setup'); return; }
       setQuestions(valid); setPicks(Array(valid.length).fill(-1)); setCur(0); setMode('play');
-    } catch { setMode('setup'); }
+    } catch { setErr('تعذّر الاتصال بالخادم — تأكد من الإنترنت وأعد المحاولة.'); setMode('setup'); }
   };
   const pick = (qi, oi) => setPicks((p) => { const n = [...p]; n[qi] = oi; return n; });
   const score = questions.reduce((s, q, i) => s + (picks[i] === (q.answer ?? 0) ? 1 : 0), 0);
@@ -385,6 +400,7 @@ function QuizView({ store, setStore }) {
       <button onClick={() => setMode('home')} style={backLink}><ChevronLeft size={16} color={T.accent} /> رجوع</button>
       <div style={{ height: 12 }} />
       <Heading title="إنشاء اختبار" />
+      <ErrBox msg={err} onRetry={start} />
       <textarea value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="اكتب الموضوع أو الصق نص الدرس..." rows={5} style={{ ...field, resize: 'vertical', marginBottom: 12 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <span style={{ color: T.textDim, fontSize: 14 }}>عدد الأسئلة:</span>
