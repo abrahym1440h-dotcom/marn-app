@@ -143,18 +143,18 @@ const field = { width: '100%', background: T.surfaceAlt, border: `1px solid ${T.
 
 function Btn({ children, onClick, variant = 'primary', disabled, full, style }) {
   const v = {
-    primary: { bg: T.accent, fg: '#fff', bd: T.accent },
-    gold: { bg: T.gold, fg: '#0B1020', bd: T.gold },
+    primary: { bg: `linear-gradient(135deg, ${T.gold}, ${T.gold}cc)`, fg: '#0F0A04', bd: T.gold },
+    gold: { bg: `linear-gradient(135deg, ${T.gold}, ${T.rose})`, fg: '#0F0A04', bd: T.gold },
     ghost: { bg: 'transparent', fg: T.text, bd: T.border },
     danger: { bg: 'transparent', fg: T.red, bd: `${T.red}55` },
   }[variant];
   return (
-    <button onClick={onClick} disabled={disabled} style={{
+    <button onClick={onClick} disabled={disabled} className="ncard" style={{
       background: disabled ? T.surfaceAlt : v.bg, color: disabled ? T.textFaint : v.fg,
-      border: `1px solid ${disabled ? T.border : v.bd}`, borderRadius: 12, padding: '12px 18px',
-      fontWeight: 700, fontSize: 15, cursor: disabled ? 'default' : 'pointer', fontFamily: FONT,
+      border: `1px solid ${disabled ? T.border : v.bd}`, borderRadius: 13, padding: '13px 18px',
+      fontWeight: 800, fontSize: 15, cursor: disabled ? 'default' : 'pointer', fontFamily: FONT,
       display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-      width: full ? '100%' : 'auto', ...style,
+      width: full ? '100%' : 'auto', transition: 'transform .12s', ...style,
     }}>{children}</button>
   );
 }
@@ -1045,10 +1045,10 @@ export default function NibrasApp({ onClose, marnT, marnF, dark, initialScreen }
 
   return (<div dir="rtl" style={{ position: 'fixed', inset: 0, zIndex: 40, background: T.bg, color: T.text, fontFamily: FONT, display: 'flex', flexDirection: 'column' }}>
     <style>{`@keyframes nspin{to{transform:rotate(360deg)}} .nbr-scroll::-webkit-scrollbar{width:0} .ncard:active{transform:scale(.97)} .ncard:hover{border-color:${T.accentLine}!important} @keyframes nFadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}} .nfadeup{animation:nFadeUp .35s ease both}`}</style>
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: `1px solid ${T.border}`, background: marnT ? marnT.headerBg : '#0B1430', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 5 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', borderBottom: `1px solid ${T.border}`, background: `linear-gradient(180deg, ${T.gold}14, ${T.surface} 80%)`, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', position: 'sticky', top: 0, zIndex: 5 }}>
       <div style={{ width: 40 }} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <meta.Icon size={18} color={T.gold} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+        <span style={{ width: 30, height: 30, borderRadius: 9, background: `${T.gold}1c`, border: `1px solid ${T.gold}33`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><meta.Icon size={17} color={T.gold} /></span>
         <span style={{ fontWeight: 800, color: T.text, fontSize: 17 }}>{meta.title}</span>
       </div>
       <button onClick={onClose} style={iconBtn}><ArrowRight size={22} color={T.text} /></button>
