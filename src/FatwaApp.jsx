@@ -65,25 +65,25 @@ const Bell = mk(<><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d=
 // الهوية (Clean Navy)
 // ---------------------------------------------------------------------------
 const T = {
-  bg: '#070C1A',
-  surface: '#0E1730',
-  surfaceAlt: '#101B38',
-  border: '#1E2A4A',
-  borderSoft: '#16223F',
-  text: '#E8EEFB',
-  textDim: '#8A98B8',
-  textFaint: '#5A6886',
-  accent: '#4A8FFF',
-  accentSoft: 'rgba(74,143,255,0.12)',
-  accentLine: 'rgba(74,143,255,0.30)',
-  good: '#34C77B',
-  goodSoft: 'rgba(52,199,123,0.12)',
-  gold: '#E2B14A',
-  goldSoft: 'rgba(226,177,74,0.12)',
-  purple: '#A78BFA',
-  purpleSoft: 'rgba(167,139,250,0.12)',
-  rose: '#F472B6',
-  roseSoft: 'rgba(244,114,182,0.12)',
+  bg: '#06120E',
+  surface: '#0C1E18',
+  surfaceAlt: '#0F261D',
+  border: '#1B3A2E',
+  borderSoft: '#143025',
+  text: '#E9F5EE',
+  textDim: '#8FB3A2',
+  textFaint: '#5C7D6C',
+  accent: '#1FB286',
+  accentSoft: 'rgba(31,178,134,0.13)',
+  accentLine: 'rgba(31,178,134,0.32)',
+  good: '#2FD89B',
+  goodSoft: 'rgba(47,216,155,0.13)',
+  gold: '#D9B45A',
+  goldSoft: 'rgba(217,180,90,0.13)',
+  purple: '#6FCBA8',
+  purpleSoft: 'rgba(111,203,168,0.12)',
+  rose: '#5BC9A0',
+  roseSoft: 'rgba(91,201,160,0.12)',
 };
 
 const FONT = "'Tajawal','Segoe UI',system-ui,sans-serif";
@@ -332,13 +332,14 @@ function Tag({ children, tint, soft }) {
 
 function FeatureCard({ Icon, title, desc, tint, tintSoft, onClick, count }) {
   return (
-    <button onClick={onClick} style={{ textAlign: 'right', background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 18, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
-      <div style={{ width: 44, height: 44, borderRadius: 12, background: tintSoft, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <button onClick={onClick} className="fcard" style={{ textAlign: 'right', background: `linear-gradient(150deg, ${tintSoft}, transparent 65%), ${T.surface}`, border: `1px solid ${T.border}`, borderRadius: 18, padding: 18, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 9, width: '100%', position: 'relative', overflow: 'hidden', transition: 'transform .15s, border-color .15s' }}>
+      <div style={{ position: 'absolute', insetInlineStart: 0, top: 0, bottom: 0, width: 3, background: tint, opacity: 0.55 }} />
+      <div style={{ width: 46, height: 46, borderRadius: 13, background: tintSoft, border: `1px solid ${tint}33`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Icon size={22} color={tint} />
       </div>
       <div style={{ fontWeight: 800, color: T.text, fontSize: 16 }}>{title}</div>
-      {desc && <div style={{ color: T.textDim, fontSize: 13, lineHeight: 1.6 }}>{desc}</div>}
-      {count != null && <div style={{ color: T.textFaint, fontSize: 12 }}>{count} عنصر</div>}
+      {desc && <div style={{ color: T.textDim, fontSize: 12.5, lineHeight: 1.6 }}>{desc}</div>}
+      {count != null && <div style={{ color: tint, fontSize: 11.5, fontWeight: 700, background: tintSoft, alignSelf: 'flex-start', padding: '2px 9px', borderRadius: 999 }}>{count} عنصر</div>}
     </button>
   );
 }
@@ -375,19 +376,21 @@ function HomeView({ go }) {
     { id: 'sources', title: 'المصادر', desc: 'شفافية ومصداقية', Icon: ShieldCheck, tint: T.good, tintSoft: T.goodSoft },
   ];
   return (
-    <div style={{ padding: 18 }}>
-      <div style={{ textAlign: 'center', padding: '24px 0 18px' }}>
-        <div style={{ width: 64, height: 64, borderRadius: 18, background: T.accentSoft, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Compass size={32} color={T.accent} />
+    <div style={{ padding: 18 }} className="fadeup">
+      <div style={{ position: 'relative', borderRadius: 22, overflow: 'hidden', marginBottom: 18, border: `1px solid ${T.border}`, background: `radial-gradient(140% 120% at 50% -20%, ${T.accentSoft}, transparent 60%), ${T.surface}` }}>
+        <div style={{ textAlign: 'center', padding: '30px 20px 26px' }}>
+          <div style={{ width: 70, height: 70, borderRadius: 20, background: `linear-gradient(145deg, ${T.accent}, ${T.good})`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 10px 30px ${T.accent}44` }}>
+            <Compass size={34} color="#06120E" />
+          </div>
+          <div style={{ fontWeight: 800, fontSize: 21, color: T.text, marginTop: 16 }}>بسم الله الرحمن الرحيم</div>
+          <div style={{ color: T.accent, fontSize: 13.5, marginTop: 8, fontWeight: 600 }}>﴿فَاسْأَلُوا أَهْلَ الذِّكْرِ إِن كُنتُمْ لَا تَعْلَمُونَ﴾</div>
         </div>
-        <div style={{ fontWeight: 800, fontSize: 20, color: T.text, marginTop: 14 }}>بسم الله الرحمن الرحيم</div>
-        <div style={{ color: T.textDim, fontSize: 13, marginTop: 6 }}>﴿فَاسْأَلُوا أَهْلَ الذِّكْرِ إِن كُنتُمْ لَا تَعْلَمُونَ﴾</div>
       </div>
-      <button onClick={() => go('chat')} style={{ width: '100%', background: T.accent, border: 'none', borderRadius: 16, padding: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <MessageCircle size={26} color="#fff" />
+      <button onClick={() => go('chat')} className="fcard" style={{ width: '100%', background: `linear-gradient(135deg, ${T.accent}, ${T.good})`, border: 'none', borderRadius: 18, padding: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, boxShadow: `0 8px 24px ${T.accent}33` }}>
+        <MessageCircle size={26} color="#06120E" />
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontWeight: 800, color: '#fff', fontSize: 17 }}>اسأل سؤالاً دينياً</div>
-          <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13 }}>احصل على إجابة فورية مستندة للشرع</div>
+          <div style={{ fontWeight: 800, color: '#06120E', fontSize: 17 }}>اسأل سؤالاً دينياً</div>
+          <div style={{ color: 'rgba(6,18,14,0.75)', fontSize: 13, fontWeight: 600 }}>إجابة فورية مستندة لمصادر شرعية موثوقة</div>
         </div>
       </button>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -926,8 +929,9 @@ function SourcesView() {
 
 function Heading({ title, subtitle }) {
   return (
-    <div style={{ textAlign: 'right', marginBottom: 18 }}>
-      <div style={{ fontWeight: 800, fontSize: 20, color: T.text }}>{title}</div>
+    <div style={{ textAlign: 'right', marginBottom: 18, position: 'relative', paddingInlineStart: 14 }}>
+      <div style={{ position: 'absolute', insetInlineStart: 0, top: 3, bottom: 3, width: 4, borderRadius: 4, background: `linear-gradient(${T.accent}, ${T.good})` }} />
+      <div style={{ fontWeight: 800, fontSize: 21, color: T.text, letterSpacing: '-0.3px' }}>{title}</div>
       {subtitle && <div style={{ color: T.textDim, fontSize: 13, marginTop: 4 }}>{subtitle}</div>}
     </div>
   );
@@ -1020,7 +1024,7 @@ export default function FatwaApp({ onClose, marnT, marnF, dark, initialScreen })
 
   return (
     <div dir="rtl" style={{ position: 'fixed', inset: 0, zIndex: 40, background: T.bg, color: T.text, fontFamily: FONT, display: 'flex', flexDirection: 'column' }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .fatwa-scroll::-webkit-scrollbar{width:0}`}</style>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .fatwa-scroll::-webkit-scrollbar{width:0} .fcard:active{transform:scale(.97)} .fcard:hover{border-color:${T.accentLine}!important} @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}} .fadeup{animation:fadeUp .35s ease both}`}</style>
       <TopBar
         title={meta.title}
         Icon={meta.Icon}
