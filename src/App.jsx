@@ -411,7 +411,7 @@ const AG_ICON = {
 
 const AGENTS = {
   marn: {
-    id: "marn", name: "مرن", color: "#2A6BF0", desc: "مساعدك العام",
+    id: "marn", name: "مرن", color: "#2A6BF0", desc: "مساعدك العام", placeholder: "اسأل عن أي شيء...",
     greeting: (n) => n ? `أهلاً، ${n}` : "كيف أقدر أساعدك؟",
     directive: "",
     suggestions: ["لخّص لي نصاً", "اكتب رسالة احترافية", "اقترح أفكاراً لمشروع", "اشرح موضوعاً ببساطة"],
@@ -421,7 +421,7 @@ const AGENTS = {
     ],
   },
   nibras: {
-    id: "nibras", name: "نبراس", color: "#D9A93C", desc: "المذاكرة والتعليم",
+    id: "nibras", name: "نبراس", color: "#D9A93C", desc: "المذاكرة والتعليم", placeholder: "اطلب شرحاً، اختباراً، أو خطة مذاكرة...",
     greeting: (n) => n ? `جاهزين نذاكر، ${n}؟` : "وش نذاكر اليوم؟",
     directive: "",
     suggestions: ["اشرح لي درس الكسور", "سوّ لي اختبار قصير", "خطة مذاكرة لأسبوع", "لخّص هذا الدرس"],
@@ -433,7 +433,7 @@ const AGENTS = {
     ],
   },
   fatwa: {
-    id: "fatwa", name: "فتوى", color: "#1FA98F", desc: "مستشار شرعي موثوق",
+    id: "fatwa", name: "فتوى", color: "#1FA98F", desc: "مستشار شرعي موثوق", placeholder: "اكتب سؤالك الفقهي بتفاصيله...",
     greeting: (n) => n ? `حيّاك الله، ${n}` : "اسأل عن أمور دينك",
     directive: "",
     suggestions: ["ما حكم الجمع في السفر؟", "كيف أحسب زكاة المال؟", "أذكار الصباح", "ما صحة هذا الحديث؟"],
@@ -985,7 +985,9 @@ export default function App() {
         flex: 1, display: "flex", flexDirection: "column", position: "relative", overflow: "hidden",
         backgroundImage: sceneOn
           ? `radial-gradient(720px 360px at 82% -80px, ${sceneAccent}2e, transparent 70%), linear-gradient(180deg, ${sceneAccent}1a, transparent 440px)`
-          : "none",
+          : empty
+            ? `radial-gradient(680px 340px at 50% -120px, ${currentAgent.color}24, transparent 72%)`
+            : "none",
       }}>
         {/* الهيدر */}
         <header style={{
@@ -1121,7 +1123,7 @@ export default function App() {
                   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
                   if (e.key === "Escape") { setDraft(""); setEditingMsg(null); }
                 }}
-                placeholder={activeTool ? (activeTool.hint || t.placeholder) : (forceSearch ? (isRTL ? "ابحث في الإنترنت..." : "Search the web...") : t.placeholder)}
+                placeholder={activeTool ? (activeTool.hint || t.placeholder) : (forceSearch ? (isRTL ? "ابحث في الإنترنت..." : "Search the web...") : (currentAgent && currentAgent.placeholder) || t.placeholder)}
                 style={{
                   flex: 1, background: "transparent", border: "none", outline: "none",
                   color: T.text, fontSize: F.base, padding: "2px 4px", fontFamily: "inherit",
