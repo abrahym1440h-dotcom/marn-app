@@ -107,13 +107,11 @@ function extractText(d) {
   return nested && nested !== d ? extractText(nested) : '';
 }
 async function ask(userPrompt, system) {
-  const messages = [{ role: 'system', content: system || NIBRAS_SYSTEM }, { role: 'user', content: userPrompt }];
-  const body = { messages, question: userPrompt, prompt: userPrompt, message: userPrompt, query: userPrompt, system: system || NIBRAS_SYSTEM };
-  const res = await fetch('/api/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const body = { question: userPrompt, system: system || NIBRAS_SYSTEM };
+  const res = await fetch('/api/nibras', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   if (!res.ok) throw new Error('network');
-  const raw = await res.text();
-  let data; try { data = JSON.parse(raw); } catch { return raw.trim(); }
-  return extractText(data) || raw.trim();
+  const data = await res.json();
+  return data?.text || '';
 }
 function parseJSON(raw) {
   let t = (raw || '').trim().replace(/```json/gi, '').replace(/```/g, '').trim();
