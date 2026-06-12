@@ -52,6 +52,7 @@ const ExternalLink = mk(<><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d=
 const Compass = mk(<><circle cx="12" cy="12" r="10" /><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" /></>);
 const Star = mk(<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />);
 const Loader2 = mk(<path d="M21 12a9 9 0 1 1-6.219-8.56" />);
+const RotateCcw = mk(<><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></>);
 const Coins = mk(<><circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18" /><path d="M7 6h1v4" /><path d="m16.71 13.88.7.71-2.82 2.82" /></>);
 const Users = mk(<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>);
 const Globe = mk(<><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></>);
@@ -132,34 +133,151 @@ const FATWAS = {
 };
 
 const ADHKAR_CATEGORIES = [
-  { id: 'sabah', title: 'أذكار الصباح', count: 12, Icon: Sunrise, tint: T.gold },
-  { id: 'masa', title: 'أذكار المساء', count: 10, Icon: Moon, tint: T.accent },
-  { id: 'istiqadh', title: 'أذكار الاستيقاظ', count: 4, Icon: Sun, tint: T.gold },
-  { id: 'nawm', title: 'أذكار النوم', count: 9, Icon: Moon, tint: T.purple },
-  { id: 'baad', title: 'أذكار بعد الصلاة', count: 9, Icon: Heart, tint: T.good },
-  { id: 'manzil', title: 'أذكار المنزل', count: 5, Icon: Home, tint: T.accent },
-  { id: 'masjid', title: 'أذكار المسجد', count: 2, Icon: Compass, tint: T.gold },
-  { id: 'safar', title: 'أذكار السفر', count: 4, Icon: Globe, tint: T.purple },
+  { id: 'sabah', title: 'أذكار الصباح', Icon: Sunrise, tint: T.gold },
+  { id: 'masa', title: 'أذكار المساء', Icon: Moon, tint: T.accent },
+  { id: 'tasabeeh', title: 'التسبيح والباقيات', Icon: Heart, tint: T.good },
+  { id: 'istighfar', title: 'الاستغفار والتوبة', Icon: Sparkles, tint: T.accent },
+  { id: 'salah_nabi', title: 'الصلاة على النبي ﷺ', Icon: Star, tint: T.gold },
+  { id: 'baad', title: 'أذكار بعد الصلاة', Icon: Compass, tint: T.good },
+  { id: 'hammwakarb', title: 'أدعية الهمّ والكرب', Icon: Moon, tint: T.purple },
+  { id: 'istiqadh', title: 'أذكار الاستيقاظ', Icon: Sun, tint: T.gold },
+  { id: 'nawm', title: 'أذكار النوم', Icon: Moon, tint: T.purple },
+  { id: 'wudu', title: 'أذكار الوضوء', Icon: Droplet, tint: T.accent },
+  { id: 'taeam', title: 'أذكار الطعام', Icon: Heart, tint: T.good },
+  { id: 'manzil', title: 'أذكار المنزل', Icon: Home, tint: T.accent },
+  { id: 'masjid', title: 'أذكار المسجد', Icon: Compass, tint: T.gold },
+  { id: 'safar', title: 'أذكار السفر', Icon: Globe, tint: T.purple },
 ];
 
 const ADHKAR = {
   sabah: [
-    { text: 'أصبحنا وأصبح الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له.', count: 1 },
-    { text: 'اللهم بك أصبحنا وبك أمسينا، وبك نحيا وبك نموت وإليك النشور.', count: 1 },
-    { text: 'سبحان الله وبحمده.', count: 100 },
-    { text: 'أعوذ بكلمات الله التامات من شر ما خلق.', count: 3 },
+    { text: 'أَعُوذُ بِاللهِ مِنَ الشَّيْطَانِ الرَّجِيمِ. اللّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ... (آية الكرسي)', count: 1, note: 'من قالها حين يصبح أُجير من الجن حتى يمسي' },
+    { text: 'قُلْ هُوَ اللَّهُ أَحَدٌ (الإخلاص والمعوذتان)', count: 3, note: 'تكفيه من كل شيء' },
+    { text: 'أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ.', count: 1 },
+    { text: 'اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ النُّشُورُ.', count: 1 },
+    { text: 'اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ... (سيد الاستغفار)', count: 1, note: 'من قالها موقناً فمات دخل الجنة' },
+    { text: 'رَضِيتُ بِاللهِ رَبًّا، وَبِالْإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ ﷺ نَبِيًّا.', count: 3 },
+    { text: 'اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي.', count: 3 },
+    { text: 'حَسْبِيَ اللهُ لَا إِلَهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ.', count: 7 },
+    { text: 'بِسْمِ اللهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ.', count: 3 },
+    { text: 'سُبْحَانَ اللهِ وَبِحَمْدِهِ.', count: 100, note: 'حُطّت خطاياه وإن كانت مثل زبد البحر' },
+    { text: 'لَا إِلَهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.', count: 10 },
+    { text: 'أَعُوذُ بِكَلِمَاتِ اللهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ.', count: 3 },
+    { text: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا، وَرِزْقًا طَيِّبًا، وَعَمَلًا مُتَقَبَّلًا.', count: 1 },
+    { text: 'يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلَا تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ.', count: 3 },
+    { text: 'سُبْحَانَ اللهِ وَبِحَمْدِهِ عَدَدَ خَلْقِهِ وَرِضَا نَفْسِهِ وَزِنَةَ عَرْشِهِ وَمِدَادَ كَلِمَاتِهِ.', count: 3 },
+    { text: 'أَسْتَغْفِرُ اللهَ وَأَتُوبُ إِلَيْهِ.', count: 100 },
   ],
   masa: [
-    { text: 'أمسينا وأمسى الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له.', count: 1 },
-    { text: 'اللهم بك أمسينا وبك أصبحنا، وبك نحيا وبك نموت وإليك المصير.', count: 1 },
-    { text: 'سبحان الله وبحمده.', count: 100 },
+    { text: 'أَعُوذُ بِاللهِ مِنَ الشَّيْطَانِ الرَّجِيمِ. اللّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ... (آية الكرسي)', count: 1 },
+    { text: 'قُلْ هُوَ اللَّهُ أَحَدٌ (الإخلاص والمعوذتان)', count: 3 },
+    { text: 'أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ.', count: 1 },
+    { text: 'اللَّهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ الْمَصِيرُ.', count: 1 },
+    { text: 'اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ... (سيد الاستغفار)', count: 1 },
+    { text: 'أَعُوذُ بِكَلِمَاتِ اللهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ.', count: 3, note: 'لم يضرّه شيء تلك الليلة' },
+    { text: 'رَضِيتُ بِاللهِ رَبًّا، وَبِالْإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ ﷺ نَبِيًّا.', count: 3 },
+    { text: 'بِسْمِ اللهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ.', count: 3 },
+    { text: 'حَسْبِيَ اللهُ لَا إِلَهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ.', count: 7 },
+    { text: 'سُبْحَانَ اللهِ وَبِحَمْدِهِ.', count: 100 },
+    { text: 'أَمْسَيْنَا عَلَى فِطْرَةِ الْإِسْلَامِ وَكَلِمَةِ الْإِخْلَاصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ ﷺ.', count: 1 },
+    { text: 'اللَّهُمَّ مَا أَمْسَى بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لَا شَرِيكَ لَكَ.', count: 1 },
+    { text: 'أَسْتَغْفِرُ اللهَ وَأَتُوبُ إِلَيْهِ.', count: 100 },
   ],
-  istiqadh: [{ text: 'الحمد لله الذي أحيانا بعد ما أماتنا وإليه النشور.', count: 1 }],
-  nawm: [{ text: 'باسمك اللهم أموت وأحيا.', count: 1 }, { text: 'سبحان الله (33) والحمد لله (33) والله أكبر (34).', count: 1 }],
-  baad: [{ text: 'أستغفر الله (ثلاثاً)، اللهم أنت السلام ومنك السلام تباركت يا ذا الجلال والإكرام.', count: 1 }, { text: 'سبحان الله (33) الحمد لله (33) الله أكبر (33) ولا إله إلا الله وحده لا شريك له.', count: 1 }],
-  manzil: [{ text: 'باسم الله ولجنا، وباسم الله خرجنا، وعلى الله ربنا توكلنا.', count: 1 }],
-  masjid: [{ text: 'اللهم افتح لي أبواب رحمتك (عند الدخول).', count: 1 }, { text: 'اللهم إني أسألك من فضلك (عند الخروج).', count: 1 }],
-  safar: [{ text: 'الله أكبر الله أكبر الله أكبر، سبحان الذي سخّر لنا هذا وما كنا له مقرنين.', count: 1 }],
+  istiqadh: [
+    { text: 'الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ.', count: 1 },
+    { text: 'لَا إِلَهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.', count: 1 },
+    { text: 'الْحَمْدُ لِلَّهِ الَّذِي عَافَانِي فِي جَسَدِي وَرَدَّ عَلَيَّ رُوحِي وَأَذِنَ لِي بِذِكْرِهِ.', count: 1 },
+    { text: 'سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ، أَشْهَدُ أَنْ لَا إِلَهَ إِلَّا أَنْتَ، أَسْتَغْفِرُكَ وَأَتُوبُ إِلَيْكَ.', count: 1 },
+  ],
+  nawm: [
+    { text: 'بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا.', count: 1 },
+    { text: 'اللَّهُمَّ قِنِي عَذَابَكَ يَوْمَ تَبْعَثُ عِبَادَكَ.', count: 3 },
+    { text: 'سُبْحَانَ اللهِ (33) وَالْحَمْدُ لِلَّهِ (33) وَاللهُ أَكْبَرُ (34).', count: 1, note: 'خير من خادم' },
+    { text: 'اللَّهُمَّ أَسْلَمْتُ نَفْسِي إِلَيْكَ، وَفَوَّضْتُ أَمْرِي إِلَيْكَ، وَأَلْجَأْتُ ظَهْرِي إِلَيْكَ.', count: 1 },
+    { text: 'قراءة آية الكرسي.', count: 1, note: 'لن يزال عليك من الله حافظ' },
+    { text: 'قراءة سورة الإخلاص والمعوذتين والنفث في الكفين ومسح الجسد.', count: 3 },
+    { text: 'بِاسْمِكَ رَبِّي وَضَعْتُ جَنْبِي، وَبِكَ أَرْفَعُهُ، إِنْ أَمْسَكْتَ نَفْسِي فَارْحَمْهَا.', count: 1 },
+    { text: 'الْحَمْدُ لِلَّهِ الَّذِي أَطْعَمَنَا وَسَقَانَا وَكَفَانَا وَآوَانَا.', count: 1 },
+  ],
+  baad: [
+    { text: 'أَسْتَغْفِرُ اللهَ.', count: 3 },
+    { text: 'اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ، تَبَارَكْتَ يَا ذَا الْجَلَالِ وَالْإِكْرَامِ.', count: 1 },
+    { text: 'لَا إِلَهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ... اللَّهُمَّ لَا مَانِعَ لِمَا أَعْطَيْتَ.', count: 1 },
+    { text: 'سُبْحَانَ اللهِ.', count: 33 },
+    { text: 'الْحَمْدُ لِلَّهِ.', count: 33 },
+    { text: 'اللهُ أَكْبَرُ.', count: 33 },
+    { text: 'لَا إِلَهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.', count: 1, note: 'تمام المئة، غُفرت خطاياه' },
+    { text: 'قراءة آية الكرسي دبر كل صلاة.', count: 1, note: 'لم يمنعه من الجنة إلا الموت' },
+    { text: 'قراءة الإخلاص والمعوذتين.', count: 1 },
+    { text: 'اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ.', count: 1 },
+  ],
+  manzil: [
+    { text: 'بِسْمِ اللهِ وَلَجْنَا، وَبِسْمِ اللهِ خَرَجْنَا، وَعَلَى اللهِ رَبِّنَا تَوَكَّلْنَا. (عند الدخول)', count: 1 },
+    { text: 'بِسْمِ اللهِ تَوَكَّلْتُ عَلَى اللهِ، لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللهِ. (عند الخروج)', count: 1 },
+    { text: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَ الْمَوْلِجِ وَخَيْرَ الْمَخْرَجِ.', count: 1 },
+    { text: 'السلام عليكم عند دخول البيت وذكر اسم الله.', count: 1, note: 'يطرد الشيطان' },
+    { text: 'قراءة سورة البقرة في البيت.', count: 1, note: 'لا يدخله الشيطان' },
+  ],
+  masjid: [
+    { text: 'اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ. (عند الدخول بالرجل اليمنى)', count: 1 },
+    { text: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ مِنْ فَضْلِكَ. (عند الخروج بالرجل اليسرى)', count: 1 },
+    { text: 'أَعُوذُ بِاللهِ الْعَظِيمِ وَبِوَجْهِهِ الْكَرِيمِ وَسُلْطَانِهِ الْقَدِيمِ مِنَ الشَّيْطَانِ الرَّجِيمِ.', count: 1 },
+    { text: 'بِسْمِ اللهِ وَالصَّلَاةُ وَالسَّلَامُ عَلَى رَسُولِ اللهِ.', count: 1 },
+  ],
+  safar: [
+    { text: 'اللهُ أَكْبَرُ، اللهُ أَكْبَرُ، اللهُ أَكْبَرُ، سُبْحَانَ الَّذِي سَخَّرَ لَنَا هَذَا وَمَا كُنَّا لَهُ مُقْرِنِينَ.', count: 1 },
+    { text: 'اللَّهُمَّ إِنَّا نَسْأَلُكَ فِي سَفَرِنَا هَذَا الْبِرَّ وَالتَّقْوَى، وَمِنَ الْعَمَلِ مَا تَرْضَى.', count: 1 },
+    { text: 'اللَّهُمَّ أَنْتَ الصَّاحِبُ فِي السَّفَرِ، وَالْخَلِيفَةُ فِي الْأَهْلِ.', count: 1 },
+    { text: 'أَعُوذُ بِكَلِمَاتِ اللهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ. (عند النزول منزلاً)', count: 3 },
+    { text: 'سُبْحَانَ اللهِ (عند الصعود)، اللهُ أَكْبَرُ.', count: 1 },
+  ],
+  tasabeeh: [
+    { text: 'سُبْحَانَ اللهِ.', count: 33 },
+    { text: 'الْحَمْدُ لِلَّهِ.', count: 33 },
+    { text: 'اللهُ أَكْبَرُ.', count: 34 },
+    { text: 'لَا إِلَهَ إِلَّا اللهُ.', count: 100 },
+    { text: 'سُبْحَانَ اللهِ وَبِحَمْدِهِ.', count: 100 },
+    { text: 'سُبْحَانَ اللهِ الْعَظِيمِ وَبِحَمْدِهِ.', count: 100 },
+    { text: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللهِ.', count: 100, note: 'كنز من كنوز الجنة' },
+    { text: 'أَسْتَغْفِرُ اللهَ الْعَظِيمَ وَأَتُوبُ إِلَيْهِ.', count: 100 },
+    { text: 'اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ.', count: 100 },
+    { text: 'سُبْحَانَ اللهِ وَبِحَمْدِهِ عَدَدَ خَلْقِهِ وَرِضَا نَفْسِهِ وَزِنَةَ عَرْشِهِ وَمِدَادَ كَلِمَاتِهِ.', count: 3 },
+    { text: 'لَا إِلَهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.', count: 100 },
+  ],
+  hammwakarb: [
+    { text: 'لَا إِلَهَ إِلَّا اللهُ الْعَظِيمُ الْحَلِيمُ، لَا إِلَهَ إِلَّا اللهُ رَبُّ الْعَرْشِ الْعَظِيمِ.', count: 1 },
+    { text: 'اللَّهُمَّ رَحْمَتَكَ أَرْجُو فَلَا تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ، وَأَصْلِحْ لِي شَأْنِي كُلَّهُ.', count: 1 },
+    { text: 'لَا إِلَهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ. (دعاء ذي النون)', count: 1 },
+    { text: 'حَسْبُنَا اللهُ وَنِعْمَ الْوَكِيلُ.', count: 7 },
+    { text: 'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ، وَالْعَجْزِ وَالْكَسَلِ، وَالْبُخْلِ وَالْجُبْنِ.', count: 1 },
+    { text: 'يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ.', count: 1 },
+  ],
+  taeam: [
+    { text: 'بِسْمِ اللهِ. (عند بدء الطعام)', count: 1 },
+    { text: 'بِسْمِ اللهِ أَوَّلَهُ وَآخِرَهُ. (إذا نسي التسمية)', count: 1 },
+    { text: 'الْحَمْدُ لِلَّهِ الَّذِي أَطْعَمَنِي هَذَا وَرَزَقَنِيهِ مِنْ غَيْرِ حَوْلٍ مِنِّي وَلَا قُوَّةٍ. (بعد الطعام)', count: 1, note: 'غُفر له ما تقدم من ذنبه' },
+    { text: 'الْحَمْدُ لِلَّهِ حَمْدًا كَثِيرًا طَيِّبًا مُبَارَكًا فِيهِ.', count: 1 },
+    { text: 'اللَّهُمَّ بَارِكْ لَنَا فِيهِ وَأَطْعِمْنَا خَيْرًا مِنْهُ.', count: 1 },
+  ],
+  wudu: [
+    { text: 'بِسْمِ اللهِ. (عند بدء الوضوء)', count: 1 },
+    { text: 'أَشْهَدُ أَنْ لَا إِلَهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ، وَأَشْهَدُ أَنَّ مُحَمَّدًا عَبْدُهُ وَرَسُولُهُ. (بعد الوضوء)', count: 1, note: 'فُتحت له أبواب الجنة الثمانية' },
+    { text: 'اللَّهُمَّ اجْعَلْنِي مِنَ التَّوَّابِينَ وَاجْعَلْنِي مِنَ الْمُتَطَهِّرِينَ.', count: 1 },
+    { text: 'سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ، أَشْهَدُ أَنْ لَا إِلَهَ إِلَّا أَنْتَ، أَسْتَغْفِرُكَ وَأَتُوبُ إِلَيْكَ.', count: 1 },
+  ],
+  istighfar: [
+    { text: 'أَسْتَغْفِرُ اللهَ.', count: 100 },
+    { text: 'أَسْتَغْفِرُ اللهَ الْعَظِيمَ الَّذِي لَا إِلَهَ إِلَّا هُوَ الْحَيَّ الْقَيُّومَ وَأَتُوبُ إِلَيْهِ.', count: 3 },
+    { text: 'رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ إِنَّكَ أَنْتَ التَّوَّابُ الرَّحِيمُ.', count: 100 },
+    { text: 'اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ... (سيد الاستغفار)', count: 1 },
+    { text: 'سُبْحَانَ اللهِ وَبِحَمْدِهِ، أَسْتَغْفِرُ اللهَ وَأَتُوبُ إِلَيْهِ.', count: 100 },
+  ],
+  salah_nabi: [
+    { text: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ كَمَا صَلَّيْتَ عَلَى إِبْرَاهِيمَ... (الصلاة الإبراهيمية)', count: 1 },
+    { text: 'اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ.', count: 100, note: 'من صلى عليّ واحدة صلى الله عليه عشراً' },
+    { text: 'صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ.', count: 10 },
+    { text: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ النَّبِيِّ الْأُمِّيِّ وَعَلَى آلِهِ وَصَحْبِهِ وَسَلِّمْ.', count: 10 },
+  ],
 };
 
 const FAQ_CATEGORIES = [
@@ -527,41 +645,96 @@ function AdhkarView() {
   const [cat, setCat] = useState(null);
   if (cat) {
     const c = ADHKAR_CATEGORIES.find((x) => x.id === cat);
-    return (
-      <div style={{ padding: 18 }}>
-        <button onClick={() => setCat(null)} style={backLink}><ChevronLeft size={16} color={T.accent} /> رجوع</button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '14px 0 18px' }}>
-          <c.Icon size={22} color={c.tint} /><span style={{ fontWeight: 800, fontSize: 18, color: T.text }}>{c.title}</span>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {(ADHKAR[cat] || []).map((d, i) => <DhikrCard key={i} text={d.text} target={d.count} tint={c.tint} />)}
-          {!(ADHKAR[cat] || []).length && <Empty text="سيُضاف هذا القسم قريباً." />}
-        </div>
-      </div>
-    );
+    const list = ADHKAR[cat] || [];
+    return <TasbihRunner cat={c} list={list} onExit={() => setCat(null)} />;
   }
   return (
-    <div style={{ padding: 18 }}>
-      <Heading title="الأذكار والأدعية" subtitle="اختر القسم المطلوب" />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        {ADHKAR_CATEGORIES.map((c) => (
-          <FeatureCard key={c.id} Icon={c.Icon} title={c.title} count={c.count} tint={c.tint} tintSoft={T.accentSoft} onClick={() => setCat(c.id)} />
-        ))}
+    <div style={{ padding: 18 }} className="fadeup">
+      <Heading title="الأذكار والأدعية" subtitle="مسبحة تفاعلية — اضغط لتُسبّح حتى يكتمل العدد" />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {ADHKAR_CATEGORIES.map((c) => {
+          const n = (ADHKAR[c.id] || []).length;
+          return (
+            <button key={c.id} onClick={() => setCat(c.id)} className="fcard" style={{ display: 'flex', alignItems: 'center', gap: 14, textAlign: 'right', background: `linear-gradient(110deg, ${c.tint}14, transparent 55%), ${T.surface}`, border: `1px solid ${T.border}`, borderRadius: 16, padding: '15px 16px', cursor: 'pointer', width: '100%', position: 'relative', overflow: 'hidden', transition: 'transform .15s, border-color .15s' }}>
+              <div style={{ width: 46, height: 46, borderRadius: 13, background: `${c.tint}1c`, border: `1px solid ${c.tint}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <c.Icon size={22} color={c.tint} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 800, color: T.text, fontSize: 16 }}>{c.title}</div>
+                <div style={{ color: T.textDim, fontSize: 12, marginTop: 2 }}>{n} ذكر</div>
+              </div>
+              <ChevronLeft size={18} color={T.textFaint} />
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
-function DhikrCard({ text, target, tint }) {
-  const [n, setN] = useState(0);
-  const done = n >= target;
+
+function TasbihRunner({ cat, list, onExit }) {
+  const [idx, setIdx] = useState(0);
+  const [count, setCount] = useState(0);
+  const item = list[idx] || { text: '', count: 1 };
+  const target = item.count || 1;
+  const done = count >= target;
+  const pct = Math.min(100, Math.round((count / target) * 100));
+  const allDone = idx >= list.length - 1 && done;
+
+  const tap = () => {
+    if (count + 1 >= target) {
+      setCount(target);
+      if (navigator.vibrate) navigator.vibrate(30);
+    } else {
+      setCount((c) => c + 1);
+      if (navigator.vibrate) navigator.vibrate(8);
+    }
+  };
+  const next = () => { if (idx < list.length - 1) { setIdx(idx + 1); setCount(0); } };
+  const prev = () => { if (idx > 0) { setIdx(idx - 1); setCount(0); } };
+
+  const R = 92, C = 2 * Math.PI * R;
   return (
-    <button onClick={() => setN((v) => (v >= target ? 0 : v + 1))} style={{ textAlign: 'right', background: done ? T.goodSoft : T.surface, border: `1px solid ${done ? T.good + '55' : T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer' }}>
-      <div style={{ color: T.text, fontSize: 16, lineHeight: 2 }}>{text}</div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
-        <span style={{ color: done ? T.good : T.textDim, fontSize: 13, fontWeight: 700 }}>{done ? 'اكتمل' : 'اضغط للتسبيح'}</span>
-        <span style={{ background: done ? T.good : tint, color: '#fff', borderRadius: 999, padding: '4px 12px', fontWeight: 800, fontSize: 14 }}>{n} / {target}</span>
+    <div style={{ padding: 18, minHeight: '100%', display: 'flex', flexDirection: 'column' }} className="fadeup">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+        <button onClick={onExit} style={backLink}><ChevronLeft size={16} color={T.accent} /> رجوع</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontWeight: 800, fontSize: 16, color: T.text }}>{cat.title}</span>
+          <cat.Icon size={18} color={cat.tint} />
+        </div>
       </div>
-    </button>
+      <div style={{ color: T.textDim, fontSize: 12.5, textAlign: 'center', marginBottom: 14 }}>{idx + 1} من {list.length}</div>
+
+      {/* نص الذكر */}
+      <div style={{ background: `linear-gradient(160deg, ${cat.tint}12, transparent 60%), ${T.surface}`, border: `1px solid ${T.border}`, borderRadius: 20, padding: '22px 20px', marginBottom: 18, textAlign: 'center', minHeight: 110, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div style={{ color: T.text, fontSize: 18, lineHeight: 2.1, fontWeight: 600 }}>{item.text}</div>
+        {item.note && <div style={{ color: cat.tint, fontSize: 12.5, marginTop: 12, fontWeight: 600 }}>✦ {item.note}</div>}
+      </div>
+
+      {/* المسبحة الدائرية */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+        <button onClick={tap} className="tasbih-tap" style={{ position: 'relative', width: 210, height: 210, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}>
+          <svg width="210" height="210" style={{ transform: 'rotate(-90deg)' }}>
+            <circle cx="105" cy="105" r={R} fill="none" stroke={T.border} strokeWidth="11" />
+            <circle cx="105" cy="105" r={R} fill="none" stroke={done ? T.good : cat.tint} strokeWidth="11" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C - (C * pct) / 100} style={{ transition: 'stroke-dashoffset .25s, stroke .25s' }} />
+          </svg>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ fontSize: 52, fontWeight: 800, color: done ? T.good : T.text, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{count}</div>
+            <div style={{ fontSize: 14, color: T.textDim, marginTop: 4, fontWeight: 700 }}>من {target}</div>
+            {done && <div style={{ fontSize: 12, color: T.good, marginTop: 6, fontWeight: 700 }}>✓ اكتمل</div>}
+          </div>
+        </button>
+      </div>
+      <div style={{ color: T.textFaint, fontSize: 12, textAlign: 'center', marginBottom: 18 }}>اضغط الدائرة للتسبيح</div>
+
+      {/* أزرار التنقل */}
+      <div style={{ display: 'flex', gap: 10, marginTop: 'auto' }}>
+        <button onClick={prev} disabled={idx === 0} style={{ flex: 1, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 13, padding: '13px 0', color: idx === 0 ? T.textFaint : T.text, fontWeight: 700, cursor: idx === 0 ? 'default' : 'pointer', fontFamily: FONT, opacity: idx === 0 ? 0.5 : 1 }}>السابق</button>
+        <button onClick={() => setCount(0)} style={{ width: 52, background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><RotateCcw size={18} color={T.textDim} /></button>
+        <button onClick={next} disabled={idx >= list.length - 1} style={{ flex: 1, background: done ? `linear-gradient(135deg, ${cat.tint}, ${T.good})` : cat.tint, border: 'none', borderRadius: 13, padding: '13px 0', color: '#06120E', fontWeight: 800, cursor: idx >= list.length - 1 ? 'default' : 'pointer', fontFamily: FONT, opacity: idx >= list.length - 1 ? 0.5 : 1 }}>التالي</button>
+      </div>
+      {allDone && <div style={{ textAlign: 'center', color: T.good, fontWeight: 700, fontSize: 14, marginTop: 14 }}>تقبّل الله — أتممت أذكار {cat.title}</div>}
+    </div>
   );
 }
 
@@ -571,7 +744,7 @@ function PrayerView() {
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 30000);
+    const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
@@ -601,24 +774,39 @@ function PrayerView() {
     for (const k of order) {
       if (k === 'Sunrise') continue;
       const [h, m] = (times[k] || '00:00').split(':').map(Number);
-      if (h * 60 + m > mins) return { key: k, time: fmtClock(times[k]) };
+      if (h * 60 + m > mins) return { key: k, time: fmtClock(times[k]), raw: times[k] };
     }
-    return { key: 'Fajr', time: times.Fajr };
+    return { key: 'Fajr', time: fmtClock(times.Fajr), raw: times.Fajr, tomorrow: true };
   }, [times, now]);
+
+  const countdown = useMemo(() => {
+    if (!next) return '';
+    const [h, m] = (next.raw || '00:00').split(':').map(Number);
+    let target = new Date(now); target.setHours(h, m, 0, 0);
+    if (next.tomorrow || target <= now) target.setDate(target.getDate() + 1);
+    let diff = Math.max(0, Math.floor((target - now) / 1000));
+    const hh = Math.floor(diff / 3600); diff %= 3600;
+    const mm = Math.floor(diff / 60); const ss = diff % 60;
+    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+  }, [next, now]);
 
   if (!times) return <div style={{ padding: 40, textAlign: 'center' }}><Loader2 size={26} color={T.accent} style={{ animation: 'spin 1s linear infinite' }} /><div style={{ color: T.textDim, marginTop: 12 }}>جاري جلب المواقيت...</div></div>;
 
   const nextMeta = PRAYER_META.find((p) => p.key === next?.key);
   return (
-    <div style={{ padding: 18 }}>
+    <div style={{ padding: 18 }} className="fadeup">
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: T.textDim, fontSize: 13, marginBottom: 14, justifyContent: 'flex-end' }}>
         <span>{loc}</span><MapPin size={14} color={T.accent} />
       </div>
-      <div style={{ background: T.accentSoft, border: `1px solid ${T.accentLine}`, borderRadius: 18, padding: 24, textAlign: 'center', marginBottom: 18 }}>
-        <div style={{ color: T.accent, fontWeight: 700, fontSize: 13 }}>الصلاة القادمة</div>
-        {nextMeta && <nextMeta.Icon size={30} color={T.accent} style={{ margin: '10px auto' }} />}
-        <div style={{ fontWeight: 800, fontSize: 22, color: T.text }}>{nextMeta?.name}</div>
-        <div style={{ fontWeight: 800, fontSize: 34, color: T.accent, marginTop: 4 }}>{next?.time}</div>
+      <div style={{ position: 'relative', overflow: 'hidden', background: `radial-gradient(130% 120% at 50% -10%, ${T.accentSoft}, transparent 60%), ${T.surface}`, border: `1px solid ${T.accentLine}`, borderRadius: 22, padding: '26px 20px', textAlign: 'center', marginBottom: 18 }}>
+        <div style={{ color: T.accent, fontWeight: 700, fontSize: 13, marginBottom: 6 }}>الصلاة القادمة</div>
+        {nextMeta && <div style={{ width: 54, height: 54, borderRadius: 15, background: `${T.accent}1c`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', margin: '6px auto 10px' }}><nextMeta.Icon size={28} color={T.accent} /></div>}
+        <div style={{ fontWeight: 800, fontSize: 24, color: T.text }}>{nextMeta?.name}</div>
+        <div style={{ fontWeight: 800, fontSize: 18, color: T.accent, marginTop: 2 }}>{next?.time}</div>
+        <div style={{ marginTop: 14, display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: T.bg + 'aa', border: `1px solid ${T.border}`, borderRadius: 14, padding: '10px 22px' }}>
+          <div dir="ltr" style={{ fontSize: 30, fontWeight: 800, color: T.text, fontVariantNumeric: 'tabular-nums', letterSpacing: 1 }}>{countdown}</div>
+          <div style={{ fontSize: 11.5, color: T.textDim, fontWeight: 600 }}>الوقت المتبقّي</div>
+        </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {PRAYER_META.map((p) => {
@@ -1024,7 +1212,7 @@ export default function FatwaApp({ onClose, marnT, marnF, dark, initialScreen })
 
   return (
     <div dir="rtl" style={{ position: 'fixed', inset: 0, zIndex: 40, background: T.bg, color: T.text, fontFamily: FONT, display: 'flex', flexDirection: 'column' }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .fatwa-scroll::-webkit-scrollbar{width:0} .fcard:active{transform:scale(.97)} .fcard:hover{border-color:${T.accentLine}!important} @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}} .fadeup{animation:fadeUp .35s ease both}`}</style>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .fatwa-scroll::-webkit-scrollbar{width:0} .fcard:active{transform:scale(.97)} .fcard:hover{border-color:${T.accentLine}!important} @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}} .fadeup{animation:fadeUp .35s ease both} .tasbih-tap:active{transform:scale(.95);transition:transform .08s}`}</style>
       <TopBar
         title={meta.title}
         Icon={meta.Icon}
