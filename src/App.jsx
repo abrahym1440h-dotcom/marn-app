@@ -1214,6 +1214,10 @@ export default function App() {
         .card-surface { transition: box-shadow .15s ease; }
         .press { transition: opacity .15s ease; }
         .press:active { opacity: 0.7; }
+        .agentcard:active { transform: scale(.975); }
+        .agentcard:hover { border-color: rgba(255,255,255,0.18); }
+        @keyframes agentFade { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+        .agentfade { animation: agentFade .4s ease both; }
         .card-in { animation: ci .35s cubic-bezier(.2,.8,.3,1) both; }
         @keyframes ci { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         .tab-in { animation: ti .25s ease both; }
@@ -1667,68 +1671,123 @@ function EmptyState({ T, t, F, send, settings, userProfile, onOpenView, agent, o
   const name = userProfile?.name;
   const isAr = t.appName === "مرن";
   const A = agent || AGENTS.marn;
-  const allSugg = (A.suggestions && A.suggestions.length ? A.suggestions : t.suggestions) || [];
-  const sugg = isMobile ? allSugg.slice(0, 3) : allSugg;
 
-  const OTHER = isAr ? [
-    { label:"المنظّم", view:"organizer", color:"#8B7FE8",
-      icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8B7FE8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
-    { label:"المجموعات", view:"groups", color:"#2FB479",
-      icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2FB479" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="7" r="3"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg> },
-  ] : [];
+  // كل وكيل بواجهة رئيسية مختلفة بنيوياً
+  if (A.id === "nibras") return <NibrasHome T={T} F={F} A={A} name={name} onTool={onTool} send={send} onOpenView={onOpenView} isMobile={isMobile} settings={settings} />;
+  if (A.id === "fatwa") return <FatwaHome T={T} F={F} A={A} name={name} onTool={onTool} send={send} onOpenView={onOpenView} isMobile={isMobile} settings={settings} />;
+  return <MarnHome T={T} F={F} A={A} name={name} t={t} send={send} onOpenView={onOpenView} isMobile={isMobile} settings={settings} isAr={isAr} />;
+}
 
-  const icoSize = isMobile ? 54 : 62;
-
+/* ============ نبراس — مركز دراسي (شبكة أدوات كبيرة بوصف) ============ */
+function NibrasHome({ T, F, A, name, onTool, send, onOpenView, isMobile, settings }) {
+  const c = A.color;
+  const toolMeta = {
+    explain: { d: "اشرح أي درس بأسلوب مبسّط وأمثلة", ic: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" },
+    quiz: { d: "ولّد اختباراً تفاعلياً وقيّم نفسك", ic: "M9 11l3 3 8-8M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" },
+    cards: { d: "بطاقات مراجعة سريعة للحفظ", ic: "M2 7h20v10H2zM2 11h20" },
+    plan: { d: "خطة مذاكرة منظّمة بخطوات", ic: "M3 4h18v18H3zM16 2v4M8 2v4M3 10h18M8 14h2M14 14h2M8 18h2" },
+  };
   return (
-    <div style={{ textAlign: "center", padding: isMobile ? "20px 0 16px" : "36px 0 24px", maxWidth: 560, margin: "0 auto", width:"100%" }}>
-      {/* هوية الوكيل النشط */}
-      <div style={{
-        width: icoSize, height: icoSize, borderRadius: isMobile ? 16 : 19, margin: isMobile ? "0 auto 12px" : "0 auto 16px",
-        background: A.color + "14", border: `1px solid ${A.color}33`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-      }}>{AG_ICON[A.id] ? AG_ICON[A.id](A.color, isMobile ? 25 : 28) : null}</div>
+    <div style={{ maxWidth: 600, margin: "0 auto", width: "100%", padding: isMobile ? "10px 16px 16px" : "20px 16px 24px" }} className="agentfade">
+      <div style={{ position: "relative", overflow: "hidden", borderRadius: 22, padding: isMobile ? "22px 18px" : "28px 22px", marginBottom: 18, background: `radial-gradient(130% 130% at 100% -10%, ${c}26, transparent 55%), ${T.cardBg}`, border: `1px solid ${T.line}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
+          <div style={{ width: 52, height: 52, borderRadius: 15, background: `linear-gradient(145deg, ${c}, ${c}99)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            {AG_ICON[A.id] ? AG_ICON[A.id]("#1a1308", 26) : null}
+          </div>
+          <div>
+            <h1 style={{ fontSize: F.h2, fontWeight: 800, margin: 0, color: T.text }}>{name ? `جاهزين نذاكر، ${name}؟` : "وش نذاكر اليوم؟"}</h1>
+            <p style={{ fontSize: F.base - 1, color: T.sub, margin: "4px 0 0" }}>اختر أداة وابدأ — كل شيء منظّم لك</p>
+          </div>
+        </div>
+      </div>
 
-      <h1 style={{ fontSize: F.h1, fontWeight: 700, margin: "0 0 5px", color: T.text, letterSpacing: "-0.4px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 11, marginBottom: 18 }}>
+        {(A.tools || []).map(tool => {
+          const meta = toolMeta[tool.id] || { d: "", ic: "M12 2v20" };
+          return (
+            <button key={tool.id} onClick={() => onTool && onTool(tool)} className="agentcard" style={{ display: "flex", alignItems: "center", gap: 14, textAlign: "right", background: `linear-gradient(110deg, ${c}12, transparent 55%), ${T.cardBg}`, border: `1px solid ${T.line}`, borderRadius: 16, padding: isMobile ? "14px 15px" : "16px 18px", cursor: "pointer", fontFamily: "inherit", width: "100%", position: "relative", overflow: "hidden", transition: "transform .14s, border-color .14s" }}>
+              <div style={{ position: "absolute", insetInlineStart: 0, top: 0, bottom: 0, width: 3, background: c, opacity: 0.6 }} />
+              <div style={{ width: 46, height: 46, borderRadius: 13, background: `${c}1c`, border: `1px solid ${c}40`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={meta.ic} /></svg>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: F.base, fontWeight: 800, color: T.text }}>{tool.label}</div>
+                <div style={{ fontSize: F.label, color: T.sub, marginTop: 2 }}>{meta.d}</div>
+              </div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.faint} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+            </button>
+          );
+        })}
+      </div>
+
+      <AgentOtherTools T={T} F={F} onOpenView={onOpenView} />
+    </div>
+  );
+}
+
+/* ============ فتوى — لوحة روحانية (هيرو + صفوف ميزات) ============ */
+function FatwaHome({ T, F, A, name, onTool, send, onOpenView, isMobile, settings }) {
+  const c = A.color;
+  const rowMeta = {
+    ask: { d: "إجابة فورية مستندة لمصادر موثوقة", ic: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" },
+    prayer: { d: "المواقيت وعدّاد الصلاة القادمة", ic: "M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zM12 9h.01" },
+    adhkar: { d: "مسبحة تفاعلية وأكثر من 100 ذكر", ic: "M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5L19 19M19 5l-2.5 2.5M7.5 16.5L5 19" },
+    track: { d: "تابع صلواتك وصيامك وقرآنك", ic: "M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3" },
+  };
+  return (
+    <div style={{ maxWidth: 600, margin: "0 auto", width: "100%", padding: isMobile ? "10px 16px 16px" : "20px 16px 24px" }} className="agentfade">
+      <div style={{ position: "relative", overflow: "hidden", borderRadius: 22, padding: isMobile ? "26px 18px" : "32px 22px", marginBottom: 16, textAlign: "center", background: `radial-gradient(140% 130% at 50% -15%, ${c}26, transparent 58%), ${T.cardBg}`, border: `1px solid ${T.line}` }}>
+        <div style={{ width: 60, height: 60, borderRadius: 17, margin: "0 auto 14px", background: `linear-gradient(145deg, ${c}, ${c}88)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {AG_ICON[A.id] ? AG_ICON[A.id]("#06120E", 30) : null}
+        </div>
+        <h1 style={{ fontSize: F.h2, fontWeight: 800, margin: "0 0 5px", color: T.text }}>{name ? `حيّاك الله، ${name}` : "اسأل عن أمور دينك"}</h1>
+        <p style={{ fontSize: F.base - 1, color: c, fontWeight: 600, margin: 0 }}>﴿فَاسْأَلُوا أَهْلَ الذِّكْرِ إِن كُنتُمْ لَا تَعْلَمُونَ﴾</p>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+        {(A.tools || []).map(tool => {
+          const meta = rowMeta[tool.id] || { d: "", ic: "M12 2v20" };
+          return (
+            <button key={tool.id} onClick={() => onTool && onTool(tool)} className="agentcard" style={{ display: "flex", alignItems: "center", gap: 14, textAlign: "right", background: `linear-gradient(110deg, ${c}12, transparent 55%), ${T.cardBg}`, border: `1px solid ${T.line}`, borderRadius: 16, padding: isMobile ? "14px 15px" : "15px 18px", cursor: "pointer", fontFamily: "inherit", width: "100%", position: "relative", overflow: "hidden", transition: "transform .14s, border-color .14s" }}>
+              <div style={{ position: "absolute", insetInlineStart: 0, top: 0, bottom: 0, width: 3, background: c, opacity: 0.6 }} />
+              <div style={{ width: 46, height: 46, borderRadius: 13, background: `${c}1c`, border: `1px solid ${c}40`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={meta.ic} /></svg>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: F.base, fontWeight: 800, color: T.text }}>{tool.label}</div>
+                <div style={{ fontSize: F.label, color: T.sub, marginTop: 2 }}>{meta.d}</div>
+              </div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.faint} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+            </button>
+          );
+        })}
+      </div>
+
+      <AgentOtherTools T={T} F={F} onOpenView={onOpenView} />
+    </div>
+  );
+}
+
+/* ============ مرن — مطلق محادثة بسيط ============ */
+function MarnHome({ T, F, A, name, t, send, onOpenView, isMobile, settings, isAr }) {
+  const allSugg = (A.suggestions && A.suggestions.length ? A.suggestions : t.suggestions) || [];
+  const sugg = isMobile ? allSugg.slice(0, 4) : allSugg;
+  const icoSize = isMobile ? 54 : 62;
+  return (
+    <div style={{ textAlign: "center", padding: isMobile ? "30px 0 16px" : "56px 0 24px", maxWidth: 560, margin: "0 auto", width: "100%" }} className="agentfade">
+      <div style={{ width: icoSize, height: icoSize, borderRadius: isMobile ? 16 : 19, margin: isMobile ? "0 auto 14px" : "0 auto 18px", background: A.color + "14", border: `1px solid ${A.color}33`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {AG_ICON[A.id] ? AG_ICON[A.id](A.color, isMobile ? 25 : 28) : null}
+      </div>
+      <h1 style={{ fontSize: F.h1, fontWeight: 700, margin: "0 0 6px", color: T.text, letterSpacing: "-0.4px" }}>
         {A.greeting ? A.greeting(name) : (name ? `أهلاً، ${name}` : A.name)}
       </h1>
-      <p style={{ fontSize: F.base, color: T.sub, margin: isMobile ? "0 0 18px" : "0 0 26px", lineHeight: 1.6 }}>{A.desc}</p>
+      <p style={{ fontSize: F.base, color: T.sub, margin: isMobile ? "0 0 24px" : "0 0 32px", lineHeight: 1.6 }}>{A.desc}</p>
 
-      {/* أدوات الوكيل */}
-      {A.tools && A.tools.length > 0 && (
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap: isMobile ? 8 : 10, marginBottom: isMobile ? 18 : 24, padding:"0 16px" }}>
-          {A.tools.map(tool=>(
-            <button key={tool.id} onClick={()=>onTool&&onTool(tool)} className="press" style={{
-              display:"flex", alignItems:"center", gap:10,
-              background:T.cardBg, border:`1px solid ${T.line}`, borderRadius:13,
-              padding: isMobile ? "11px 12px" : "13px 14px", cursor:"pointer", fontFamily:"inherit", textAlign:"right",
-              transition:"border-color .15s",
-            }}
-              onMouseEnter={e=>{ e.currentTarget.style.borderColor = A.color+"66"; }}
-              onMouseLeave={e=>{ e.currentTarget.style.borderColor = T.line; }}>
-              <span style={{ width: isMobile?28:32, height: isMobile?28:32, borderRadius:9, background:A.color+"16", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <span style={{ width:7, height:7, borderRadius:"50%", background:A.color }}/>
-              </span>
-              <span style={{ fontSize: F.base - 1.5, fontWeight:700, color:T.text }}>{tool.label}</span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* اقتراحات */}
       {settings.showSuggestions && sugg.length > 0 && (
-        <div style={{ padding:"0 16px", marginBottom: OTHER.length ? (isMobile ? 16 : 22) : 0 }}>
-          <div style={{ fontSize: F.label, color: T.faint, fontWeight: 600, marginBottom: 10 }}>
-            {isAr ? "جرّب أن تسأل" : "Try asking"}
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 7, justifyContent: "center" }}>
+        <div style={{ padding: "0 16px", marginBottom: isMobile ? 18 : 24 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
             {sugg.map(s => (
-              <button key={s} onClick={() => send(s)} className="press"
-                style={{
-                  background: T.pillFill, color: T.text,
-                  border: `1px solid ${T.line}`, borderRadius: 999,
-                  padding: isMobile ? "8px 13px" : "9px 15px", fontSize: F.base - 1.5, fontWeight: 500,
-                  cursor: "pointer", fontFamily: "inherit", lineHeight: 1.4, transition: "all .15s",
-                }}
+              <button key={s} onClick={() => send(s)} className="press" style={{ background: T.pillFill, color: T.text, border: `1px solid ${T.line}`, borderRadius: 999, padding: isMobile ? "9px 15px" : "10px 17px", fontSize: F.base - 1, fontWeight: 500, cursor: "pointer", fontFamily: "inherit", lineHeight: 1.4, transition: "all .15s" }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = A.color + "66"; e.currentTarget.style.background = T.hover; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = T.line; e.currentTarget.style.background = T.pillFill; }}>
                 {s}
@@ -1738,26 +1797,30 @@ function EmptyState({ T, t, F, send, settings, userProfile, onOpenView, agent, o
         </div>
       )}
 
-      {/* أدوات أخرى */}
-      {OTHER.length > 0 && (
-        <div style={{ padding: isMobile ? "14px 16px 0" : "18px 16px 0", borderTop:`1px solid ${T.line}`, marginTop:8 }}>
-          <div style={{ fontSize:F.label, color:T.faint, fontWeight:600, marginBottom:10 }}>أدوات أخرى</div>
-          <div style={{ display:"flex", gap:9, justifyContent:"center" }}>
-            {OTHER.map(o=>(
-              <button key={o.view} onClick={()=>onOpenView&&onOpenView(o.view)} className="press" style={{
-                flex:1, maxWidth:200, display:"flex", alignItems:"center", gap:8, justifyContent:"center",
-                background:T.cardBg, border:`1px solid ${T.line}`, borderRadius:12, padding:"10px 12px",
-                cursor:"pointer", fontFamily:"inherit", transition:"border-color .15s",
-              }}
-                onMouseEnter={e=>{ e.currentTarget.style.borderColor = o.color+"66"; }}
-                onMouseLeave={e=>{ e.currentTarget.style.borderColor = T.line; }}>
-                <span style={{ display:"flex" }}>{o.icon}</span>
-                <span style={{ fontSize:F.base-1.5, fontWeight:600, color:T.text }}>{o.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <AgentOtherTools T={T} F={F} onOpenView={onOpenView} />
+    </div>
+  );
+}
+
+/* أدوات أخرى مشتركة (المنظّم + المجموعات) */
+function AgentOtherTools({ T, F, onOpenView }) {
+  const OTHER = [
+    { label: "المنظّم", view: "organizer", color: "#8B7FE8", ic: "M3 4h18v18H3zM16 2v4M8 2v4M3 10h18" },
+    { label: "المجموعات", view: "groups", color: "#2FB479", ic: "M9 7a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M17 7a3 3 0 1 0 0-6M21 21v-2a4 4 0 0 0-3-3.87" },
+  ];
+  return (
+    <div style={{ padding: "16px 0 0", borderTop: `1px solid ${T.line}` }}>
+      <div style={{ fontSize: F.label, color: T.faint, fontWeight: 600, marginBottom: 10, textAlign: "center" }}>أدوات أخرى</div>
+      <div style={{ display: "flex", gap: 9, justifyContent: "center" }}>
+        {OTHER.map(o => (
+          <button key={o.view} onClick={() => onOpenView && onOpenView(o.view)} className="press" style={{ flex: 1, maxWidth: 200, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", background: T.cardBg, border: `1px solid ${T.line}`, borderRadius: 12, padding: "11px 12px", cursor: "pointer", fontFamily: "inherit", transition: "border-color .15s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = o.color + "66"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = T.line; }}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={o.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={o.ic} /></svg>
+            <span style={{ fontSize: F.base - 1.5, fontWeight: 600, color: T.text }}>{o.label}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
