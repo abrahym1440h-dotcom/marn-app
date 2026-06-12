@@ -426,14 +426,14 @@ function parseFatwa(raw) {
 // ---------------------------------------------------------------------------
 function TopBar({ title, subtitle, Icon, onBack, onMenu }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: `1px solid ${T.borderSoft}`, background: T.surface, position: 'sticky', top: 0, zIndex: 5 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: `1px solid ${T.border}`, background: `linear-gradient(180deg, ${T.accent}14, ${T.surface} 80%)`, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 5 }}>
       {onMenu ? <button onClick={onMenu} style={iconBtn}><Menu size={22} color={T.text} /></button> : <div style={{ width: 40 }} />}
       <div style={{ textAlign: 'center', flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          {Icon && <Icon size={18} color={T.accent} />}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
+          {Icon && <span style={{ width: 30, height: 30, borderRadius: 9, background: `${T.accent}1c`, border: `1px solid ${T.accent}33`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={17} color={T.accent} /></span>}
           <span style={{ fontWeight: 800, color: T.text, fontSize: 17 }}>{title}</span>
         </div>
-        {subtitle && <div style={{ color: T.textDim, fontSize: 12, marginTop: 2 }}>{subtitle}</div>}
+        {subtitle && <div style={{ color: T.textDim, fontSize: 12, marginTop: 3 }}>{subtitle}</div>}
       </div>
       {onBack ? (
         <button onClick={onBack} style={iconBtn}><ArrowRight size={22} color={T.text} /></button>
