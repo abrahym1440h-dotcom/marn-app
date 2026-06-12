@@ -644,9 +644,15 @@ function fmtClock(t) {
 }
 const FALLBACK_TIMES = { Fajr: '04:15', Sunrise: '05:40', Dhuhr: '12:25', Asr: '15:43', Maghrib: '19:07', Isha: '20:27' };
 
+const QADA_KEY = 'fatwa_qada_v1';
+function loadQada() { try { return { owed: 0, done: 0, ...JSON.parse(localStorage.getItem(QADA_KEY) || '{}') }; } catch { return { owed: 0, done: 0 }; } }
+function saveQada(q) { try { localStorage.setItem(QADA_KEY, JSON.stringify(q)); } catch {} }
+
 function TrackingView() {
   const [tab, setTab] = useState('salah');
   const [data, setData] = useState(loadTracking);
+  const [qada, setQada] = useState(loadQada);
+  const setQ = (patch) => { const nq = { ...qada, ...patch }; if (nq.owed < 0) nq.owed = 0; if (nq.done < 0) nq.done = 0; if (nq.done > nq.owed) nq.done = nq.owed; setQada(nq); saveQada(nq); };
   const key = todayKey();
   const day = data[key] || { prayers: [false, false, false, false, false], quranPages: 0, fasted: false };
 
@@ -698,10 +704,52 @@ function TrackingView() {
       )}
 
       {tab === 'siyam' && (
-        <button onClick={() => update({ fasted: !day.fasted })} style={{ width: '100%', background: day.fasted ? T.goldSoft : T.surface, border: `1px solid ${day.fasted ? T.gold + '66' : T.border}`, borderRadius: 16, padding: 24, cursor: 'pointer', textAlign: 'center' }}>
-          <Moon size={30} color={day.fasted ? T.gold : T.textDim} />
-          <div style={{ fontWeight: 800, fontSize: 18, color: T.text, marginTop: 10 }}>{day.fasted ? 'صمت اليوم — تقبّل الله' : 'سجّل صيام اليوم'}</div>
-        </button>
+        <>
+          {/* بطاقة صيام اليوم */}
+          <div style={{ background: `linear-gradient(135deg, ${T.goldSoft}, transparent 70%), ${T.surface}`, border: `1px solid ${day.fasted ? T.gold + '66' : T.border}`, borderRadius: 18, padding: 22, marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <Moon size={26} color={day.fasted ? T.gold : T.textDim} />
+              <div style={{ textAlign: 'end' }}>
+                <div style={{ fontWeight: 800, fontSize: 17, color: T.text }}>{day.fasted ? 'صمت اليوم — تقبّل الله' : 'صيام اليوم'}</div>
+                <div style={{ color: T.textDim, fontSize: 12.5, marginTop: 2 }}>{day.fasted ? (day.fastType === 'qada' ? 'محسوب من القضاء' : 'نافلة — أجر عظيم') : 'سجّل صيامك وحدد نوعه'}</div>
+              </div>
+            </div>
+            {!day.fasted ? (
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={() => update({ fasted: true, fastType: 'nafl' })} style={{ flex: 1, background: T.gold, color: '#1a1208', border: 'none', borderRadius: 12, padding: '13px 0', fontWeight: 800, cursor: 'pointer', fontSize: 14.5 }}>صيام نافلة</button>
+                <button onClick={() => { update({ fasted: true, fastType: 'qada' }); setQ({ done: qada.done + 1 }); }} style={{ flex: 1, background: 'transparent', color: T.gold, border: `1.5px solid ${T.gold}`, borderRadius: 12, padding: '13px 0', fontWeight: 800, cursor: 'pointer', fontSize: 14.5 }}>صيام قضاء</button>
+              </div>
+            ) : (
+              <button onClick={() => { if (day.fastType === 'qada') setQ({ done: qada.done - 1 }); update({ fasted: false, fastType: null }); }} style={{ width: '100%', background: 'transparent', color: T.textDim, border: `1px solid ${T.border}`, borderRadius: 12, padding: '11px 0', fontWeight: 700, cursor: 'pointer', fontSize: 13.5 }}>تراجع عن تسجيل اليوم</button>
+            )}
+          </div>
+
+          {/* عدّاد القضاء */}
+          <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 18, padding: 22 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <span style={{ background: T.accentSoft, color: T.accent, borderRadius: 999, padding: '4px 12px', fontSize: 12, fontWeight: 700 }}>{Math.max(0, qada.owed - qada.done)} متبقٍ</span>
+              <div style={{ fontWeight: 800, fontSize: 16, color: T.text }}>قضاء الصيام</div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+              <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, textAlign: 'center' }}>
+                <div style={{ color: T.textDim, fontSize: 12.5, marginBottom: 8 }}>الأيام التي عليّ</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                  <button onClick={() => setQ({ owed: qada.owed - 1 })} style={{ ...stepBtn, width: 38, height: 38 }}><Minus size={16} color={T.text} /></button>
+                  <span style={{ fontWeight: 800, fontSize: 26, color: T.text, minWidth: 36 }}>{qada.owed}</span>
+                  <button onClick={() => setQ({ owed: qada.owed + 1 })} style={{ ...stepBtn, width: 38, height: 38, background: T.accent }}><Plus size={16} color="#fff" /></button>
+                </div>
+              </div>
+              <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, textAlign: 'center' }}>
+                <div style={{ color: T.textDim, fontSize: 12.5, marginBottom: 8 }}>قضيتُ منها</div>
+                <div style={{ fontWeight: 800, fontSize: 32, color: T.good, lineHeight: '38px' }}>{qada.done}</div>
+              </div>
+            </div>
+            <div style={{ height: 10, borderRadius: 999, background: T.surfaceAlt, overflow: 'hidden', marginBottom: 10 }}>
+              <div style={{ height: '100%', width: `${qada.owed ? Math.round((qada.done / qada.owed) * 100) : 0}%`, background: `linear-gradient(90deg, ${T.good}, ${T.gold})`, borderRadius: 999, transition: 'width .4s' }} />
+            </div>
+            <div style={{ color: T.textDim, fontSize: 12, textAlign: 'center' }}>{qada.owed === 0 ? 'حدد عدد الأيام التي عليك قضاؤها' : qada.done >= qada.owed ? 'أتممت القضاء كاملاً — تقبّل الله طاعتك' : `أنجزت ${Math.round((qada.done / qada.owed) * 100)}٪ من القضاء`}</div>
+          </div>
+        </>
       )}
     </div>
   );
@@ -771,6 +819,7 @@ function AnalyticsView() {
         <Stat Icon={Compass} value={`${fullDays}/14`} label="أيام الصلاة الكاملة" tint={T.accent} />
         <Stat Icon={Activity} value={`${streak}`} label="أطول سلسلة (يوم)" tint={T.gold} />
         <Stat Icon={Moon} value={`${totalFasts}`} label="أيام الصيام" tint={T.purple} />
+        <Stat Icon={Check} value={`${loadQada().done}/${loadQada().owed}`} label="قضاء الصيام" tint={T.gold} />
         <Stat Icon={BookOpen} value={`${totalPages}`} label="صفحات القرآن" tint={T.good} />
       </div>
       <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 18 }}>
