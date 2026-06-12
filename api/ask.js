@@ -518,6 +518,8 @@ export default async function handler(req, res) {
     history = Array.isArray(body?.history) ? body.history.slice(-8) : [];
     timeFormat = body?.timeFormat === "24" ? "24" : "12";
     var cachedKnowledge = typeof body?.cachedKnowledge === "string" ? body.cachedKnowledge.slice(0, 4000) : "";
+    var rawMode = body?.mode === "raw";
+    var rawSystem = typeof body?.system === "string" ? body.system.slice(0, 2000) : "";
     lang = body?.lang === "en" ? "en" : "ar";
     forceSearch = body?.forceSearch === true;
     userProfile = body?.userProfile || null;
@@ -535,6 +537,29 @@ export default async function handler(req, res) {
   };
   const apiKey = ((KEY_BY_AGENT[agent] || process.env.CEREBRAS_API_KEY) || "").trim();
   if (!apiKey.startsWith("csk-")) return res.status(500).json({ error: "Invalid key", agent });
+
+  // ===== وضع النص الخام: لأدوات نبراس (اختبارات، بطاقات، خطط، تلخيص) — يرجع {text} مباشرة =====
+  if (rawMode) {
+    const sysR = rawSystem || "أنت نبراس، مساعد تعليمي ذكي باللغة العربية الفصحى المبسطة. اشرح بوضوح ودقة.";
+    for (const model of MODELS_TO_TRY) {
+      try {
+        const ctrl = new AbortController();
+        const tt = setTimeout(() => ctrl.abort(), 28000);
+        const r = await fetch("https://api.cerebras.ai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + apiKey },
+          body: JSON.stringify({ model, messages: [{ role: "system", content: sysR }, { role: "user", content: question }], temperature: 0.3, max_tokens: 4000 }),
+          signal: ctrl.signal,
+        });
+        clearTimeout(tt);
+        if (!r.ok) continue;
+        const d = await r.json();
+        const text = d?.choices?.[0]?.message?.content || "";
+        if (text) return res.status(200).json({ text });
+      } catch { /* جرّب النموذج التالي */ }
+    }
+    return res.status(502).json({ error: "الخدمة مزدحمة حالياً — جرّب بعد لحظات", text: "" });
+  }
 
   // ===== توجيه ذكي حسب نية السؤال — ينتقل تلقائياً بين المساعدين =====
   const GENERAL_DOMAINS = /طقس|حرار|مطر|رياح|مباراة|مباريات|الدوري|كأس|نتيجة|ترتيب|تشكيلة|سعر|أسعار|سهم|أسهم|عملة|دولار|بتكوين|ذهب|نفط|أخبار|خبر|weather|temperature|rain|match|league|score|standings|stock|price|bitcoin|news/i;
