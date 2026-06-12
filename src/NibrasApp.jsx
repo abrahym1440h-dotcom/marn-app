@@ -58,14 +58,14 @@ const Star = mk(<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12
 // الهوية
 // ---------------------------------------------------------------------------
 const T = {
-  bg: '#070C1A', surface: '#0E1730', surfaceAlt: '#101B38', border: '#1E2A4A', borderSoft: '#16223F',
-  text: '#E8EEFB', textDim: '#8A98B8', textFaint: '#5A6886',
-  accent: '#4A8FFF', accentSoft: 'rgba(74,143,255,0.12)', accentLine: 'rgba(74,143,255,0.30)',
-  gold: '#E2B14A', goldSoft: 'rgba(226,177,74,0.14)', goldLine: 'rgba(226,177,74,0.32)',
-  good: '#34C77B', goodSoft: 'rgba(52,199,123,0.12)',
-  purple: '#A78BFA', purpleSoft: 'rgba(167,139,250,0.12)',
-  rose: '#F472B6', roseSoft: 'rgba(244,114,182,0.12)',
-  red: '#F87171',
+  bg: '#0F0A04', surface: '#1A1308', surfaceAlt: '#211910', border: '#3A2C16', borderSoft: '#2C2012',
+  text: '#F6EEDD', textDim: '#BBA079', textFaint: '#7D6A4C',
+  accent: '#E2B14A', accentSoft: 'rgba(226,177,74,0.14)', accentLine: 'rgba(226,177,74,0.34)',
+  gold: '#E2B14A', goldSoft: 'rgba(226,177,74,0.14)', goldLine: 'rgba(226,177,74,0.34)',
+  good: '#5BBF86', goodSoft: 'rgba(91,191,134,0.13)',
+  purple: '#C79BE8', purpleSoft: 'rgba(199,155,232,0.12)',
+  rose: '#E89B6F', roseSoft: 'rgba(232,155,111,0.12)',
+  red: '#F0876B',
 };
 const FONT = "'Tajawal','Segoe UI',system-ui,sans-serif";
 
@@ -107,8 +107,8 @@ function extractText(d) {
   return nested && nested !== d ? extractText(nested) : '';
 }
 async function ask(userPrompt, system) {
-  const body = { question: userPrompt, system: system || NIBRAS_SYSTEM };
-  const res = await fetch('/api/nibras', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const body = { question: userPrompt, system: system || NIBRAS_SYSTEM, mode: 'raw', agent: 'nibras', lang: 'ar' };
+  const res = await fetch('/api/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   if (!res.ok) throw new Error('network');
   const data = await res.json();
   return data?.text || '';
@@ -159,8 +159,9 @@ function Btn({ children, onClick, variant = 'primary', disabled, full, style }) 
   );
 }
 function Heading({ title, subtitle }) {
-  return (<div style={{ textAlign: 'right', marginBottom: 18 }}>
-    <div style={{ fontWeight: 800, fontSize: 20, color: T.text }}>{title}</div>
+  return (<div style={{ textAlign: 'right', marginBottom: 18, position: 'relative', paddingInlineStart: 14 }}>
+    <div style={{ position: 'absolute', insetInlineStart: 0, top: 3, bottom: 3, width: 4, borderRadius: 4, background: `linear-gradient(${T.accent}, ${T.good})` }} />
+    <div style={{ fontWeight: 800, fontSize: 21, color: T.text, letterSpacing: '-0.3px' }}>{title}</div>
     {subtitle && <div style={{ color: T.textDim, fontSize: 13, marginTop: 4 }}>{subtitle}</div>}
   </div>);
 }
@@ -184,11 +185,12 @@ function StatCard({ Icon, value, label, tint, tintSoft }) {
   </div>);
 }
 function FeatureCard({ Icon, title, desc, tint, tintSoft, onClick }) {
-  return (<button onClick={onClick} style={{ textAlign: 'right', background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 18, cursor: 'pointer', width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
-    <div style={{ width: 44, height: 44, borderRadius: 12, background: tintSoft, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={22} color={tint} /></div>
+  return (<button onClick={onClick} className="ncard" style={{ textAlign: 'right', background: `linear-gradient(150deg, ${tintSoft}, transparent 65%), ${T.surface}`, border: `1px solid ${T.border}`, borderRadius: 18, padding: 18, cursor: 'pointer', width: '100%', display: 'flex', flexDirection: 'column', gap: 9, position: 'relative', overflow: 'hidden', transition: 'transform .15s, border-color .15s' }}>
+    <div style={{ position: 'absolute', insetInlineStart: 0, top: 0, bottom: 0, width: 3, background: tint, opacity: 0.55 }} />
+    <div style={{ width: 46, height: 46, borderRadius: 13, background: tintSoft, border: `1px solid ${tint}33`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={22} color={tint} /></div>
     <div style={{ fontWeight: 800, color: T.text, fontSize: 16 }}>{title}</div>
-    {desc && <div style={{ color: T.textDim, fontSize: 13, lineHeight: 1.6 }}>{desc}</div>}
-    <div style={{ color: T.accent, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>استكشف <ChevronLeft size={14} color={T.accent} /></div>
+    {desc && <div style={{ color: T.textDim, fontSize: 12.5, lineHeight: 1.6 }}>{desc}</div>}
+    <div style={{ color: tint, fontSize: 12.5, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>استكشف <ChevronLeft size={14} color={tint} /></div>
   </button>);
 }
 
@@ -207,10 +209,16 @@ function Dashboard({ store, go, name }) {
     { id: 'stats', title: 'الإحصائيات', desc: 'تابع تقدمك الأكاديمي', Icon: BarChart3, tint: T.purple, tintSoft: T.purpleSoft },
     { id: 'files', title: 'الملفات المرفوعة', desc: 'ارفع ملفاتك ولخّصها', Icon: FileUp, tint: T.accent, tintSoft: T.accentSoft },
   ];
-  return (<div style={{ padding: 18 }}>
-    <div style={{ background: T.goldSoft, border: `1px solid ${T.goldLine}`, borderRadius: 18, padding: 22, marginBottom: 18 }}>
-      <div style={{ fontWeight: 800, fontSize: 20, color: T.text }}>{name ? `مساء الخير، ${name}` : 'مساء الخير'}</div>
-      <div style={{ color: T.textDim, fontSize: 14, marginTop: 6 }}>مرحباً بك في نبراس — مساعدك الذكي للتعلّم والتفوق</div>
+  return (<div style={{ padding: 18 }} className="nfadeup">
+    <div style={{ position: 'relative', overflow: 'hidden', background: `radial-gradient(130% 120% at 100% -10%, ${T.goldSoft}, transparent 55%), ${T.surface}`, border: `1px solid ${T.border}`, borderRadius: 20, padding: '24px 22px', marginBottom: 18 }}>
+      <div style={{ position: 'absolute', insetInlineEnd: -10, top: -10, width: 90, height: 90, borderRadius: '50%', background: `radial-gradient(circle, ${T.gold}22, transparent 70%)` }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 48, height: 48, borderRadius: 14, background: `linear-gradient(145deg, ${T.gold}, ${T.rose})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Sparkles size={24} color="#0F0A04" /></div>
+        <div>
+          <div style={{ fontWeight: 800, fontSize: 20, color: T.text }}>{name ? `أهلاً ${name}` : 'أهلاً بك في نبراس'}</div>
+          <div style={{ color: T.textDim, fontSize: 13.5, marginTop: 3 }}>مساعدك الذكي للتعلّم والتفوّق الأكاديمي</div>
+        </div>
+      </div>
     </div>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 22 }}>
       <StatCard Icon={Video} value={store.videos.length} label="الفيديوهات" tint={T.gold} tintSoft={T.goldSoft} />
@@ -1011,7 +1019,7 @@ export default function NibrasApp({ onClose, marnT, marnF, dark, initialScreen }
   }[view];
 
   return (<div dir="rtl" style={{ position: 'fixed', inset: 0, zIndex: 40, background: T.bg, color: T.text, fontFamily: FONT, display: 'flex', flexDirection: 'column' }}>
-    <style>{`@keyframes nspin{to{transform:rotate(360deg)}} .nbr-scroll::-webkit-scrollbar{width:0}`}</style>
+    <style>{`@keyframes nspin{to{transform:rotate(360deg)}} .nbr-scroll::-webkit-scrollbar{width:0} .ncard:active{transform:scale(.97)} .ncard:hover{border-color:${T.accentLine}!important} @keyframes nFadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}} .nfadeup{animation:nFadeUp .35s ease both}`}</style>
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: `1px solid ${T.border}`, background: marnT ? marnT.headerBg : '#0B1430', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 5 }}>
       <div style={{ width: 40 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
