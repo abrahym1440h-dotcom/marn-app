@@ -1690,7 +1690,8 @@ function NibrasHome({ T, F, A, name, onTool, send, onOpenView, isMobile, setting
   return (
     <div style={{ maxWidth: 600, margin: "0 auto", width: "100%", padding: isMobile ? "10px 16px 16px" : "20px 16px 24px" }} className="agentfade">
       <div style={{ position: "relative", overflow: "hidden", borderRadius: 22, padding: isMobile ? "22px 18px" : "28px 22px", marginBottom: 18, background: `radial-gradient(130% 130% at 100% -10%, ${c}26, transparent 55%), ${T.cardBg}`, border: `1px solid ${T.line}` }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
+        <div style={{ position: "absolute", insetInlineEnd: -30, top: -30, width: 130, height: 130, borderRadius: "50%", background: `radial-gradient(circle, ${c}33, transparent 68%)`, pointerEvents: "none" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 13, position: "relative" }}>
           <div style={{ width: 52, height: 52, borderRadius: 15, background: `linear-gradient(145deg, ${c}, ${c}99)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             {AG_ICON[A.id] ? AG_ICON[A.id]("#1a1308", 26) : null}
           </div>
@@ -1737,6 +1738,8 @@ function FatwaHome({ T, F, A, name, onTool, send, onOpenView, isMobile, settings
   return (
     <div style={{ maxWidth: 600, margin: "0 auto", width: "100%", padding: isMobile ? "10px 16px 16px" : "20px 16px 24px" }} className="agentfade">
       <div style={{ position: "relative", overflow: "hidden", borderRadius: 22, padding: isMobile ? "26px 18px" : "32px 22px", marginBottom: 16, textAlign: "center", background: `radial-gradient(140% 130% at 50% -15%, ${c}26, transparent 58%), ${T.cardBg}`, border: `1px solid ${T.line}` }}>
+        <div style={{ position: "absolute", insetInlineStart: "50%", top: -60, width: 200, height: 200, marginInlineStart: -100, borderRadius: "50%", border: `1px solid ${c}22`, pointerEvents: "none" }} />
+        <div style={{ position: "absolute", insetInlineStart: "50%", top: -30, width: 130, height: 130, marginInlineStart: -65, borderRadius: "50%", border: `1px solid ${c}1a`, pointerEvents: "none" }} />
         <div style={{ width: 60, height: 60, borderRadius: 17, margin: "0 auto 14px", background: `linear-gradient(145deg, ${c}, ${c}88)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
           {AG_ICON[A.id] ? AG_ICON[A.id]("#06120E", 30) : null}
         </div>
