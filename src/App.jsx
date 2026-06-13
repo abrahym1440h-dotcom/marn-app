@@ -1216,6 +1216,8 @@ export default function App() {
         .press:active { opacity: 0.7; }
         .agentcard:active { transform: scale(.975); }
         .agentcard:hover { border-color: rgba(255,255,255,0.18); }
+        .listrow:active { background: rgba(255,255,255,0.04); }
+        .listrow:hover { background: rgba(255,255,255,0.03); }
         @keyframes agentFade { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
         .agentfade { animation: agentFade .4s ease both; }
         .card-in { animation: ci .35s cubic-bezier(.2,.8,.3,1) both; }
@@ -1702,20 +1704,19 @@ function NibrasHome({ T, F, A, name, onTool, send, onOpenView, isMobile, setting
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 11, marginBottom: 18 }}>
+      <div style={{ display: "flex", flexDirection: "column", marginBottom: 18, borderTop: `1px solid ${T.line}` }}>
         {(A.tools || []).map(tool => {
           const meta = toolMeta[tool.id] || { d: "", ic: "M12 2v20" };
           return (
-            <button key={tool.id} onClick={() => onTool && onTool(tool)} className="agentcard" style={{ display: "flex", alignItems: "center", gap: 14, textAlign: "right", background: `linear-gradient(110deg, ${c}12, transparent 55%), ${T.cardBg}`, border: `1px solid ${T.line}`, borderRadius: 16, padding: isMobile ? "14px 15px" : "16px 18px", cursor: "pointer", fontFamily: "inherit", width: "100%", position: "relative", overflow: "hidden", transition: "transform .14s, border-color .14s" }}>
-              <div style={{ position: "absolute", insetInlineStart: 0, top: 0, bottom: 0, width: 3, background: c, opacity: 0.6 }} />
-              <div style={{ width: 46, height: 46, borderRadius: 13, background: `${c}1c`, border: `1px solid ${c}40`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={meta.ic} /></svg>
+            <button key={tool.id} onClick={() => onTool && onTool(tool)} className="listrow" style={{ display: "flex", alignItems: "center", gap: 13, textAlign: "right", background: "transparent", border: "none", borderBottom: `1px solid ${T.line}`, padding: "15px 4px", cursor: "pointer", fontFamily: "inherit", width: "100%", transition: "background .15s" }}>
+              <div style={{ width: 40, height: 40, borderRadius: 11, background: `${c}16`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={meta.ic} /></svg>
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: F.base, fontWeight: 800, color: T.text }}>{tool.label}</div>
-                <div style={{ fontSize: F.label, color: T.sub, marginTop: 2 }}>{meta.d}</div>
+                <div style={{ fontSize: F.base, fontWeight: 700, color: T.text }}>{tool.label}</div>
+                <div style={{ fontSize: F.label, color: T.faint, marginTop: 2 }}>{meta.d}</div>
               </div>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.faint} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={T.faint} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
           );
         })}
@@ -1747,20 +1748,19 @@ function FatwaHome({ T, F, A, name, onTool, send, onOpenView, isMobile, settings
         <p style={{ fontSize: F.base - 1, color: c, fontWeight: 600, margin: 0 }}>﴿فَاسْأَلُوا أَهْلَ الذِّكْرِ إِن كُنتُمْ لَا تَعْلَمُونَ﴾</p>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+      <div style={{ display: "flex", flexDirection: "column", marginBottom: 18, borderTop: `1px solid ${T.line}` }}>
         {(A.tools || []).map(tool => {
           const meta = rowMeta[tool.id] || { d: "", ic: "M12 2v20" };
           return (
-            <button key={tool.id} onClick={() => onTool && onTool(tool)} className="agentcard" style={{ display: "flex", alignItems: "center", gap: 14, textAlign: "right", background: `linear-gradient(110deg, ${c}12, transparent 55%), ${T.cardBg}`, border: `1px solid ${T.line}`, borderRadius: 16, padding: isMobile ? "14px 15px" : "15px 18px", cursor: "pointer", fontFamily: "inherit", width: "100%", position: "relative", overflow: "hidden", transition: "transform .14s, border-color .14s" }}>
-              <div style={{ position: "absolute", insetInlineStart: 0, top: 0, bottom: 0, width: 3, background: c, opacity: 0.6 }} />
-              <div style={{ width: 46, height: 46, borderRadius: 13, background: `${c}1c`, border: `1px solid ${c}40`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={meta.ic} /></svg>
+            <button key={tool.id} onClick={() => onTool && onTool(tool)} className="listrow" style={{ display: "flex", alignItems: "center", gap: 13, textAlign: "right", background: "transparent", border: "none", borderBottom: `1px solid ${T.line}`, padding: "15px 4px", cursor: "pointer", fontFamily: "inherit", width: "100%", transition: "background .15s" }}>
+              <div style={{ width: 40, height: 40, borderRadius: 11, background: `${c}16`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={meta.ic} /></svg>
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: F.base, fontWeight: 800, color: T.text }}>{tool.label}</div>
-                <div style={{ fontSize: F.label, color: T.sub, marginTop: 2 }}>{meta.d}</div>
+                <div style={{ fontSize: F.base, fontWeight: 700, color: T.text }}>{tool.label}</div>
+                <div style={{ fontSize: F.label, color: T.faint, marginTop: 2 }}>{meta.d}</div>
               </div>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.faint} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={T.faint} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
           );
         })}
