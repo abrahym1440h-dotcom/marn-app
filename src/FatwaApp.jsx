@@ -450,14 +450,16 @@ function Tag({ children, tint, soft }) {
 
 function FeatureCard({ Icon, title, desc, tint, tintSoft, onClick, count }) {
   return (
-    <button onClick={onClick} className="fcard" style={{ textAlign: 'right', background: `linear-gradient(150deg, ${tintSoft}, transparent 65%), ${T.surface}`, border: `1px solid ${T.border}`, borderRadius: 18, padding: 18, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 9, width: '100%', position: 'relative', overflow: 'hidden', transition: 'transform .15s, border-color .15s' }}>
-      <div style={{ position: 'absolute', insetInlineStart: 0, top: 0, bottom: 0, width: 3, background: tint, opacity: 0.55 }} />
-      <div style={{ width: 46, height: 46, borderRadius: 13, background: tintSoft, border: `1px solid ${tint}33`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Icon size={22} color={tint} />
+    <button onClick={onClick} className="listrow" style={{ textAlign: 'right', background: 'transparent', border: 'none', borderBottom: `1px solid ${T.borderSoft}`, padding: '15px 4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 13, width: '100%', transition: 'background .15s' }}>
+      <div style={{ width: 40, height: 40, borderRadius: 11, background: `${tint}16`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon size={19} color={tint} />
       </div>
-      <div style={{ fontWeight: 800, color: T.text, fontSize: 16 }}>{title}</div>
-      {desc && <div style={{ color: T.textDim, fontSize: 12.5, lineHeight: 1.6 }}>{desc}</div>}
-      {count != null && <div style={{ color: tint, fontSize: 11.5, fontWeight: 700, background: tintSoft, alignSelf: 'flex-start', padding: '2px 9px', borderRadius: 999 }}>{count} عنصر</div>}
+      <div style={{ flex: 1 }}>
+        <div style={{ fontWeight: 700, color: T.text, fontSize: 15.5 }}>{title}</div>
+        {desc && <div style={{ color: T.textFaint, fontSize: 12, lineHeight: 1.5, marginTop: 2 }}>{desc}</div>}
+        {count != null && <div style={{ color: T.textFaint, fontSize: 12, marginTop: 2 }}>{count} عنصر</div>}
+      </div>
+      <ChevronLeft size={17} color={T.textFaint} />
     </button>
   );
 }
@@ -511,7 +513,7 @@ function HomeView({ go }) {
           <div style={{ color: 'rgba(6,18,14,0.75)', fontSize: 13, fontWeight: 600 }}>إجابة فورية مستندة لمصادر شرعية موثوقة</div>
         </div>
       </button>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      <div style={{ borderTop: `1px solid ${T.borderSoft}` }}>
         {tiles.map((t) => <FeatureCard key={t.id} {...t} onClick={() => go(t.id)} />)}
       </div>
     </div>
@@ -634,7 +636,7 @@ function LibraryView() {
   return (
     <div style={{ padding: 18 }}>
       <Heading title="الفتاوى الشرعية" subtitle="اختر القسم المطلوب" />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      <div style={{ borderTop: `1px solid ${T.borderSoft}` }}>
         {FATWA_CATEGORIES.map((c) => <FeatureCard key={c.id} {...c} onClick={() => setCat(c.id)} />)}
       </div>
     </div>
@@ -649,21 +651,23 @@ function AdhkarView() {
     return <TasbihRunner cat={c} list={list} onExit={() => setCat(null)} />;
   }
   return (
-    <div style={{ padding: 18 }} className="fadeup">
-      <Heading title="الأذكار والأدعية" subtitle="مسبحة تفاعلية — اضغط لتُسبّح حتى يكتمل العدد" />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {ADHKAR_CATEGORIES.map((c) => {
+    <div style={{ padding: 0 }} className="fadeup">
+      <div style={{ padding: '18px 18px 6px' }}>
+        <Heading title="الأذكار والأدعية" subtitle="اختر القسم لتبدأ التسبيح" />
+      </div>
+      <div>
+        {ADHKAR_CATEGORIES.map((c, i) => {
           const n = (ADHKAR[c.id] || []).length;
           return (
-            <button key={c.id} onClick={() => setCat(c.id)} className="fcard" style={{ display: 'flex', alignItems: 'center', gap: 14, textAlign: 'right', background: `linear-gradient(110deg, ${c.tint}14, transparent 55%), ${T.surface}`, border: `1px solid ${T.border}`, borderRadius: 16, padding: '15px 16px', cursor: 'pointer', width: '100%', position: 'relative', overflow: 'hidden', transition: 'transform .15s, border-color .15s' }}>
-              <div style={{ width: 46, height: 46, borderRadius: 13, background: `${c.tint}1c`, border: `1px solid ${c.tint}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <c.Icon size={22} color={c.tint} />
+            <button key={c.id} onClick={() => setCat(c.id)} className="listrow" style={{ display: 'flex', alignItems: 'center', gap: 14, textAlign: 'right', background: 'transparent', border: 'none', borderTop: i === 0 ? `1px solid ${T.borderSoft}` : 'none', borderBottom: `1px solid ${T.borderSoft}`, padding: '16px 18px', cursor: 'pointer', width: '100%', transition: 'background .15s' }}>
+              <div style={{ width: 38, height: 38, borderRadius: 11, background: `${c.tint}16`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <c.Icon size={19} color={c.tint} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 800, color: T.text, fontSize: 16 }}>{c.title}</div>
-                <div style={{ color: T.textDim, fontSize: 12, marginTop: 2 }}>{n} ذكر</div>
+                <div style={{ fontWeight: 700, color: T.text, fontSize: 15.5 }}>{c.title}</div>
+                <div style={{ color: T.textFaint, fontSize: 12, marginTop: 2 }}>{n} ذكر</div>
               </div>
-              <ChevronLeft size={18} color={T.textFaint} />
+              <ChevronLeft size={17} color={T.textFaint} />
             </button>
           );
         })}
@@ -1071,7 +1075,7 @@ function FaqView() {
           {!(FAQ[cat] || []).length && <Empty text="سيُضاف هذا القسم قريباً." />}
         </>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ borderTop: `1px solid ${T.borderSoft}` }}>
           {FAQ_CATEGORIES.map((c) => (
             <FeatureCard key={c.id} Icon={c.Icon} title={c.title} count={c.count} tint={c.tint} tintSoft={T.accentSoft} onClick={() => setCat(c.id)} />
           ))}
@@ -1212,7 +1216,7 @@ export default function FatwaApp({ onClose, marnT, marnF, dark, initialScreen })
 
   return (
     <div dir="rtl" style={{ position: 'fixed', inset: 0, zIndex: 40, background: T.bg, color: T.text, fontFamily: FONT, display: 'flex', flexDirection: 'column' }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .fatwa-scroll::-webkit-scrollbar{width:0} .fcard:active{transform:scale(.97)} .fcard:hover{border-color:${T.accentLine}!important} @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}} .fadeup{animation:fadeUp .35s ease both} .tasbih-tap:active{transform:scale(.95);transition:transform .08s}`}</style>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} .fatwa-scroll::-webkit-scrollbar{width:0} .fcard:active{transform:scale(.97)} .fcard:hover{border-color:${T.accentLine}!important} .listrow:active{background:${T.surface}!important} .listrow:hover{background:${T.surfaceAlt}!important} @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}} .fadeup{animation:fadeUp .35s ease both} .tasbih-tap:active{transform:scale(.95);transition:transform .08s}`}</style>
       <TopBar
         title={meta.title}
         Icon={meta.Icon}
