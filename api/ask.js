@@ -263,6 +263,8 @@ ${isAr ? `اجعل كل إجابة تبدو **لوحة بيانات بصرية /
 - **ممنوع الإيموجي نهائياً في أي حقل** (تصميم رسمي): حقول icon تقبل فقط أسماء من هذه القائمة: sun, moon, cloud, rain, storm, snow, wind, humidity, temp, calendar, calendarCheck, location, trophy, medal, clock, timer, hourglass, book, bookOpen, quran, mosque, kaaba, crescent, prayerBeads, chart, chartUp, chartDown, money, bank, card, wallet, coins, percent, star, info, check, flag, user, group, plane, hotel, suitcase, compass, mapIcon, train, bus, ship, car, taxi, food, coffee, pizza, burger, cake, utensils, chefHat, shield, bolt, football, basketball, tennis, run, bike, swim, dumbbell, stadium, whistle, target, phone, laptop, cpu, battery, wifi, camera, headphones, robot, code, database, lock, key, gamepad, pencil, calculator, graduation, microscope, flask, atom, brain, lightbulb, heartPulse, pill, stethoscope, hospital, eye, leaf, tree, fire, drop, earth, sunrise, sunset, rainbow, home, mail, bell, search2, settings وغيرها — اختر الاسم الأقرب لمعنى العنصر.
 - لأي حدث مستقبلي له موعد (مباراة، نهائي، رمضان، إطلاق، امتحان) أضف تبويب "countdown": {"intro":"...","target":"تاريخ الحدث بصيغة ISO مع +03:00","label":"اسم الحدث"} — عدّاد تنازلي حي.
 - للسلاسل الرقمية (توقعات أيام، أهداف عبر سنوات، أسعار عبر فترات) أضف تبويب "chart": {"intro":"...","labels":["..."],"values":[أرقام],"unit":"°"} — رسم أعمدة احترافي.
+- **اختر الشكل البصري الأنسب لكل بيان** بدل النص الطويل: مقارنة طرفين→comparison؛ ترتيب→leaderboard أو hbar؛ نِسَب→pie/donut؛ تطور زمني→line/area؛ تقييم متعدد المحاور→radar؛ نسبة إنجاز→gauge/progress؛ بيانات صفّية→table؛ أرقام رئيسية→kpi/metric_tiles؛ مراحل→timeline_v؛ قمع→funnel؛ توزيع→treemap. **استعملها بسخاء — كل إجابة يجب أن تحوي على الأقل رسماً بصرياً واحداً من هذه (غير stats)**.
+- **اختم دائماً بتبويب ai_insight** يلخّص أهم استنتاج أو خلاصة ذكية من الإجابة (ما لم تكن دردشة).
 - **عدد التبويبات يتبع ما تملكه من معلومات موثوقة فقط**: تبويبان صادقان أفضل من خمسة محشوة بالتأليف. لا تنشئ تبويب فئة (رياضة/تقنية/ترفيه…) إلا إذا كانت لديك معلومات حقيقية مصدرها نتائج البحث لتلك الفئة.
 - **لا تكرر الوحدة أو الاتجاه داخل القيمة**: القيمة رقم + وحدة واحدة فقط (12 كم/س)، والاتجاه أو التفصيل في label أو hint — ممنوع مثل «12 كم/س غرب-شمال غرب كم/س».
 - في "facts": لكل عنصر {icon (إيموجي مناسب)، label (كلمة)، value (كلمة/كلمتان)}.
@@ -338,6 +340,30 @@ ${isAr ? `هذه القاعدة لا تُكسر أبداً:
 - **timeline**: {"events":[["${isAr ? "التاريخ" : "date"}","${isAr ? "عنوان" : "title"}","${isAr ? "وصف" : "desc"}"]]}
 - **compare**: {"cols":["${isAr ? "وجه" : "aspect"}","A","B"],"rows":[["${isAr ? "صف" : "row"}","val","val"]]}
 - **facts**: {"items":[{"icon":"location","label":"${isAr ? "المكان" : "label"}","value":"${isAr ? "الرياض" : "value"}"}]}
+
+## ${isAr ? "بطاقات بصرية ورسوم بيانية — استخدمها كثيراً لتجميل الإجابة" : "Visual charts — use generously"}
+- **table**: {"columns":["${isAr ? "عمود" : "col"}"],"rows":[["${isAr ? "خلية" : "cell"}"]]} ${isAr ? "— الأفضل لأي بيانات صفّية متعددة الأعمدة" : ""}
+- **kpi**: {"items":[{"value":"25K","label":"${isAr ? "عنوان" : "label"}","trend":"+12%"}]} ${isAr ? "— أرقام رئيسية بارزة" : ""}
+- **pie**: {"segments":[{"label":"${isAr ? "اسم" : "name"}","value":40}]} ${isAr ? "— نِسَب من كل" : ""}
+- **donut**: {"segments":[{"label":"${isAr ? "مكتمل" : "done"}","value":80},{"label":"${isAr ? "متبقٍ" : "left"}","value":20}]}
+- **bar**: {"labels":["${isAr ? "يناير" : "Jan"}"],"values":[60],"unit":""} ${isAr ? "— أعمدة رأسية" : ""}
+- **hbar**: {"items":[{"label":"${isAr ? "المنتج" : "item"}","value":90}],"unit":""} ${isAr ? "— ترتيب أفقي" : ""}
+- **line**: {"labels":["${isAr ? "س1" : "t1"}"],"values":[20,50,35,70]} ${isAr ? "— تطور زمني" : ""}
+- **area**: {"labels":[],"values":[20,45,30,65]} ${isAr ? "— نمو بمساحة ملونة" : ""}
+- **stacked_bar**: {"keys":["${isAr ? "أ" : "a"}","${isAr ? "ب" : "b"}"],"groups":[{"label":"${isAr ? "شهر" : "m"}","values":[30,40]}]}
+- **radar**: {"max":100,"axes":[{"label":"${isAr ? "محور" : "axis"}","value":80}]} ${isAr ? "— تقييم متعدد المحاور (لاعب، مقارنة)" : ""}
+- **gauge**: {"value":72,"max":100,"label":"${isAr ? "الأداء" : "perf"}","unit":"%"} ${isAr ? "— عدّاد" : ""}
+- **progress**: {"items":[{"label":"${isAr ? "اكتمال" : "done"}","value":75}]} ${isAr ? "— حلقات تقدّم" : ""}
+- **funnel**: {"items":[{"label":"${isAr ? "زائر" : "visit"}","value":100}],"unit":""} ${isAr ? "— قمع تحويل" : ""}
+- **treemap**: {"items":[{"label":"${isAr ? "قسم" : "part"}","value":60}]} ${isAr ? "— توزيع نسبي" : ""}
+- **heatmap**: {"cols":12,"cells":[0.1,0.5,0.9]} ${isAr ? "— كثافة (قيم 0..1)" : ""}
+- **bubble**: {"points":[{"x":50,"y":60,"r":20,"label":"${isAr ? "اسم" : "n"}"}]}
+- **scatter**: {"points":[{"x":30,"y":90}]} ${isAr ? "— علاقة متغيّرين" : ""}
+- **leaderboard**: {"items":[{"name":"${isAr ? "أحمد" : "A"}","value":2500}]} ${isAr ? "— ترتيب متصدّرين" : ""}
+- **comparison**: {"left":{"name":"A","value":3,"sub":""},"right":{"name":"B","value":1,"sub":""},"rows":[{"label":"${isAr ? "وجه" : "aspect"}","left":"","right":""}]} ${isAr ? "— مقارنة طرفين" : ""}
+- **metric_tiles**: {"items":[{"value":"28°","label":"${isAr ? "الطقس" : "weather"}"}]} ${isAr ? "— بطاقات سريعة" : ""}
+- **timeline_v**: {"items":[{"title":"${isAr ? "مرحلة" : "stage"}","desc":"","date":""}]} ${isAr ? "— خط زمني عمودي أنيق" : ""}
+- **ai_insight**: {"title":"${isAr ? "استنتاج ذكي" : "AI Insight"}","body":"${isAr ? "الخلاصة..." : "..."}","metric":"+23%"} ${isAr ? "— بطاقة خلاصة ذكية، ممتازة كتبويب أخير" : ""}
 
 ## ${isAr ? "بطاقات رياضية" : "Sports Cards"}
 - **match**: {"team1":"${isAr ? "الفريق الأول" : "Team A"}","score1":2,"team2":"${isAr ? "الفريق الثاني" : "Team B"}","score2":1,"status":"${isAr ? "انتهت" : "FT"}","venue":"${isAr ? "الملعب" : "stadium"}","date":"${isAr ? "التاريخ" : "date"}","details":[{"label":"${isAr ? "تفصيل" : "detail"}","value":"${isAr ? "قيمة" : "value"}"}]}
