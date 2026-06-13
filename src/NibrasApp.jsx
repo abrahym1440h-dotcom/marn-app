@@ -272,70 +272,86 @@ function PlanView({ store, setStore }) {
     for (const t of tasks) { const k = t.subject || 'عام'; (g[k] = g[k] || []).push(t); }
     return g;
   }, [tasks]);
+  const [showGen, setShowGen] = useState(tasks.length === 0);
 
-  return (<div style={{ padding: 18 }} className="nfadeup">
-    <Heading title="الخطة الدراسية" subtitle="نظّم مذاكرتك وتابع تقدّمك خطوة بخطوة" />
-    <ErrBox msg={perr} onRetry={generate} />
-
-    {/* بطاقة التقدّم */}
-    <div style={{ position: 'relative', overflow: 'hidden', background: `radial-gradient(120% 120% at 100% 0%, ${T.goldSoft}, transparent 55%), ${T.surface}`, border: `1px solid ${T.border}`, borderRadius: 18, padding: 18, marginBottom: 14 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <span style={{ fontWeight: 800, fontSize: 28, color: T.accent }}>{pct}%</span>
-        <span style={{ color: T.textDim, fontSize: 14, fontWeight: 600 }}>نسبة الإنجاز</span>
+  return (<div style={{ padding: 0 }} className="nfadeup">
+    {/* شريط التقدّم العلوي النظيف */}
+    <div style={{ padding: '16px 18px 14px', borderBottom: `1px solid ${T.borderSoft}` }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+        <span style={{ fontWeight: 800, fontSize: 30, color: T.accent }}>{pct}<span style={{ fontSize: 16 }}>%</span></span>
+        <div style={{ textAlign: 'left' }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: T.text }}>الخطة الدراسية</div>
+          <div style={{ color: T.textFaint, fontSize: 12 }}>{done} من {tasks.length} مكتملة</div>
+        </div>
       </div>
-      <div style={{ height: 10, background: T.surfaceAlt, borderRadius: 999, marginTop: 12, overflow: 'hidden' }}>
+      <div style={{ height: 8, background: T.surfaceAlt, borderRadius: 999, overflow: 'hidden' }}>
         <div style={{ width: `${pct}%`, height: '100%', background: `linear-gradient(90deg, ${T.accent}, ${T.good})`, borderRadius: 999, transition: 'width .4s' }} />
       </div>
-      <div style={{ color: T.textFaint, fontSize: 12, marginTop: 8 }}>{done} من {tasks.length} مهمة مكتملة</div>
     </div>
 
-    {/* توليد ذكي — هو البطل */}
-    <div style={{ background: `linear-gradient(160deg, ${T.goldSoft}, transparent 60%), ${T.surface}`, border: `1px solid ${T.accentLine}`, borderRadius: 18, padding: 18, marginBottom: 14 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <Sparkles size={18} color={T.accent} />
-        <span style={{ fontWeight: 800, color: T.text, fontSize: 16 }}>توليد خطة ذكية</span>
-      </div>
-      <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="المادة (مثال: الرياضيات)" style={{ ...field, marginBottom: 10 }} />
-      <input value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="الهدف (اختياري: الاستعداد للاختبار النهائي)" style={{ ...field, marginBottom: 12 }} />
-      <Btn variant="gold" full onClick={generate} disabled={!subject.trim() || busy}>
-        {busy ? <Loader2 size={18} style={{ animation: 'nspin 1s linear infinite' }} /> : <Sparkles size={18} />} ولّد خطتي
-      </Btn>
-    </div>
+    <ErrBox msg={perr} onRetry={generate} />
 
-    {/* إضافة يدوية مطوية بسيطة */}
-    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 14, marginBottom: 18 }}>
-      <div style={{ display: 'flex', gap: 10 }}>
-        <Btn onClick={addTask} disabled={!taskTitle.trim()}><Plus size={18} /></Btn>
-        <input value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addTask()} placeholder="أضف مهمة يدوياً (تُنسب لآخر مادة)" style={{ ...field, flex: 1 }} />
-      </div>
-    </div>
-
-    {/* المهام مجمّعة حسب المادة */}
+    {/* المهام مجمّعة حسب المادة — قوائم مسطّحة نظيفة */}
     {tasks.length ? (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <div style={{ padding: '6px 0 90px' }}>
         {Object.entries(grouped).map(([subj, items]) => {
           const sd = items.filter((x) => x.done).length;
+          const sp = Math.round((sd / items.length) * 100);
           return (
-            <div key={subj}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, paddingInlineStart: 12, position: 'relative' }}>
-                <div style={{ position: 'absolute', insetInlineStart: 0, top: 2, bottom: 2, width: 4, borderRadius: 4, background: T.accent }} />
-                <span style={{ color: T.textDim, fontSize: 12.5, fontWeight: 700 }}>{sd}/{items.length}</span>
-                <span style={{ fontWeight: 800, fontSize: 16, color: T.text }}>{subj}</span>
+            <div key={subj} style={{ marginBottom: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 8px' }}>
+                <span style={{ color: sp === 100 ? T.good : T.textDim, fontSize: 12.5, fontWeight: 800 }}>{sd}/{items.length}</span>
+                <span style={{ fontWeight: 800, fontSize: 15, color: T.text }}>{subj}</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-                {items.map((t) => (
-                  <div key={t.id} className="ncard" style={{ display: 'flex', alignItems: 'center', gap: 12, background: T.surface, border: `1px solid ${t.done ? T.good + '55' : T.border}`, borderRadius: 13, padding: '13px 15px', transition: 'transform .12s' }}>
-                    <button onClick={() => remove(t.id)} style={iconBtn}><Trash2 size={15} color={T.textFaint} /></button>
-                    <div style={{ flex: 1, textAlign: 'right', fontWeight: 600, color: t.done ? T.textFaint : T.text, fontSize: 14.5, textDecoration: t.done ? 'line-through' : 'none' }}>{t.title}</div>
-                    <button onClick={() => toggle(t.id)} style={{ width: 25, height: 25, borderRadius: 999, border: `2px solid ${t.done ? T.good : T.border}`, background: t.done ? T.good : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>{t.done && <Check size={14} color="#0F0A04" />}</button>
+              {items.map((t, i) => (
+                <div key={t.id} className="listrow" style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '13px 18px', borderTop: i === 0 ? `1px solid ${T.borderSoft}` : 'none', borderBottom: `1px solid ${T.borderSoft}`, transition: 'background .15s' }}>
+                  <button onClick={() => toggle(t.id)} style={{ width: 24, height: 24, borderRadius: 999, border: `2px solid ${t.done ? T.good : T.border}`, background: t.done ? T.good : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>{t.done && <Check size={13} color="#0F0A04" />}</button>
+                  <div style={{ flex: 1, textAlign: 'right', fontWeight: 600, color: t.done ? T.textFaint : T.text, fontSize: 14.5, textDecoration: t.done ? 'line-through' : 'none' }}>
+                    {t.title}
+                    {t.fromChat && <span style={{ fontSize: 10, color: T.accent, background: `${T.accent}1a`, padding: '1px 7px', borderRadius: 999, marginInlineStart: 7, fontWeight: 700, verticalAlign: 'middle' }}>من الشات</span>}
                   </div>
-                ))}
-              </div>
+                  <button onClick={() => remove(t.id)} style={iconBtn}><Trash2 size={15} color={T.textFaint} /></button>
+                </div>
+              ))}
             </div>
           );
         })}
       </div>
-    ) : <Empty Icon={Clock} text="لا توجد مهام بعد. أدخل مادتك وولّد خطة ذكية!" />}
+    ) : (
+      <div style={{ padding: '30px 18px' }}>
+        <Empty Icon={Clock} text="لا توجد مهام بعد — ولّد خطة ذكية أو اطلبها من شات نبراس مباشرة!" />
+      </div>
+    )}
+
+    {/* زر عائم لإضافة/توليد */}
+    <button onClick={() => setShowGen(true)} style={{ position: 'fixed', insetInlineStart: 20, bottom: 20, width: 54, height: 54, borderRadius: 17, background: `linear-gradient(135deg, ${T.gold}, ${T.rose})`, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: `0 8px 24px ${T.gold}44`, zIndex: 20 }}>
+      <Plus size={26} color="#0F0A04" />
+    </button>
+
+    {/* لوحة التوليد/الإضافة كـ Sheet منزلق */}
+    {showGen && (
+      <div onClick={() => setShowGen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 30, display: 'flex', alignItems: 'flex-end', animation: 'nFadeUp .2s ease' }}>
+        <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', background: T.bg, borderRadius: '22px 22px 0 0', borderTop: `1px solid ${T.border}`, padding: 20, maxHeight: '85vh', overflowY: 'auto' }}>
+          <div style={{ width: 40, height: 4, borderRadius: 999, background: T.border, margin: '0 auto 18px' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <Sparkles size={19} color={T.accent} />
+            <span style={{ fontWeight: 800, color: T.text, fontSize: 17 }}>توليد خطة ذكية</span>
+          </div>
+          <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="المادة (مثال: الرياضيات)" style={{ ...field, marginBottom: 10 }} />
+          <input value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="الهدف (اختياري: الاستعداد للاختبار)" style={{ ...field, marginBottom: 12 }} />
+          <Btn variant="gold" full onClick={async () => { await generate(); setShowGen(false); }} disabled={!subject.trim() || busy}>
+            {busy ? <Loader2 size={18} style={{ animation: 'nspin 1s linear infinite' }} /> : <Sparkles size={18} />} ولّد خطتي
+          </Btn>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0' }}>
+            <div style={{ flex: 1, height: 1, background: T.borderSoft }} /><span style={{ color: T.textFaint, fontSize: 12 }}>أو يدوياً</span><div style={{ flex: 1, height: 1, background: T.borderSoft }} />
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <Btn onClick={() => { addTask(); }} disabled={!taskTitle.trim()}><Plus size={18} /></Btn>
+            <input value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addTask()} placeholder="عنوان مهمة (تُنسب لآخر مادة)" style={{ ...field, flex: 1 }} />
+          </div>
+        </div>
+      </div>
+    )}
   </div>);
 }
 const iconBtn = { width: 34, height: 34, borderRadius: 9, background: 'transparent', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 };
@@ -1016,6 +1032,13 @@ export default function NibrasApp({ onClose, marnT, marnF, dark, initialScreen }
   const [drawer, setDrawer] = useState(false);
   const [store, setStoreRaw] = useState(loadStore);
   const setStore = (updater) => setStoreRaw((prev) => { const next = typeof updater === 'function' ? updater(prev) : updater; try { localStorage.setItem(STORE_KEY, JSON.stringify(next)); } catch { /* ignore */ } return next; });
+  // إعادة تحميل المتجر عند إضافة خطة من شات نبراس + عند العودة للنافذة
+  useEffect(() => {
+    const reload = () => { try { setStoreRaw(loadStore()); } catch {} };
+    window.addEventListener('nibras-plan-updated', reload);
+    window.addEventListener('focus', reload);
+    return () => { window.removeEventListener('nibras-plan-updated', reload); window.removeEventListener('focus', reload); };
+  }, []);
   const name = store.settings.name || profileName();
 
   // مطابقة نظام مرن (الثيم/الوضع فاتح-داكن) — تجعل نبراس جزءاً من مرن لا تطبيقاً منفصلاً
