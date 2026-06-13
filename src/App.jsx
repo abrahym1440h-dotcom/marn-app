@@ -3241,6 +3241,326 @@ function TabContent({ tab, a, T, F }) {
       );
     }
 
+    case "pie":
+    case "donut": {
+      const segs = (d.segments || d.items || []).map((s, i) => ({ label: s.label || s.name || "", value: Number(s.value ?? s.percent ?? 0), color: s.color || [a, "#34C77B", "#E2B14A", "#A78BFA", "#F472B6", "#22D3EE"][i % 6] }));
+      const total = segs.reduce((x, s) => x + s.value, 0) || 1;
+      const R = 62, cx = 75, cy = 75; let ang = -90; const isDonut = tab.type === "donut";
+      const paths = segs.map((s) => {
+        const a1 = ang, a2 = ang + (s.value / total) * 360; ang = a2;
+        const x1 = cx + R * Math.cos(a1 * Math.PI / 180), y1 = cy + R * Math.sin(a1 * Math.PI / 180);
+        const x2 = cx + R * Math.cos(a2 * Math.PI / 180), y2 = cy + R * Math.sin(a2 * Math.PI / 180);
+        return `<path d="M${cx} ${cy} L${x1} ${y1} A${R} ${R} 0 ${(a2 - a1) > 180 ? 1 : 0} 1 ${x2} ${y2} Z" fill="${s.color}"/>`;
+      }).join("");
+      return (
+        <div>
+          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 18, flexWrap: "wrap" }}>
+            <div style={{ position: "relative" }}>
+              <div dangerouslySetInnerHTML={{ __html: `<svg width="150" height="150" viewBox="0 0 150 150">${paths}${isDonut ? `<circle cx="75" cy="75" r="34" fill="${T.cardBg}"/>` : ""}</svg>` }} />
+              {isDonut && <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}><div style={{ fontSize: 22, fontWeight: 800, color: T.text }}>{Math.round((segs[0]?.value / total) * 100)}%</div><div style={{ fontSize: 10, color: T.sub }}>{segs[0]?.label}</div></div>}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+              {segs.map((s, i) => <div key={i} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: F.label }}><span style={{ width: 11, height: 11, borderRadius: 3, background: s.color, flexShrink: 0 }} /><span style={{ color: T.sub }}>{s.label}</span><span style={{ color: T.text, fontWeight: 700 }}>{Math.round((s.value / total) * 100)}%</span></div>)}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    case "hbar": {
+      const rows = (d.items || []).map((r, i) => ({ label: r.label || r.name || "", value: Number(r.value ?? 0), color: r.color || [a, "#E2B14A", "#34C77B", "#A78BFA", "#F472B6"][i % 5] }));
+      const max = Math.max(...rows.map(r => r.value), 1);
+      return (
+        <div>
+          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {rows.map((r, i) => (
+              <div key={i}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}><span style={{ fontSize: F.label, color: T.text, fontWeight: 600 }}>{r.label}</span><span style={{ fontSize: F.label, color: r.color, fontWeight: 700 }}>{r.value}{d.unit || ""}</span></div>
+                <div style={{ height: 13, background: T.pillFill, borderRadius: 999, overflow: "hidden" }}><div style={{ width: `${(r.value / max) * 100}%`, height: "100%", borderRadius: 999, background: `linear-gradient(90deg, ${r.color}, ${r.color}99)` }} /></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    case "line":
+    case "area": {
+      const vals = (d.values || []).map(Number);
+      const labels = d.labels || [];
+      const max = Math.max(...vals, 1), min = Math.min(...vals, 0);
+      const W = 280, H = 130, pad = 8, span = (max - min) || 1;
+      const step = vals.length > 1 ? (W - pad * 2) / (vals.length - 1) : 0;
+      const pts = vals.map((v, i) => `${pad + i * step},${H - pad - ((v - min) / span) * (H - pad * 2)}`).join(" ");
+      const isArea = tab.type === "area";
+      const gid = "ag" + a.replace("#", "");
+      return (
+        <div>
+          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
+          <div style={{ background: T.pillFill, border: `1px solid ${T.line}`, borderRadius: 13, padding: 14 }}>
+            <div dangerouslySetInnerHTML={{ __html: `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}" stop-opacity="0.45"/><stop offset="1" stop-color="${a}" stop-opacity="0"/></linearGradient></defs>${isArea ? `<polygon points="${pad},${H - pad} ${pts} ${W - pad},${H - pad}" fill="url(#${gid})"/>` : ""}<polyline points="${pts}" fill="none" stroke="${a}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${vals.map((v, i) => `<circle cx="${pad + i * step}" cy="${H - pad - ((v - min) / span) * (H - pad * 2)}" r="3.5" fill="${a}"/>`).join("")}</svg>` }} />
+            {labels.length > 0 && <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>{labels.map((l, i) => <span key={i} style={{ fontSize: F.label - 1, color: T.sub }}>{l}</span>)}</div>}
+          </div>
+        </div>
+      );
+    }
+
+    case "radar": {
+      const axes = (d.axes || d.items || []).map(x => ({ label: x.label || x.name || "", value: Number(x.value ?? 0) }));
+      const n = axes.length || 1, cx = 90, cy = 90, R = 70, maxV = d.max || 100;
+      const pt = (i, r) => { const ang = (i / n * 2 * Math.PI) - Math.PI / 2; return [cx + r * Math.cos(ang), cy + r * Math.sin(ang)]; };
+      let rings = ""; for (let g = 1; g <= 3; g++) { let p = ""; for (let i = 0; i < n; i++) { const [x, y] = pt(i, R * g / 3); p += `${x},${y} `; } rings += `<polygon points="${p}" fill="none" stroke="${T.line}" stroke-width="1"/>`; }
+      let poly = ""; axes.forEach((ax, i) => { const [x, y] = pt(i, R * Math.min(ax.value / maxV, 1)); poly += `${x},${y} `; });
+      const lbls = axes.map((ax, i) => { const [x, y] = pt(i, R + 12); return `<text x="${x}" y="${y}" fill="${T.sub}" font-size="9" text-anchor="middle" dominant-baseline="middle">${ax.label}</text>`; }).join("");
+      return (
+        <div>
+          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
+          <div style={{ display: "flex", justifyContent: "center" }} dangerouslySetInnerHTML={{ __html: `<svg width="180" height="180" viewBox="0 0 180 180">${rings}<polygon points="${poly}" fill="${a}44" stroke="${a}" stroke-width="2"/>${lbls}</svg>` }} />
+        </div>
+      );
+    }
+
+    case "gauge": {
+      const v = Number(d.value ?? 0), max = d.max || 100;
+      const ang = -90 + Math.min(v / max, 1) * 180, R = 64, cx = 80, cy = 82;
+      const x = cx + R * Math.cos(ang * Math.PI / 180), y = cy + R * Math.sin(ang * Math.PI / 180);
+      const col = d.color || (v / max > 0.66 ? "#34C77B" : v / max > 0.33 ? "#E2B14A" : "#F87171");
+      return (
+        <div>
+          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div dangerouslySetInnerHTML={{ __html: `<svg width="160" height="105"><path d="M16 82 A64 64 0 0 1 144 82" fill="none" stroke="${T.line}" stroke-width="13" stroke-linecap="round"/><path d="M16 82 A64 64 0 0 1 ${x} ${y}" fill="none" stroke="${col}" stroke-width="13" stroke-linecap="round"/></svg>` }} />
+            <div style={{ marginTop: -28, textAlign: "center" }}><div style={{ fontSize: 26, fontWeight: 800, color: T.text }}>{v}{d.unit || "%"}</div>{d.label && <div style={{ fontSize: F.label, color: T.sub }}>{d.label}</div>}</div>
+          </div>
+        </div>
+      );
+    }
+
+    case "progress": {
+      const items = (d.items || [{ label: d.label, value: d.value }]).map((p, i) => ({ label: p.label || "", value: Number(p.value ?? 0), color: p.color || [a, "#34C77B", "#E2B14A", "#A78BFA"][i % 4] }));
+      return (
+        <div>
+          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
+            {items.map((p, i) => {
+              const R = 42, circ = 2 * Math.PI * R, len = Math.min(p.value / 100, 1) * circ;
+              return (
+                <div key={i} style={{ position: "relative", textAlign: "center" }}>
+                  <div dangerouslySetInnerHTML={{ __html: `<svg width="104" height="104"><circle cx="52" cy="52" r="${R}" fill="none" stroke="${T.line}" stroke-width="9"/><circle cx="52" cy="52" r="${R}" fill="none" stroke="${p.color}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${len} ${circ}" transform="rotate(-90 52 52)"/></svg>` }} />
+                  <div style={{ position: "absolute", top: 0, left: 0, width: 104, height: 104, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 800, color: T.text }}>{p.value}%</div>
+                  {p.label && <div style={{ fontSize: F.label, color: T.sub, marginTop: 4 }}>{p.label}</div>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    case "kpi":
+    case "metric_tiles": {
+      const cards = (d.items || []).map((k, i) => ({ value: k.value, label: k.label || "", color: k.color || [a, "#E2B14A", "#34C77B", "#A78BFA", "#F472B6"][i % 5], trend: k.trend }));
+      return (
+        <div>
+          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
+          <div style={{ display: "grid", gridTemplateColumns: cards.length > 2 ? "1fr 1fr" : `repeat(${cards.length},1fr)`, gap: 10 }}>
+            {cards.map((k, i) => (
+              <div key={i} style={{ background: T.pillFill, border: `1px solid ${T.line}`, borderRadius: 14, padding: "14px 12px", textAlign: "center" }}>
+                <div style={{ fontSize: 23, fontWeight: 800, color: k.color }}>{k.value}</div>
+                <div style={{ fontSize: F.label, color: T.sub, marginTop: 2 }}>{k.label}</div>
+                {k.trend && <div style={{ fontSize: F.label - 1, color: String(k.trend).startsWith("-") ? "#F87171" : "#34C77B", marginTop: 3, fontWeight: 700 }}>{k.trend}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    case "leaderboard": {
+      const rows = d.items || [];
+      const medal = ["#E2B14A", "#C0C0C0", "#CD7F32"];
+      return (
+        <div>
+          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
+          <div>
+            {rows.map((r, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 0", borderBottom: i < rows.length - 1 ? `1px solid ${T.line}` : "none" }}>
+                <span style={{ width: 28, height: 28, borderRadius: 9, background: (medal[i] || T.line) + "33", color: medal[i] || T.sub, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, flexShrink: 0 }}>{i + 1}</span>
+                <span style={{ flex: 1, fontWeight: 700, fontSize: F.base - 1, color: T.text }}>{r.name || r.label}</span>
+                <span style={{ color: a, fontWeight: 800, fontSize: F.base - 1 }}>{r.value ?? r.score}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    case "comparison": {
+      const A1 = d.left || {}, B1 = d.right || {};
+      const rows = d.rows || [];
+      return (
+        <div>
+          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
+          <div style={{ display: "flex", gap: 10, marginBottom: rows.length ? 14 : 0 }}>
+            <div style={{ flex: 1, background: T.pillFill, border: `1px solid ${a}44`, borderRadius: 13, padding: 14, textAlign: "center" }}><div style={{ fontWeight: 800, color: a, fontSize: F.base }}>{A1.name}</div>{A1.value != null && <div style={{ fontSize: 26, fontWeight: 800, color: T.text, margin: "6px 0" }}>{A1.value}</div>}{A1.sub && <div style={{ fontSize: F.label, color: T.sub }}>{A1.sub}</div>}</div>
+            <div style={{ display: "flex", alignItems: "center", fontWeight: 800, color: T.faint, fontSize: F.label }}>VS</div>
+            <div style={{ flex: 1, background: T.pillFill, border: `1px solid ${T.line}`, borderRadius: 13, padding: 14, textAlign: "center" }}><div style={{ fontWeight: 800, color: "#E2B14A", fontSize: F.base }}>{B1.name}</div>{B1.value != null && <div style={{ fontSize: 26, fontWeight: 800, color: T.text, margin: "6px 0" }}>{B1.value}</div>}{B1.sub && <div style={{ fontSize: F.label, color: T.sub }}>{B1.sub}</div>}</div>
+          </div>
+          {rows.map((r, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", padding: "9px 0", borderBottom: i < rows.length - 1 ? `1px solid ${T.line}` : "none" }}>
+              <span style={{ flex: 1, textAlign: "center", fontSize: F.label, color: T.text, fontWeight: 600 }}>{r.left}</span>
+              <span style={{ flex: 1, textAlign: "center", fontSize: F.label - 1, color: T.sub }}>{r.label}</span>
+              <span style={{ flex: 1, textAlign: "center", fontSize: F.label, color: T.text, fontWeight: 600 }}>{r.right}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    case "table": {
+      const cols = d.columns || d.headers || [];
+      const rows = d.rows || [];
+      return (
+        <div>
+          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
+          <div style={{ overflowX: "auto", border: `1px solid ${T.line}`, borderRadius: 12 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: F.label }}>
+              <thead><tr>{cols.map((c, i) => <th key={i} style={{ textAlign: "right", padding: "10px 12px", color: T.sub, fontWeight: 700, borderBottom: `1px solid ${T.line}`, background: T.pillFill, whiteSpace: "nowrap" }}>{c}</th>)}</tr></thead>
+              <tbody>{rows.map((r, i) => <tr key={i}>{(Array.isArray(r) ? r : Object.values(r)).map((cell, j) => <td key={j} style={{ padding: "10px 12px", color: j === 0 ? T.text : T.sub, fontWeight: j === 0 ? 700 : 500, borderBottom: i < rows.length - 1 ? `1px solid ${T.line}` : "none" }}>{cell}</td>)}</tr>)}</tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    case "funnel": {
+      const steps = (d.items || []).map((s, i) => ({ label: s.label || s.name || "", value: Number(s.value ?? 0), color: s.color || [a, "#34C77B", "#E2B14A", "#F472B6", "#A78BFA"][i % 5] }));
+      const max = Math.max(...steps.map(s => s.value), 1);
+      return (
+        <div>
+          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            {steps.map((s, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: "center" }}>
+                <div style={{ width: `${Math.max((s.value / max) * 100, 22)}%`, background: `linear-gradient(135deg, ${s.color}, ${s.color}cc)`, padding: "11px 8px", borderRadius: 9, textAlign: "center", color: "#0A0E1A", fontWeight: 800, fontSize: F.label }}>{s.label} · {s.value}{d.unit || ""}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    case "heatmap": {
+      const cells = d.cells || [];
+      const cols = d.cols || 12;
+      const colorFor = (v) => v > 0.75 ? "#F87171" : v > 0.5 ? "#E2B14A" : v > 0.25 ? "#34C77B" : v > 0 ? "#34C77B66" : T.line;
+      return (
+        <div>
+          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols},1fr)`, gap: 4 }}>
+            {cells.map((v, i) => <div key={i} title={String(v)} style={{ aspectRatio: "1", borderRadius: 3, background: colorFor(Number(v)) }} />)}
+          </div>
+        </div>
+      );
+    }
+
+    case "treemap": {
+      const items = (d.items || []).map((x, i) => ({ label: x.label || x.name || "", value: Number(x.value ?? 0), color: x.color || [a, "#34C77B", "#E2B14A", "#A78BFA", "#F472B6", "#22D3EE"][i % 6] }));
+      const total = items.reduce((x, i) => x + i.value, 0) || 1;
+      return (
+        <div>
+          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 5, height: 160 }}>
+            {items.map((it, i) => (
+              <div key={i} style={{ flex: `${Math.max(it.value / total * 100, 14)} 1 30%`, minWidth: 70, background: it.color, borderRadius: 9, padding: 10, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", color: "#0A0E1A" }}>
+                <div style={{ fontWeight: 800, fontSize: F.base - 1 }}>{it.label}</div>
+                <div style={{ fontWeight: 700, fontSize: F.label }}>{Math.round(it.value / total * 100)}%</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    case "timeline_v": {
+      const items = d.items || [];
+      return (
+        <div>
+          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
+          <div style={{ paddingRight: 6 }}>
+            {items.map((it, i) => {
+              const col = it.color || [a, "#34C77B", "#E2B14A", "#A78BFA"][i % 4];
+              return (
+                <div key={i} style={{ position: "relative", paddingRight: 20, paddingBottom: i < items.length - 1 ? 18 : 0, borderRight: i < items.length - 1 ? `2px solid ${T.line}` : "2px solid transparent" }}>
+                  <span style={{ position: "absolute", right: -7, top: 2, width: 12, height: 12, borderRadius: "50%", background: col, border: `2px solid ${T.cardBg}` }} />
+                  <div style={{ fontSize: F.base - 1, fontWeight: 700, color: T.text }}>{it.title || it.label}</div>
+                  {it.desc && <div style={{ fontSize: F.label, color: T.sub, marginTop: 2, lineHeight: 1.6 }}>{it.desc}</div>}
+                  {it.date && <div style={{ fontSize: F.label - 1, color: col, marginTop: 2, fontWeight: 600 }}>{it.date}</div>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    case "bubble":
+    case "scatter": {
+      const pts = (d.points || []).map((p, i) => ({ x: Number(p.x ?? 0), y: Number(p.y ?? 0), r: Number(p.r ?? 5), label: p.label, color: p.color || [a, "#34C77B", "#E2B14A", "#A78BFA", "#F472B6"][i % 5] }));
+      const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+      const xmax = Math.max(...xs, 1), xmin = Math.min(...xs, 0), ymax = Math.max(...ys, 1), ymin = Math.min(...ys, 0);
+      const W = 280, H = 150, pad = 16;
+      const sx = v => pad + (xmax === xmin ? 0.5 : (v - xmin) / (xmax - xmin)) * (W - pad * 2);
+      const sy = v => H - pad - (ymax === ymin ? 0.5 : (v - ymin) / (ymax - ymin)) * (H - pad * 2);
+      const isBubble = tab.type === "bubble";
+      return (
+        <div>
+          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
+          <div style={{ background: T.pillFill, border: `1px solid ${T.line}`, borderRadius: 13, padding: 12 }} dangerouslySetInnerHTML={{ __html: `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}"><line x1="${pad}" y1="${H - pad}" x2="${W - pad}" y2="${H - pad}" stroke="${T.line}"/><line x1="${pad}" y1="${pad}" x2="${pad}" y2="${H - pad}" stroke="${T.line}"/>${pts.map(p => `<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="${isBubble ? Math.max(p.r, 6) : 4}" fill="${p.color}${isBubble ? '66' : ''}" stroke="${p.color}" stroke-width="1.5"/>`).join("")}</svg>` }} />
+        </div>
+      );
+    }
+
+    case "stacked_bar": {
+      const groups = d.groups || [];
+      const keys = d.keys || [];
+      const cols = d.colors || [a, "#34C77B", "#E2B14A", "#A78BFA", "#F472B6"];
+      const maxTotal = Math.max(...groups.map(g => (g.values || []).reduce((x, v) => x + Number(v), 0)), 1);
+      return (
+        <div>
+          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
+          <div style={{ background: T.pillFill, border: `1px solid ${T.line}`, borderRadius: 13, padding: 14 }}>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 12, height: 140, justifyContent: "space-around" }}>
+              {groups.map((g, i) => (
+                <div key={i} style={{ flex: 1, maxWidth: 50, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <div style={{ width: "100%", display: "flex", flexDirection: "column-reverse", height: 110, borderRadius: "6px 6px 0 0", overflow: "hidden" }}>
+                    {(g.values || []).map((v, j) => <div key={j} style={{ height: `${(Number(v) / maxTotal) * 100}%`, background: cols[j % cols.length] }} />)}
+                  </div>
+                  <div style={{ fontSize: F.label - 1, color: T.sub, marginTop: 6 }}>{g.label}</div>
+                </div>
+              ))}
+            </div>
+            {keys.length > 0 && <div style={{ display: "flex", flexWrap: "wrap", gap: 9, justifyContent: "center", marginTop: 12 }}>{keys.map((k, i) => <span key={i} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: F.label - 1, color: T.sub }}><span style={{ width: 9, height: 9, borderRadius: 2, background: cols[i % cols.length] }} />{k}</span>)}</div>}
+          </div>
+        </div>
+      );
+    }
+
+    case "ai_insight": {
+      return (
+        <div style={{ background: `linear-gradient(135deg, ${a}1c, transparent 70%)`, border: `1px solid ${a}44`, borderRadius: 14, padding: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 9 }}>
+            <span style={{ width: 32, height: 32, borderRadius: 10, background: `${a}22`, display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={a} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3 1.9 5.8 5.8 1.9-5.8 1.9L12 18.4l-1.9-5.8L4.3 10.7l5.8-1.9z" /></svg></span>
+            <span style={{ fontWeight: 800, fontSize: F.base, color: T.text }}>{d.title || "استنتاج ذكي"}</span>
+          </div>
+          <div style={{ fontSize: F.base - 0.5, color: T.sub, lineHeight: 1.8 }}>{d.body}</div>
+          {d.metric && <div style={{ marginTop: 10, display: "inline-block", background: `${a}22`, color: a, fontWeight: 800, fontSize: F.base, padding: "4px 12px", borderRadius: 999 }}>{d.metric}</div>}
+        </div>
+      );
+    }
+
     default:
       return <p style={{ color:T.text, lineHeight:1.9, margin:0, fontSize:F.base-0.5, whiteSpace:"pre-wrap" }}>{d.body||""}</p>;
   }
