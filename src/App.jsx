@@ -534,10 +534,14 @@ export default function App() {
   const [editingMsg, setEditingMsg] = useState(null); // {chatId, index, text}
   const [renameDialog, setRenameDialog] = useState(null); // {id, currentTitle}
   const [forceSearch, setForceSearch] = useState(false);
+  const [pendingImage, setPendingImage] = useState(null); // {base64, mime, preview} صورة مرفقة للإرسال
+  const imageInputRef = useRef(null);
   const [chatSearch, setChatSearch] = useState("");
 
   const endRef = useRef(null);
   const inputRef = useRef(null);
+  const imgInputRef = useRef(null);
+  const [pendingImage, setPendingImage] = useState(null); // { base64, mime, preview }
 
   // الوضع الفعلي
   const effectiveMode = settings.mode === "auto" ? (systemDark ? "dark" : "light") : settings.mode;
@@ -770,7 +774,7 @@ export default function App() {
       if (typeof replaceFromIndex === "number") {
         msgs = msgs.slice(0, replaceFromIndex);
       }
-      msgs.push({ role: "user", text: q, at: Date.now() });
+      msgs.push({ role: "user", text: q, at: Date.now(), image: opts.imagePreview || null });
       return { ...prev, [chatId]: { ...cur, messages: msgs } };
     });
     setDraft("");
@@ -814,6 +818,8 @@ export default function App() {
           lang: settings.lang,
           forceSearch: forceWebSearch === true,
           userProfile: userProfile.name || userProfile.interests ? userProfile : null,
+          imageBase64: opts.imageBase64 || null,
+          imageMimeType: opts.imageMimeType || "image/jpeg",
         }),
       });
       let data = null;
@@ -853,8 +859,33 @@ export default function App() {
 
   const send = (text) => {
     const q = (text ?? draft).trim();
-    sendMessage(q, { forceWebSearch: forceSearch, toolPrompt: activeTool?.prompt || "" });
+    if (!q && !pendingImage) return;
+    const img = pendingImage;
+    sendMessage(q || (img ? "اشرح هذه الصورة بالتفصيل" : ""), {
+      forceWebSearch: forceSearch,
+      toolPrompt: activeTool?.prompt || "",
+      imageBase64: img?.base64 || null,
+      imageMimeType: img?.mime || "image/jpeg",
+      imagePreview: img?.preview || null,
+    });
+    if (img) setPendingImage(null);
     if (activeTool) setActiveTool(null);
+  };
+
+  // اختيار صورة من المعرض/الكاميرا وتحويلها base64
+  const onPickImage = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return;
+    if (file.size > 7 * 1024 * 1024) { alert("الصورة كبيرة جداً (الحد 7 ميجابايت)"); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || "");
+      const base64 = dataUrl.split(",")[1] || "";
+      if (base64) setPendingImage({ base64, mime: file.type, preview: dataUrl });
+    };
+    reader.readAsDataURL(file);
   };
 
   const editAndResend = (chatId, index, newText) => {
@@ -1107,6 +1138,15 @@ export default function App() {
                 </span>
               </div>
             )}
+            {pendingImage && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, background: T.pillFill, border: `1px solid ${T.line}`, borderRadius: 12, padding: 8 }}>
+                <img src={pendingImage.preview} alt="" style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+                <span style={{ flex: 1, fontSize: F.base - 2, color: T.dim, fontWeight: 600 }}>صورة مرفقة — سيتم تحليلها</span>
+                <button onClick={() => setPendingImage(null)} title="إزالة" style={{ background: "transparent", border: "none", cursor: "pointer", color: T.faint, padding: 4, display: "flex" }}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            )}
             <div style={{
               background: /^#[01]/i.test(T.pageBg||"") ? "rgba(15,22,40,0.6)" : "rgba(255,255,255,0.6)",
               backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)",
@@ -1134,6 +1174,19 @@ export default function App() {
                 }}
               />
               <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                <input ref={imgInputRef} type="file" accept="image/*" onChange={onPickImage} style={{ display: "none" }} />
+                <button onClick={() => imgInputRef.current?.click()}
+                  title="إرفاق صورة"
+                  style={{
+                    background: pendingImage ? "rgba(10,132,255,0.1)" : "transparent",
+                    color: pendingImage ? "#0a84ff" : T.faint,
+                    border: "none", borderRadius: 8,
+                    width: 32, height: 32, cursor: "pointer", fontFamily: "inherit",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    transition: "all .15s",
+                  }}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                </button>
                 <MicButton T={T} isRTL={isRTL} onResult={(text) => setDraft(prev => prev + text)} />
                 <button onClick={() => setForceSearch(s => !s)}
                   title={isRTL ? "بحث في الإنترنت" : "Search the web"}
@@ -1147,13 +1200,13 @@ export default function App() {
                   }}>
                   <Icon.Web />
                 </button>
-                <button onClick={() => send()} disabled={!draft.trim() || thinking}
+                <button onClick={() => send()} disabled={(!draft.trim() && !pendingImage) || thinking}
                   style={{
-                    background: draft.trim() ? (T.gradBtn||"linear-gradient(135deg,#0F2060,#2A5ED8)") : T.pillFill,
-                    color: draft.trim() ? "#fff" : T.faint,
-                    border: draft.trim() ? "none" : `1px solid ${T.line}`, borderRadius: 9,
+                    background: (draft.trim() || pendingImage) ? (T.gradBtn||"linear-gradient(135deg,#0F2060,#2A5ED8)") : T.pillFill,
+                    color: (draft.trim() || pendingImage) ? "#fff" : T.faint,
+                    border: (draft.trim() || pendingImage) ? "none" : `1px solid ${T.line}`, borderRadius: 9,
                     width: 34, height: 34,
-                    cursor: draft.trim() ? "pointer" : "default",
+                    cursor: (draft.trim() || pendingImage) ? "pointer" : "default",
                     fontFamily: "inherit", transition: "all .15s", flexShrink: 0,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     transform: isRTL ? "scaleX(-1)" : "none",
@@ -1903,6 +1956,9 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
           <Icon.Edit />
         </button>
         <div>
+          {m.image && (
+            <img src={m.image} alt="صورة مرفقة" style={{ maxWidth: 220, maxHeight: 220, borderRadius: "14px 14px 4px 14px", marginBottom: 6, display: "block", marginInlineStart: "auto", objectFit: "cover" }} />
+          )}
           <div style={{
             background: T.userFill||"linear-gradient(135deg,#0F2060,#1E4BB8)", color: T.userText||"#fff",
             borderRadius: "16px 16px 4px 16px", padding: "10px 15px",
