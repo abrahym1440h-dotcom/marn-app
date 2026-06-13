@@ -535,13 +535,11 @@ export default function App() {
   const [renameDialog, setRenameDialog] = useState(null); // {id, currentTitle}
   const [forceSearch, setForceSearch] = useState(false);
   const [pendingImage, setPendingImage] = useState(null); // {base64, mime, preview} صورة مرفقة للإرسال
-  const imageInputRef = useRef(null);
+  const imgInputRef = useRef(null);
   const [chatSearch, setChatSearch] = useState("");
 
   const endRef = useRef(null);
   const inputRef = useRef(null);
-  const imgInputRef = useRef(null);
-  const [pendingImage, setPendingImage] = useState(null); // { base64, mime, preview }
 
   // الوضع الفعلي
   const effectiveMode = settings.mode === "auto" ? (systemDark ? "dark" : "light") : settings.mode;
