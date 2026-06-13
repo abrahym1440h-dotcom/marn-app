@@ -826,6 +826,8 @@ export default function App() {
         if (r.ok && data?.card) {
           if (data.searched === true) knowSave(q, data.card);
           newMsg = { role: "card", card: data.card, searched: data.searched, sources: Array.isArray(data.sources) ? data.sources : [], agentUsed: data.agent_used || agentId, at: Date.now(), forSearchQuery: q, followUps: Array.isArray(data.card?.followUps) ? data.card.followUps : [] };
+          // ربط تلقائي: إذا كان نبراس وأنتج خطة/جدول مذاكرة، احفظها في الخطة الدراسية
+          try { if (agentId === "nibras") syncNibrasPlan(data.card, q); } catch { /* تجاهل */ }
         } else {
           const errMsg = (data && data.error)
             ? data.error
@@ -3659,6 +3661,42 @@ function knowTokens(str) {
   return String(str || "").replace(/[\u064B-\u0652]/g, "").replace(/[^\u0621-\u064AA-Za-z0-9 ]/g, " ").toLowerCase().split(/\s+/).filter(w => w.length > 1);
 }
 function knowLoad() { try { return JSON.parse(localStorage.getItem(KNOW_KEY)) || []; } catch { return []; } }
+/* ربط نبراس بالخطة الدراسية: استخراج المهام من بطاقة وحفظها في متجر نبراس */
+function syncNibrasPlan(card, q) {
+  if (!card || !Array.isArray(card.tabs)) return;
+  const NK = "marn_nibras_v1";
+  // اجمع المهام من تبويبات الخطة (steps / study_plan / table / list ضمن سياق خطة)
+  let items = [];
+  let subject = (card.title || q || "مادة").replace(/خطة|مذاكرة|جدول|دراسية/g, "").trim().slice(0, 40) || "مادة";
+  for (const tb of card.tabs) {
+    const d = tb.data || {};
+    const isPlanish = /خطة|جدول|مهام|مذاكرة|study|plan|schedule/i.test((tb.label || "") + " " + tb.type);
+    if (tb.type === "steps" && Array.isArray(d.steps)) {
+      items.push(...d.steps.map(s => (s.t || s.title || "").trim()).filter(Boolean));
+    } else if (tb.type === "steps" && Array.isArray(d.items)) {
+      items.push(...d.items.map(s => (s.title || s.t || s.label || s).toString().trim()).filter(Boolean));
+    } else if (tb.type === "study_plan" && Array.isArray(d.items)) {
+      items.push(...d.items.map(x => (x.title || x.label || x).toString().trim()).filter(Boolean));
+    } else if (tb.type === "table" && Array.isArray(d.rows) && isPlanish) {
+      items.push(...d.rows.map(r => (Array.isArray(r) ? r.join(" — ") : Object.values(r).join(" — ")).trim()).filter(Boolean));
+    } else if (tb.type === "list" && isPlanish && Array.isArray(d.items)) {
+      items.push(...d.items.map(x => x.toString().trim()).filter(Boolean));
+    }
+  }
+  items = items.filter(Boolean).slice(0, 12);
+  if (!items.length) return;
+  try {
+    const store = JSON.parse(localStorage.getItem(NK) || "{}");
+    const tasks = Array.isArray(store.tasks) ? store.tasks : [];
+    const existing = new Set(tasks.map(t => t.title));
+    const add = items.filter(t => !existing.has(t)).map(t => ({ id: "t" + Date.now() + Math.random().toString(36).slice(2, 6), subject, title: t, done: false, at: Date.now(), fromChat: true }));
+    if (!add.length) return;
+    const next = { ...store, tasks: [...tasks, ...add] };
+    localStorage.setItem(NK, JSON.stringify(next));
+    try { window.dispatchEvent(new CustomEvent("nibras-plan-updated", { detail: { count: add.length, subject } })); } catch {}
+  } catch {}
+}
+
 function knowSave(q, card) {
   try {
     if (!card || !card.title) return;
