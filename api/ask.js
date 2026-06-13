@@ -137,6 +137,132 @@ async function searchWeb(query, key, domains) {
   } catch { return null; }
 }
 
+/* ===== Serper.dev — بحث جوجل سريع ===== */
+async function searchSerper(query, key, domains) {
+  if (!key) return null;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 14000);
+    const body = { q: query, num: 8, hl: "ar" };
+    const r = await fetch("https://google.serper.dev/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-API-KEY": key },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+    clearTimeout(t);
+    if (!r.ok) return null;
+    const d = await r.json();
+    const lines = [];
+    if (d.answerBox?.answer) lines.push("VERIFIED ANSWER: " + d.answerBox.answer);
+    if (d.answerBox?.snippet) lines.push("ANSWER SNIPPET: " + d.answerBox.snippet);
+    const sources = [];
+    (d.organic || []).slice(0, 8).forEach((x, i) => {
+      lines.push(`
+[${i+1}] ${x.title}
+${x.link}
+${(x.snippet||"").slice(0,600)}`);
+      if (x.link) {
+        let domain = "";
+        try { domain = new URL(x.link).hostname.replace(/^www\./, ""); } catch {}
+        sources.push({ title: x.title || domain, url: x.link, domain });
+      }
+    });
+    if (!lines.length) return null;
+    return { text: lines.join("\n"), sources };
+  } catch { return null; }
+}
+
+/* ===== Google Programmable Search (CSE) — 100 يومياً تتجدد ===== */
+async function searchGoogleCSE(query, key, cx, domains) {
+  if (!key || !cx) return null;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 14000);
+    let url = `https://www.googleapis.com/customsearch/v1?key=${key}&cx=${cx}&q=${encodeURIComponent(query)}&num=8`;
+    if (Array.isArray(domains) && domains.length) url += "&siteSearch=" + encodeURIComponent(domains[0]);
+    const r = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(t);
+    if (!r.ok) return null;
+    const d = await r.json();
+    const lines = [];
+    const sources = [];
+    (d.items || []).slice(0, 8).forEach((x, i) => {
+      lines.push(`
+[${i+1}] ${x.title}
+${x.link}
+${(x.snippet||"").slice(0,600)}`);
+      if (x.link) {
+        let domain = "";
+        try { domain = new URL(x.link).hostname.replace(/^www\./, ""); } catch {}
+        sources.push({ title: x.title || domain, url: x.link, domain });
+      }
+    });
+    if (!lines.length) return null;
+    return { text: lines.join("\n"), sources };
+  } catch { return null; }
+}
+
+/* ===== كاسكيد موحّد: Tavily → Serper → Google CSE ===== */
+async function searchCascade(query, keys, domains) {
+  if (keys.tavily) {
+    const r = await searchWeb(query, keys.tavily, domains);
+    if (r?.text?.length > 80) return { ...r, provider: "Tavily" };
+  }
+  if (keys.serper) {
+    const r = await searchSerper(query, keys.serper, domains);
+    if (r?.text?.length > 80) return { ...r, provider: "Serper" };
+  }
+  if (keys.google && keys.googleCx) {
+    const r = await searchGoogleCSE(query, keys.google, keys.googleCx, domains);
+    if (r?.text?.length > 80) return { ...r, provider: "GoogleCSE" };
+  }
+  return null;
+}
+
+
+/* ===== Gemini Vision — تحليل الصور (Cerebras لا يدعم الرؤية) ===== */
+async function geminiVision(question, imageBase64, mimeType, systemPrompt, key) {
+  if (!key) return { error: "no_gemini_key" };
+  const models = ["gemini-2.5-flash", "gemini-2.0-flash"];
+  for (const model of models) {
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 40000);
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{
+            role: "user",
+            parts: [
+              { inline_data: { mime_type: mimeType, data: imageBase64 } },
+              { text: question || "اشرح هذه الصورة بالتفصيل بالعربية الفصحى المبسطة." },
+            ],
+          }],
+          generationConfig: { temperature: 0.3, maxOutputTokens: 7000 },
+        }),
+        signal: ctrl.signal,
+      });
+      clearTimeout(t);
+      if (!r.ok) {
+        const e = await r.text().catch(() => "");
+        if (r.status === 404) continue;
+        if (r.status === 429) return { error: "rate_limited" };
+        return { error: "gemini_" + r.status, detail: e.slice(0, 200) };
+      }
+      const d = await r.json();
+      const text = d?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") || "";
+      if (text) return { text };
+    } catch (e) {
+      if (String(e).includes("abort")) return { error: "timeout" };
+    }
+  }
+  return { error: "gemini_all_failed" };
+}
+
 const delay = ms => new Promise(r => setTimeout(r, ms));
 
 /* ===== system prompt المتقدم ===== */
@@ -535,7 +661,34 @@ ${searchBlock || ""}`;
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const tavilyKey = (process.env.TAVILY_API_KEY || "").trim();
+  const SEARCH_KEYS = {
+    marn: {
+      tavily:   (process.env.TAVILY_KEY_MARN   || process.env.TAVILY_API_KEY || "").trim(),
+      serper:   (process.env.SERPER_KEY_MARN   || "").trim(),
+      google:   (process.env.GOOGLE_KEY_MARN   || "").trim(),
+      googleCx: (process.env.GOOGLE_CX_MARN    || "").trim(),
+    },
+    nibras: {
+      tavily:   (process.env.TAVILY_KEY_NIBRAS || process.env.TAVILY_API_KEY || "").trim(),
+      serper:   (process.env.SERPER_KEY_NIBRAS || "").trim(),
+      google:   (process.env.GOOGLE_KEY_NIBRAS || "").trim(),
+      googleCx: (process.env.GOOGLE_CX_NIBRAS  || "").trim(),
+    },
+    fatwa: {
+      tavily:   (process.env.TAVILY_KEY_FATWA  || process.env.TAVILY_API_KEY || "").trim(),
+      serper:   (process.env.SERPER_KEY_FATWA  || "").trim(),
+      google:   (process.env.GOOGLE_KEY_FATWA  || "").trim(),
+      googleCx: (process.env.GOOGLE_CX_FATWA   || "").trim(),
+    },
+  };
+  const tavilyKey = SEARCH_KEYS.marn.tavily; // للتوافق مع الكود القديم
+
+  // ===== مفاتيح Gemini للرؤية (لكل وكيل، مع سقوط عام) =====
+  const GEMINI_KEY_BY_AGENT = {
+    marn:   (process.env.GEMINI_KEY_MARN   || process.env.GEMINI_API_KEY || process.env.GOOGLE_KEY_MARN   || "").trim(),
+    nibras: (process.env.GEMINI_KEY_NIBRAS || process.env.GEMINI_API_KEY || process.env.GOOGLE_KEY_NIBRAS || "").trim(),
+    fatwa:  (process.env.GEMINI_KEY_FATWA  || process.env.GEMINI_API_KEY || process.env.GOOGLE_KEY_FATWA  || "").trim(),
+  };
 
   let question, history, lang, forceSearch, userProfile, agent, timeFormat = "12", imageBase64 = null, imageMimeType = "image/jpeg";
   try {
@@ -614,7 +767,9 @@ export default async function handler(req, res) {
   let sources = [];
   const isFatwa = effectiveAgent === "fatwa";
   const FATWA_DOMAINS = ["binbaz.org.sa", "alifta.gov.sa", "islamqa.info", "islamweb.net", "dorar.net"];
-  const shouldSearch = !isCasualChat && tavilyKey && (forceSearch || isFatwa || needsSearch(question));
+  const agentKeys = SEARCH_KEYS[agent] || SEARCH_KEYS.marn;
+  const hasAnyKey = !!(agentKeys.tavily || agentKeys.serper || agentKeys.google);
+  const shouldSearch = !isCasualChat && hasAnyKey && (forceSearch || isFatwa || needsSearch(question));
   let servedFromCache = false;
   if (shouldSearch && cachedKnowledge && !isFatwa) {
     // 🧠 اقتصاد البحث: معرفة محفوظة حديثة من بحث سابق — لا حاجة لبحث جديد
@@ -634,7 +789,7 @@ export default async function handler(req, res) {
     if (BROAD_NEWS) {
       const dateTag = new Intl.DateTimeFormat("ar", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date());
       const queries = [searchQuery, `أهم أخبار اليوم ${dateTag}`, `أخبار السعودية والعالم اليوم عاجل`];
-      const batch = await Promise.all(queries.map(q => searchWeb(q, tavilyKey, null).catch(() => null)));
+      const batch = await Promise.all(queries.map(q => searchCascade(q, agentKeys, null).catch(() => null)));
       const seen = new Set(); const texts = []; const srcs = [];
       for (const r of batch) {
         if (!r) continue;
@@ -643,7 +798,7 @@ export default async function handler(req, res) {
       }
       results = texts.length ? { text: texts.join("\n\n---\n\n").slice(0, 14000), sources: srcs.slice(0, 10) } : null;
     } else {
-      results = await searchWeb(searchQuery, tavilyKey, isFatwa ? FATWA_DOMAINS : null);
+      results = await searchCascade(searchQuery, agentKeys, isFatwa ? FATWA_DOMAINS : null);
     }
     if (results && results.text) {
       searchBlock = isFatwa
@@ -689,12 +844,48 @@ export default async function handler(req, res) {
       ? buildNibrasPrompt(lang, searchBlock, profileBlock)
       : buildSystemPrompt(lang, searchBlock, profileBlock, didSearch)) + timeBlock;
 
-  const userContent = imageBase64
-    ? [
-        { type: "image", source: { type: "base64", media_type: imageMimeType, data: imageBase64 } },
-        { type: "text", text: question }
-      ]
-    : question;
+  // ===== فرع الرؤية: إذا وُجدت صورة، حلّلها عبر Gemini (Cerebras لا يدعم الصور) =====
+  if (imageBase64) {
+    const geminiKey = GEMINI_KEY_BY_AGENT[effectiveAgent] || GEMINI_KEY_BY_AGENT.marn;
+    if (!geminiKey) {
+      return res.status(200).json({
+        card: {
+          accent: "knowledge", kicker: "تنبيه", title: "تحليل الصور غير مفعّل",
+          sub: "", tabs: [{ label: "ملاحظة", type: "text", data: { body: "خاصية شرح الصور تحتاج مفتاح Gemini. أضف GEMINI_KEY في إعدادات Vercel." } }],
+          followUps: [],
+        },
+        searched: false, sources: [], agent_used: effectiveAgent,
+      });
+    }
+    const visionSystem = systemPrompt + "\n\n# مهم جداً: المُدخل صورة. حلّلها بدقة. أخرج JSON فقط بنفس مخطط البطاقة (accent, kicker, title, sub, tabs[], followUps[]). لا تكتب أي نص خارج JSON.";
+    const vis = await geminiVision(question, imageBase64, imageMimeType, visionSystem, geminiKey);
+    if (vis.text) {
+      let card = null;
+      try {
+        let str = vis.text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+        const f = str.indexOf("{"), l = str.lastIndexOf("}");
+        if (f !== -1 && l > f) card = JSON.parse(str.slice(f, l + 1).replace(/,\s*([}\]])/g, "$1"));
+      } catch {}
+      if (!card || !Array.isArray(card.tabs)) {
+        card = {
+          accent: "knowledge", kicker: "تحليل الصورة", title: "شرح الصورة", sub: "",
+          tabs: [{ label: "الشرح", type: "text", data: { body: vis.text.slice(0, 6000) } }],
+          followUps: [],
+        };
+      }
+      if (!Array.isArray(card.followUps)) card.followUps = [];
+      return res.status(200).json({ card, model_used: "gemini-vision", searched: false, sources: [], agent_used: effectiveAgent });
+    }
+    const msg = vis.error === "rate_limited"
+      ? "تجاوزت الحد المجاني لتحليل الصور اليوم (Gemini). جرّب غداً."
+      : "تعذّر تحليل الصورة حالياً. جرّب صورة أوضح أو بعد قليل.";
+    return res.status(200).json({
+      card: { accent: "knowledge", kicker: "تعذّر التحليل", title: "مشكلة في تحليل الصورة", sub: "", tabs: [{ label: "ملاحظة", type: "text", data: { body: msg } }], followUps: [] },
+      searched: false, sources: [], agent_used: effectiveAgent,
+    });
+  }
+
+  const userContent = question;
 
   const messages = [
     { role: "system", content: systemPrompt },
