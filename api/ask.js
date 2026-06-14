@@ -224,7 +224,7 @@ async function searchCascade(query, keys, domains) {
 /* ===== Gemini Vision — تحليل الصور (Cerebras لا يدعم الرؤية) ===== */
 async function geminiVision(question, imageBase64, mimeType, systemPrompt, key) {
   if (!key) return { error: "no_gemini_key" };
-  const models = ["gemini-2.5-flash", "gemini-2.0-flash"];
+  const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-flash-latest"];
   for (const model of models) {
     try {
       const ctrl = new AbortController();
@@ -707,6 +707,16 @@ export default async function handler(req, res) {
     imageMimeType = body?.imageMimeType || "image/jpeg";
   } catch { return res.status(400).json({ error: "Bad request" }); }
   if (!question) return res.status(400).json({ error: "Question missing" });
+
+  // ===== OCR صورة (نبراس): استخراج نص خام عبر Gemini فقط — يتجاوز Cerebras =====
+  if (imageBase64 && rawMode) {
+    const gkey = (GEMINI_KEY_BY_AGENT[agent] || GEMINI_KEY_BY_AGENT.marn || GEMINI_KEY_BY_AGENT.nibras || GEMINI_KEY_BY_AGENT.fatwa || "").trim();
+    if (!gkey) return res.status(200).json({ text: "", error: "no_gemini_key" });
+    const ocrSystem = "أنت محرّك OCR عربي دقيق. استخرج كل النص والمعادلات والأرقام من الصورة حرفياً كما هي، بدون أي شرح أو تعليق أو تنسيق إضافي. أعد النص المستخرج فقط.";
+    const vis = await geminiVision(question, imageBase64, imageMimeType, ocrSystem, gkey);
+    if (vis && vis.text && vis.text.trim()) return res.status(200).json({ text: vis.text.trim() });
+    return res.status(200).json({ text: "", error: (vis && vis.error) || "ocr_failed", detail: (vis && vis.detail) || "" });
+  }
 
   // ===== مفتاح خاص لكل وكيل (مع سقوط للمفتاح العام إن لم يُضبط) =====
   const KEY_BY_AGENT = {
