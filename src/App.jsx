@@ -870,20 +870,43 @@ export default function App() {
     if (activeTool) setActiveTool(null);
   };
 
-  // اختيار صورة من المعرض/الكاميرا وتحويلها base64
-  const onPickImage = (e) => {
+  // تصغير الصورة قبل الرفع — يمنع تجاوز حد Vercel (413 FUNCTION_PAYLOAD_TOO_LARGE)
+  async function downscaleImage(file, maxDim = 1600, quality = 0.72) {
+    const dataUrl = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result || ""));
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+    const img = await new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = reject;
+      im.src = dataUrl;
+    });
+    let width = img.width, height = img.height;
+    if (width > maxDim || height > maxDim) {
+      const s = maxDim / Math.max(width, height);
+      width = Math.round(width * s); height = Math.round(height * s);
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = width; canvas.height = height;
+    canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+    const out = canvas.toDataURL("image/jpeg", quality);
+    return { base64: out.split(",")[1] || "", mime: "image/jpeg", preview: out };
+  }
+
+  // اختيار صورة من المعرض/الكاميرا وتحويلها base64 (مع تصغير)
+  const onPickImage = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
     if (!file.type.startsWith("image/")) return;
-    if (file.size > 7 * 1024 * 1024) { alert("الصورة كبيرة جداً (الحد 7 ميجابايت)"); return; }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = String(reader.result || "");
-      const base64 = dataUrl.split(",")[1] || "";
-      if (base64) setPendingImage({ base64, mime: file.type, preview: dataUrl });
-    };
-    reader.readAsDataURL(file);
+    if (file.size > 25 * 1024 * 1024) { alert("الصورة كبيرة جداً (الحد 25 ميجابايت)"); return; }
+    try {
+      const { base64, mime, preview } = await downscaleImage(file, 1600, 0.72);
+      if (base64) setPendingImage({ base64, mime, preview });
+    } catch { alert("تعذّر قراءة الصورة"); }
   };
 
   const editAndResend = (chatId, index, newText) => {
