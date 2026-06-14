@@ -135,19 +135,15 @@ async function scanImageText(imageBase64, mimeType) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       question: 'استخرج كل النصوص والمعادلات والأرقام من هذه الصورة كاملاً بدون أي تعليق أو تنسيق.',
-      agent: 'nibras', lang: 'ar',
+      agent: 'nibras', lang: 'ar', mode: 'raw',
       imageBase64, imageMimeType: mimeType,
     }),
   });
   if (!res.ok) throw new Error('network');
   const data = await res.json();
-  const card = data?.card;
-  if (!card) throw new Error('no card');
-  for (const tb of (card.tabs || [])) {
-    const body = tb?.data?.body || tb?.data?.text || '';
-    if (body && body.length > 5) return body.trim();
-  }
-  return (card.title || '').trim();
+  const text = (data?.text || '').trim();
+  if (!text) throw new Error(data?.error || 'no text');
+  return text;
 }
 
 /* ===== زر مسح الصور — مشترك بين الاختبارات والبطاقات والألعاب ===== */
