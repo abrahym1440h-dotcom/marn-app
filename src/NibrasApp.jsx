@@ -146,30 +146,52 @@ async function scanImageText(imageBase64, mimeType) {
   return text;
 }
 
+/* ===== تصغير الصورة قبل الرفع — يمنع تجاوز حد Vercel (413) ===== */
+async function downscaleImage(file, maxDim = 1600, quality = 0.72) {
+  const dataUrl = await new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result || ''));
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+  const img = await new Promise((resolve, reject) => {
+    const im = new Image();
+    im.onload = () => resolve(im);
+    im.onerror = reject;
+    im.src = dataUrl;
+  });
+  let width = img.width, height = img.height;
+  if (width > maxDim || height > maxDim) {
+    const s = maxDim / Math.max(width, height);
+    width = Math.round(width * s); height = Math.round(height * s);
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
+  canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+  const out = canvas.toDataURL('image/jpeg', quality);
+  return { base64: out.split(',')[1] || '', mime: 'image/jpeg' };
+}
+
 /* ===== زر مسح الصور — مشترك بين الاختبارات والبطاقات والألعاب ===== */
 function ImageScanButton({ onText, label = 'صوّر الدرس', disabled }) {
   const ref = useRef(null);
   const [scanning, setScanning] = useState(false);
   const [err, setErr] = useState('');
 
-  const pick = (e) => {
+  const pick = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file || !file.type.startsWith('image/')) return;
-    if (file.size > 8 * 1024 * 1024) { setErr('الصورة كبيرة جداً (الحد 8 ميجابايت)'); return; }
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const b64 = String(reader.result || '').split(',')[1] || '';
-      if (!b64) return;
-      setScanning(true); setErr('');
-      try {
-        const text = await scanImageText(b64, file.type);
-        if (text) { onText(text); }
-        else setErr('لم يُتعرف على نص في الصورة — جرّب صورة أوضح');
-      } catch { setErr('تعذّر معالجة الصورة — تأكد من مفتاح Gemini'); }
-      finally { setScanning(false); }
-    };
-    reader.readAsDataURL(file);
+    if (file.size > 25 * 1024 * 1024) { setErr('الصورة كبيرة جداً (الحد 25 ميجابايت)'); return; }
+    setScanning(true); setErr('');
+    try {
+      const { base64, mime } = await downscaleImage(file, 1600, 0.72);
+      if (!base64) { setErr('تعذّر قراءة الصورة'); setScanning(false); return; }
+      const text = await scanImageText(base64, mime);
+      if (text) { onText(text); }
+      else setErr('لم يُتعرف على نص في الصورة — جرّب صورة أوضح');
+    } catch { setErr('تعذّر معالجة الصورة — تأكد من مفتاح Gemini'); }
+    finally { setScanning(false); }
   };
 
   return (
