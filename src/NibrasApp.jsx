@@ -128,6 +128,81 @@ async function genJSON(userPrompt) {
   return r;
 }
 
+/* ===== استخراج نص من صورة عبر Gemini ===== */
+async function scanImageText(imageBase64, mimeType) {
+  const res = await fetch('/api/ask', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      question: 'استخرج كل النصوص والمعادلات والأرقام من هذه الصورة كاملاً بدون أي تعليق أو تنسيق.',
+      agent: 'nibras', lang: 'ar',
+      imageBase64, imageMimeType: mimeType,
+    }),
+  });
+  if (!res.ok) throw new Error('network');
+  const data = await res.json();
+  const card = data?.card;
+  if (!card) throw new Error('no card');
+  for (const tb of (card.tabs || [])) {
+    const body = tb?.data?.body || tb?.data?.text || '';
+    if (body && body.length > 5) return body.trim();
+  }
+  return (card.title || '').trim();
+}
+
+/* ===== زر مسح الصور — مشترك بين الاختبارات والبطاقات والألعاب ===== */
+function ImageScanButton({ onText, label = 'صوّر الدرس', disabled }) {
+  const ref = useRef(null);
+  const [scanning, setScanning] = useState(false);
+  const [err, setErr] = useState('');
+
+  const pick = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !file.type.startsWith('image/')) return;
+    if (file.size > 8 * 1024 * 1024) { setErr('الصورة كبيرة جداً (الحد 8 ميجابايت)'); return; }
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const b64 = String(reader.result || '').split(',')[1] || '';
+      if (!b64) return;
+      setScanning(true); setErr('');
+      try {
+        const text = await scanImageText(b64, file.type);
+        if (text) { onText(text); }
+        else setErr('لم يُتعرف على نص في الصورة — جرّب صورة أوضح');
+      } catch { setErr('تعذّر معالجة الصورة — تأكد من مفتاح Gemini'); }
+      finally { setScanning(false); }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <input ref={ref} type="file" accept="image/*" onChange={pick} style={{ display: 'none' }} />
+      <button
+        onClick={() => ref.current?.click()}
+        disabled={disabled || scanning}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+          background: scanning ? T.goldSoft : `${T.gold}18`,
+          border: `1px solid ${T.goldLine}`,
+          color: scanning ? T.textDim : T.gold,
+          borderRadius: 12, padding: '12px 16px',
+          fontSize: 14, fontWeight: 700, cursor: scanning ? 'default' : 'pointer',
+          fontFamily: FONT, transition: 'all .15s',
+          opacity: disabled ? 0.5 : 1,
+        }}>
+        {scanning
+          ? <Loader2 size={16} style={{ animation: 'nspin 1s linear infinite' }} />
+          : <Upload size={16} />}
+        {scanning ? 'جاري استخراج النص...' : label}
+      </button>
+      {err && <div style={{ color: '#f87171', fontSize: 12, marginTop: 5, textAlign: 'center' }}>{err}</div>}
+    </div>
+  );
+}
+
+
 function ErrBox({ msg, onRetry }) {
   if (!msg) return null;
   return (<div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 12, padding: '12px 14px', margin: '12px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
@@ -337,6 +412,10 @@ function PlanView({ store, setStore }) {
             <Sparkles size={19} color={T.accent} />
             <span style={{ fontWeight: 800, color: T.text, fontSize: 17 }}>توليد خطة ذكية</span>
           </div>
+          <ImageScanButton
+            label="صوّر جدول المحتوى أو فهرس الكتاب"
+            onText={(t) => { const lines = t.split('\n').filter(Boolean); setSubject(lines[0]?.slice(0,40)||t.slice(0,40)); if (lines.length > 1) setGoal(lines.slice(1).join('، ').slice(0,80)); }}
+          />
           <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="المادة (مثال: الرياضيات)" style={{ ...field, marginBottom: 10 }} />
           <input value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="الهدف (اختياري: الاستعداد للاختبار)" style={{ ...field, marginBottom: 12 }} />
           <Btn variant="gold" full onClick={async () => { await generate(); setShowGen(false); }} disabled={!subject.trim() || busy}>
@@ -451,7 +530,12 @@ function QuizView({ store, setStore }) {
       <div style={{ height: 12 }} />
       <Heading title="إنشاء اختبار" />
       <ErrBox msg={err} onRetry={start} />
-      <textarea value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="اكتب الموضوع أو الصق نص الدرس..." rows={5} style={{ ...field, resize: 'vertical', marginBottom: 12 }} />
+      <ImageScanButton
+        label="صوّر ورقة الأسئلة أو الدرس"
+        onText={(t) => setTopic(prev => prev ? prev + '\n' + t : t)}
+        disabled={false}
+      />
+      <textarea value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="أو اكتب الموضوع / الصق نص الدرس..." rows={5} style={{ ...field, resize: 'vertical', marginBottom: 12 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <span style={{ color: T.textDim, fontSize: 14 }}>عدد الأسئلة:</span>
         {[5, 8, 10].map((n) => <button key={n} onClick={() => setCount(n)} style={{ width: 44, height: 40, borderRadius: 10, border: `1px solid ${count === n ? T.accent : T.border}`, background: count === n ? T.accentSoft : T.surface, color: count === n ? T.accent : T.textDim, fontWeight: 700, cursor: 'pointer', fontFamily: FONT }}>{n}</button>)}
@@ -553,7 +637,11 @@ function CardsView({ store, setStore }) {
       <button onClick={() => setMode('home')} style={backLink}><ChevronLeft size={16} color={T.accent} /> رجوع</button>
       <div style={{ height: 12 }} />
       <Heading title="إنشاء بطاقات" />
-      <textarea value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="اكتب الموضوع أو الصق نص الدرس..." rows={5} style={{ ...field, resize: 'vertical', marginBottom: 14 }} />
+      <ImageScanButton
+        label="صوّر ملاحظاتك أو الكتاب"
+        onText={(t) => setTopic(prev => prev ? prev + '\n' + t : t)}
+      />
+      <textarea value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="أو اكتب الموضوع / الصق نص الدرس..." rows={5} style={{ ...field, resize: 'vertical', marginBottom: 14 }} />
       <Btn variant="gold" full onClick={start} disabled={!topic.trim()}><Sparkles size={18} /> توليد البطاقات</Btn>
     </div>);
   }
@@ -591,7 +679,11 @@ function GamesView() {
     <Heading title="ألعاب نبراس" subtitle="العب وتعلّم في نفس الوقت — أدخل محتوى الدرس" />
     <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, padding: 18, marginBottom: 18 }}>
       <div style={{ fontWeight: 700, color: T.text, marginBottom: 10 }}>محتوى الدرس</div>
-      <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="الصق نص الدرس هنا لتوليد الأسئلة..." rows={5} style={{ ...field, resize: 'vertical' }} />
+      <ImageScanButton
+        label="صوّر صفحة الكتاب أو الملاحظات"
+        onText={(t) => setContent(prev => prev ? prev + '\n' + t : t)}
+      />
+      <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="أو الصق نص الدرس هنا..." rows={5} style={{ ...field, resize: 'vertical' }} />
     </div>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {games.map((g) => (
