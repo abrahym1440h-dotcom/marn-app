@@ -222,6 +222,30 @@ async function searchCascade(query, keys, domains) {
 
 
 /* ===== Gemini Vision — تحليل الصور (Cerebras لا يدعم الرؤية) ===== */
+// مُستخرِج JSON قوي: يوازن الأقواس ويُصلح القطع
+function extractJsonObject(text) {
+  let s = String(text || "").replace(/```json/gi, "").replace(/```/g, "").trim();
+  const start = s.indexOf("{");
+  if (start === -1) return null;
+  s = s.slice(start);
+  let depth = 0, end = -1, inStr = false, esc = false;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (esc) { esc = false; continue; }
+    if (c === "\\") { esc = true; continue; }
+    if (c === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (c === "{") depth++;
+    else if (c === "}") { depth--; if (depth === 0) { end = i; break; } }
+  }
+  let cand = end !== -1 ? s.slice(0, end + 1) : s;
+  if (end === -1 && depth > 0) cand = s.replace(/,\s*$/, "") + "}".repeat(depth);
+  cand = cand.replace(/,\s*([}\]])/g, "$1");
+  try { return JSON.parse(cand); } catch {}
+  try { return JSON.parse(cand.replace(/[\u0000-\u001F]+/g, " ")); } catch {}
+  return null;
+}
+
 async function geminiVision(question, imageBase64, mimeType, systemPrompt, key) {
   if (!key) return { error: "no_gemini_key" };
   const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-flash-latest"];
@@ -242,7 +266,7 @@ async function geminiVision(question, imageBase64, mimeType, systemPrompt, key) 
               { text: question || "اشرح هذه الصورة بالتفصيل بالعربية الفصحى المبسطة." },
             ],
           }],
-          generationConfig: { temperature: 0.3, maxOutputTokens: 7000 },
+          generationConfig: { temperature: 0.3, maxOutputTokens: 8192 },
         }),
         signal: ctrl.signal,
       });
@@ -495,7 +519,7 @@ ${isAr ? `هذه القاعدة لا تُكسر أبداً:
 - **match**: {"team1":"${isAr ? "الفريق الأول" : "Team A"}","team1_code":"sa","score1":2,"team2":"${isAr ? "الفريق الثاني" : "Team B"}","team2_code":"ar","score2":1,"status":"${isAr ? "انتهت" : "FT"}","venue":"${isAr ? "الملعب" : "stadium"}","date":"${isAr ? "التاريخ" : "date"}","details":[{"label":"${isAr ? "تفصيل" : "detail"}","value":"${isAr ? "قيمة" : "value"}"}]} ${isAr ? "— team1_code/team2_code: رمز الدولة ISO بحرفين صغيرين للمنتخبات الوطنية (sa السعودية، ar الأرجنتين، br البرازيل، fr فرنسا، gb-eng إنجلترا...) لعرض العلم. أضفها دائماً للمنتخبات." : ""}
 - **lineup**: {"formation":"4-3-3","team":"${isAr ? "الفريق" : "team"}","players":[{"name":"${isAr ? "اللاعب" : "player"}","number":9,"position":"${isAr ? "المركز" : "pos"}","rating":8.5}]}
 - **standings**: {"league":"${isAr ? "الدوري" : "league"}","rows":[{"pos":1,"team":"${isAr ? "الفريق" : "team"}","code":"sa","mp":20,"w":15,"d":3,"l":2,"pts":48}]} ${isAr ? "— code: رمز دولة ISO بحرفين للمنتخبات الوطنية لعرض العلم." : ""}
-- **player_profile**: {"name":"${isAr ? "الاسم" : "name"}","club":"${isAr ? "النادي" : "club"}","position":"${isAr ? "المركز" : "pos"}","nationality":"${isAr ? "الجنسية" : "nationality"}","stats":[{"label":"${isAr ? "الإحصاء" : "stat"}","value":"${isAr ? "القيمة" : "val"}"}],"image_query":"${isAr ? "اسم اللاعب" : "player name"}"}
+- **player_profile**: {"name":"${isAr ? "الاسم" : "name"}","club":"${isAr ? "النادي" : "club"}","position":"${isAr ? "المركز" : "pos"}","nationality":"${isAr ? "الجنسية" : "nationality"}","nat_code":"sa","stats":[{"label":"${isAr ? "الإحصاء" : "stat"}","value":"${isAr ? "القيمة" : "val"}"}],"image_query":"${isAr ? "اسم اللاعب" : "player name"}"}
 
 ## ${isAr ? "بطاقات الطقس" : "Weather Cards"}
 - **weather**: {"city":"${isAr ? "المدينة" : "city"}","temp":32,"feels_like":35,"condition":"${isAr ? "مشمس" : "Sunny"}","icon":"☀️","humidity":45,"wind":12,"forecast":[{"day":"${isAr ? "السبت" : "Sat"}","icon":"⛅","high":34,"low":28}]}
@@ -516,7 +540,7 @@ ${isAr ? `هذه القاعدة لا تُكسر أبداً:
 - **app_card**: {"name":"${isAr ? "الاسم" : "name"}","category":"${isAr ? "الفئة" : "cat"}","rating":4.5,"price":"${isAr ? "مجاني" : "Free"}","features":["${isAr ? "ميزة" : "feature"}"],"platforms":["iOS","Android"]}
 
 ## ${isAr ? "بطاقات السفر" : "Travel Cards"}
-- **destination**: {"city":"${isAr ? "المدينة" : "city"}","country":"${isAr ? "الدولة" : "country"}","best_time":"${isAr ? "أفضل وقت" : "best time"}","currency":"${isAr ? "العملة" : "currency"}","language":"${isAr ? "اللغة" : "language"}","attractions":[{"name":"${isAr ? "الاسم" : "name"}","type":"${isAr ? "النوع" : "type"}"}],"tips":["${isAr ? "نصيحة" : "tip"}"]}
+- **destination**: {"city":"${isAr ? "المدينة" : "city"}","country":"${isAr ? "الدولة" : "country"}","country_code":"sa","best_time":"${isAr ? "أفضل وقت" : "best time"}","currency":"${isAr ? "العملة" : "currency"}","language":"${isAr ? "اللغة" : "language"}","attractions":[{"name":"${isAr ? "الاسم" : "name"}","type":"${isAr ? "النوع" : "type"}"}],"tips":["${isAr ? "نصيحة" : "tip"}"]}
 - **flight**: {"from":"${isAr ? "من" : "from"}","to":"${isAr ? "إلى" : "to"}","duration":"${isAr ? "المدة" : "duration"}","airlines":[{"name":"${isAr ? "الاسم" : "name"}","price":"${isAr ? "السعر" : "price"}","stops":0}]}
 
 # ${isAr ? "مهم جداً — قاعدة الشمولية" : "CRITICAL — Comprehensiveness Rule"}
@@ -873,12 +897,7 @@ export default async function handler(req, res) {
     const visionSystem = systemPrompt + "\n\n# مهم جداً: المُدخل صورة. حلّلها بدقة. أخرج JSON فقط بنفس مخطط البطاقة (accent, kicker, title, sub, tabs[], followUps[]). لا تكتب أي نص خارج JSON.";
     const vis = await geminiVision(question, imageBase64, imageMimeType, visionSystem, geminiKey);
     if (vis.text) {
-      let card = null;
-      try {
-        let str = vis.text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
-        const f = str.indexOf("{"), l = str.lastIndexOf("}");
-        if (f !== -1 && l > f) card = JSON.parse(str.slice(f, l + 1).replace(/,\s*([}\]])/g, "$1"));
-      } catch {}
+      let card = extractJsonObject(vis.text);
       if (!card || !Array.isArray(card.tabs)) {
         card = {
           accent: "knowledge", kicker: "تحليل الصورة", title: "شرح الصورة", sub: "",
