@@ -113,7 +113,7 @@ async function searchWeb(query, key, domains) {
       body: JSON.stringify({
         api_key: key, query,
         search_depth: "advanced",
-        max_results: 8,
+        max_results: 20,
         include_answer: "advanced",
         ...(Array.isArray(domains) && domains.length ? { include_domains: domains } : {}),
       }),
@@ -125,7 +125,7 @@ async function searchWeb(query, key, domains) {
     const lines = [];
     if (d.answer) lines.push("VERIFIED ANSWER: " + d.answer);
     const sources = [];
-    (d.results || []).slice(0, 8).forEach((x, i) => {
+    (d.results || []).slice(0, 20).forEach((x, i) => {
       lines.push(`\n[${i+1}] ${x.title}\n${x.url}\n${(x.content||"").slice(0,600)}`);
       if (x.url) {
         let domain = "";
@@ -133,7 +133,7 @@ async function searchWeb(query, key, domains) {
         sources.push({ title: x.title || domain || x.url, url: x.url, domain });
       }
     });
-    return { text: lines.join("\n"), sources: sources.slice(0, 6) };
+    return { text: lines.join("\n"), sources: sources.slice(0, 20) };
   } catch { return null; }
 }
 
@@ -143,7 +143,7 @@ async function searchSerper(query, key, domains) {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 14000);
-    const body = { q: query, num: 8, hl: "ar" };
+    const body = { q: query, num: 20, hl: "ar" };
     const r = await fetch("https://google.serper.dev/search", {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-API-KEY": key },
@@ -157,7 +157,7 @@ async function searchSerper(query, key, domains) {
     if (d.answerBox?.answer) lines.push("VERIFIED ANSWER: " + d.answerBox.answer);
     if (d.answerBox?.snippet) lines.push("ANSWER SNIPPET: " + d.answerBox.snippet);
     const sources = [];
-    (d.organic || []).slice(0, 8).forEach((x, i) => {
+    (d.organic || []).slice(0, 20).forEach((x, i) => {
       lines.push(`
 [${i+1}] ${x.title}
 ${x.link}
@@ -179,7 +179,7 @@ async function searchGoogleCSE(query, key, cx, domains) {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 14000);
-    let url = `https://www.googleapis.com/customsearch/v1?key=${key}&cx=${cx}&q=${encodeURIComponent(query)}&num=8`;
+    let url = `https://www.googleapis.com/customsearch/v1?key=${key}&cx=${cx}&q=${encodeURIComponent(query)}&num=10`;
     if (Array.isArray(domains) && domains.length) url += "&siteSearch=" + encodeURIComponent(domains[0]);
     const r = await fetch(url, { signal: ctrl.signal });
     clearTimeout(t);
@@ -187,7 +187,7 @@ async function searchGoogleCSE(query, key, cx, domains) {
     const d = await r.json();
     const lines = [];
     const sources = [];
-    (d.items || []).slice(0, 8).forEach((x, i) => {
+    (d.items || []).slice(0, 10).forEach((x, i) => {
       lines.push(`
 [${i+1}] ${x.title}
 ${x.link}
@@ -596,64 +596,64 @@ ${searchBlock || ""}`;
 function buildNibrasPrompt(lang, searchBlock, profileBlock) {
   const isAr = lang === "ar";
   if (!isAr) {
-    return `You are "نبراس", a world-class encyclopedic expert tutor inside Marn — a professor and doctor-level specialist in EVERY field. Teach with depth and precision: full explanations, no shallow summaries. Always: define, explain step by step from basics, give at least one fully worked example, note common mistakes, end with "test yourself". If unsure, say so. Output JSON ONLY with rich tabs.${profileBlock}${searchBlock || ""}`;
+    return `You are "نبراس", a world-class encyclopedic expert tutor inside Marn — professor/doctor-level in EVERY field. Teach with depth: full explanations, no shallow summaries. Always define, explain step by step, give a worked example, note common mistakes, end with "test yourself". Add 1-3 visual chart tabs with REAL data. Output JSON ONLY.${profileBlock}${searchBlock || ""}`;
   }
-  return `أنت «نبراس» — معلّم خبير موسوعي داخل تطبيق مرن، بمستوى أستاذ جامعي ودكتور متخصّص في كل المجالات (علوم، رياضيات، فيزياء، كيمياء، أحياء، لغة، نحو، بلاغة، تاريخ، برمجة، وغيرها). قوّتك: شرح عميق ودقيق وثري يبني الفهم من الأساس — تشرح ولا تلخّص.${profileBlock}
+  return `أنت «نبراس» — معلّم خبير موسوعي داخل تطبيق مرن، بمستوى أستاذ جامعي ودكتور متخصّص في كل المجالات (علوم، رياضيات، فيزياء، كيمياء، أحياء، لغة، نحو، بلاغة، تاريخ، برمجة، وغيرها). قوّتك: شرح عميق ودقيق وثري يبني الفهم من الأساس — تشرح ولا تلخّص، وتدعّم الشرح برسوم بصرية.${profileBlock}
 
 # نوع الرسالة
 - تحية أو دردشة → رد ودّي مختصر بتبويب text واحد.
-- طلب تعليمي (شرح، حل مسألة، تبسيط درس، مراجعة) → طبّق التصميم التعليمي الثري أدناه.
+- طلب تعليمي (شرح، حل مسألة، تبسيط درس، مراجعة) → طبّق التصميم الثري أدناه.
 
 # قواعد الجودة (إلزامية)
-1. الدقة المطلقة أولاً: لا معلومة إلا وأنت واثق منها؛ وإن لم تتأكد نبّه بوضوح ولا تخمّن.
-2. اشرح بعمق وتدرّج من الأبسط للأعقد، بعربية واضحة وأمثلة محسوسة — ممنوع التلخيص المخلّ، المطلوب شرح كامل يفهمه الطالب وحده.
-3. كل شرح يتضمّن مثالاً محلولاً خطوة بخطوة على الأقل.
-4. نبّه على الأخطاء الشائعة التي يقع فيها الطلاب في هذا الموضوع.
-5. اختم بـ «اختبر نفسك»: سؤالان قصيران يرسّخان الفهم.
-6. لا إيموجي، وJSON صحيح فقط.
+1. الدقة المطلقة أولاً؛ وإن لم تتأكد نبّه ولا تخمّن.
+2. اشرح بعمق وتدرّج — ممنوع التلخيص المخلّ، المطلوب شرح كامل يفهمه الطالب وحده.
+3. مثال محلول خطوة بخطوة على الأقل.
+4. نبّه على الأخطاء الشائعة.
+5. اختم بـ «اختبر نفسك».
+6. لا إيموجي، JSON صحيح فقط.
 
-# التصميم المطلوب — JSON فقط، لا شيء قبله أو بعده
+# التصميم — JSON فقط، لا شيء قبله أو بعده
 \`\`\`
 {
   "accent": "knowledge",
   "kicker": "شرح تعليمي",
-  "hero": {"icon":"book","value":"<المفهوم/الرقم البطل قصيراً>","label":"<وصف قصير>"},
+  "hero": {"icon":"book","value":"<قصير>","label":"<وصف>"},
   "title": "<الموضوع>",
   "sub": "<ملخّص في سطر>",
   "tabs": [
-    {"label":"الفكرة","type":"text","data":{"body":"<تمهيد وتعريف مبسّط في جملتين إلى ثلاث>"}},
-    {"label":"الشرح المفصّل","type":"list","data":{"intro":"بالتفصيل وبالتدرّج:","items":["<نقطة شارحة>","<نقطة>","<نقطة>","<نقطة>","<نقطة>"]}},
-    {"label":"مثال محلول","type":"list","data":{"intro":"خطوة بخطوة:","items":["<الخطوة 1>","<الخطوة 2>","<الخطوة 3 والنتيجة>"]}},
-    {"label":"أخطاء شائعة","type":"list","data":{"items":["<خطأ يقع فيه الطلاب والصواب>","<خطأ آخر>"]}},
-    {"label":"خلاصة","type":"list","data":{"items":["<أهم ما يجب تذكّره>","<نقطة>"]}},
-    {"label":"اختبر نفسك","type":"list","data":{"intro":"أجب لترسّخ فهمك:","items":["<سؤال قصير>","<سؤال قصير>"]}}
+    {"label":"الفكرة","type":"text","data":{"body":"<تمهيد وتعريف في جملتين إلى ثلاث>"}},
+    {"label":"الشرح المفصّل","type":"list","data":{"intro":"بالتفصيل:","items":["<نقطة>","<نقطة>","<نقطة>","<نقطة>","<نقطة>"]}},
+    {"label":"مثال محلول","type":"steps","data":{"items":[{"title":"الخطوة 1","desc":"..."},{"title":"الخطوة 2","desc":"..."},{"title":"النتيجة","desc":"..."}]}},
+    {"label":"أخطاء شائعة","type":"list","data":{"items":["<خطأ والصواب>","<خطأ>"]}},
+    {"label":"خلاصة","type":"list","data":{"items":["<أهم نقطة>","<نقطة>"]}},
+    {"label":"اختبر نفسك","type":"quiz","data":{"items":[{"q":"<سؤال اختياري>","type":"mcq","options":["خيار","خيار","خيار","خيار"],"answer":0,"explain":"<سبب الإجابة الصحيحة>"},{"q":"<سؤال مقالي>","type":"written","modelAnswer":"<الإجابة النموذجية كاملة>","points":["<نقطة مفتاحية>","<نقطة>"]}]}}
   ],
-  "followUps": ["<سؤال تعليمي متعلّق>","<سؤال تعليمي متعلّق>","<سؤال تعليمي متعلّق>"]
+  "followUps": ["<سؤال متعلّق>","<سؤال متعلّق>","<سؤال متعلّق>"]
 }
 \`\`\`
-- استخدم list لأي محتوى أكثر من جملتين. خصّص الأمثلة لمستوى الطالب إن عُرف من ملفه.
 
-# استثناء خاص — طلب جدول/خطة دراسية (الكلمات: جدول، خطة، برنامج مراجعة، جدول مذاكرة)
-إذا طلب الطالب جدولاً أو خطة → تجاهل القالب أعلاه واستخدم:
+# ⭐ تبويبات بصرية (مهم جداً للتكثيف) — أضِف من 1 إلى 3 تبويبات رسوم مناسبة للموضوع بين التبويبات أعلاه، ببيانات حقيقية من الدرس (لا عشوائية):
+- مقارنة قيم: {"label":"مقارنة","type":"chart","data":{"kind":"bar","values":[40,75,55],"labels":["أ","ب","ج"]}}
+- نِسَب: {"label":"النِّسب","type":"chart","data":{"kind":"pie","slices":[{"value":40,"label":"قسم"},{"value":60,"label":"قسم"}]}}
+- ترتيب/تفاوت: {"label":"الترتيب","type":"chart","data":{"kind":"hbar","items":[{"label":"الأول","value":90},{"label":"الثاني","value":60}]}}
+- تسلسل زمني/مراحل: {"label":"التسلسل","type":"chart","data":{"kind":"timeline","items":[{"title":"المرحلة","desc":"..."}]}}
+- نسبة مئوية: {"label":"المؤشّر","type":"chart","data":{"kind":"gauge","value":72}}
+- مقابلة طرفين: {"label":"مقابلة","type":"chart","data":{"kind":"comparison","a":{"label":"س","value":"3"},"b":{"label":"ص","value":"1"}}}
+- أرقام مفتاحية: {"label":"أرقام","type":"chart","data":{"kind":"kpi","items":[{"value":"25","label":"وصف"},{"value":"+12%","label":"وصف"}]}}
+- جدول: {"label":"جدول","type":"table","data":{"head":["العمود1","العمود2"],"rows":[["قيمة","قيمة"]]}}
+- خط بياني: {"kind":"line","values":[20,40,35,60]}
+- رادار مهارات: {"kind":"radar","values":[0.8,0.6,0.9,0.7]}
+الأنواع المتاحة: pie, donut, bar, hbar, line, area, radar, gauge, timeline, comparison, kpi, table, funnel, scatter, treemap, leaderboard, matrix, network.
+
+# ⭐ اختبار تفاعلي: تبويب «اختبر نفسك» اجعله type:"quiz" يحوي من 2 إلى 6 أسئلة، امزج بين اختياري (mcq مع options وanswer رقم الصحيح يبدأ 0 وexplain) ومقالي (written مع modelAnswer وpoints). المستخدم يجيب داخل البطاقة ويرى صح/خطأ فوراً.
+خصّص الأمثلة لمستوى الطالب إن عُرف من ملفه.
+
+# استثناء — طلب جدول/خطة دراسية (الكلمات: جدول، خطة، برنامج مراجعة)
+استخدم:
 \`\`\`
-{
-  "accent": "knowledge",
-  "kicker": "خطة دراسية",
-  "hero": {"icon":"calendarCheck","value":"<عدد أيام رقم فقط>","label":"أيام للمراجعة"},
-  "title": "<عنوان الجدول>",
-  "sub": "<وصف مختصر في سطر>",
-  "tabs": [
-    {"label":"الجدول","type":"steps","data":{"items":[
-      {"title":"<اليوم: الموضوع>","desc":"<وقت + ما يراجعه تحديداً>"},
-      {"title":"<اليوم التالي>","desc":"<وقت + موضوع>"}
-    ]}},
-    {"label":"نصائح","type":"list","data":{"items":["<نصيحة فعّالة>","<نصيحة>"]}},
-    {"label":"يوم الاختبار","type":"list","data":{"items":["<صباح الاختبار>","<خلال الاختبار>"]}}
-  ],
-  "followUps": ["<سؤال تعليمي متعلق>","<سؤال تعليمي متعلق>"]
-}
+{"accent":"knowledge","kicker":"خطة دراسية","hero":{"icon":"calendarCheck","value":"<أيام>","label":"أيام للمراجعة"},"title":"<عنوان>","sub":"<وصف>","tabs":[{"label":"الجدول","type":"steps","data":{"items":[{"title":"<اليوم: الموضوع>","desc":"<وقت + تفاصيل>"}]}},{"label":"تقدّم","type":"chart","data":{"kind":"gauge","value":0}},{"label":"نصائح","type":"list","data":{"items":["<نصيحة>"]}}],"followUps":["<سؤال>"]}
 \`\`\`
-أيام حقيقية، مواضيع محددة، أوقات واقعية تراعي ظروف الطالب.
+أيام حقيقية، مواضيع محددة، أوقات واقعية.
 ${searchBlock || ""}`;
 }
 
@@ -776,7 +776,7 @@ export default async function handler(req, res) {
   let didSearch = false;
   let sources = [];
   const isFatwa = effectiveAgent === "fatwa";
-  const FATWA_DOMAINS = ["binbaz.org.sa", "alifta.gov.sa", "islamqa.info", "islamweb.net", "dorar.net"];
+  const FATWA_DOMAINS = ["binbaz.org.sa", "alifta.gov.sa", "islamqa.info", "islamweb.net", "dorar.net", "ar.islamway.net", "saaid.net", "al-eman.com", "ibnothaimeen.com", "binothaimeen.net", "dar-alifta.org", "aliftaa.jo", "islamhouse.com", "shamela.ws", "islamonline.net", "alukah.net", "fatwa.islamweb.net", "al-albany.net", "kalemtayeb.com", "taimiah.org", "sahab.net", "alimam.ws"];
   const agentKeys = SEARCH_KEYS[agent] || SEARCH_KEYS.marn;
   const hasAnyKey = !!(agentKeys.tavily || agentKeys.serper || agentKeys.google);
   const shouldSearch = !isCasualChat && hasAnyKey && (forceSearch || isFatwa || needsSearch(question));
@@ -806,7 +806,7 @@ export default async function handler(req, res) {
         if (r.text) texts.push(r.text);
         for (const s of (r.sources || [])) { if (s.url && !seen.has(s.url)) { seen.add(s.url); srcs.push(s); } }
       }
-      results = texts.length ? { text: texts.join("\n\n---\n\n").slice(0, 14000), sources: srcs.slice(0, 10) } : null;
+      results = texts.length ? { text: texts.join("\n\n---\n\n").slice(0, 16000), sources: srcs.slice(0, 20) } : null;
     } else {
       results = await searchCascade(searchQuery, agentKeys, isFatwa ? FATWA_DOMAINS : null);
     }
