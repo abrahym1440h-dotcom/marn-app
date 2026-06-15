@@ -647,7 +647,7 @@ function FatwaCard({ card, sources }) {
         <div style={{ borderTop: `1px solid ${T.borderSoft}`, paddingTop: 10 }}>
           <div style={{ color: T.textDim, fontWeight: 700, fontSize: 12, marginBottom: 7 }}>المصادر</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-            {sources.slice(0, 6).map((s, k) => (
+            {sources.slice(0, 20).map((s, k) => (
               <a key={k} href={s.url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 7, color: T.accent, fontSize: 13, textDecoration: 'none' }}>
                 <ExternalLink size={13} color={T.accent} />
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title || s.domain || s.url}</span>
