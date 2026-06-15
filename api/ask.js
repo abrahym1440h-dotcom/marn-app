@@ -492,9 +492,9 @@ ${isAr ? `هذه القاعدة لا تُكسر أبداً:
 - **ai_insight**: {"title":"${isAr ? "استنتاج ذكي" : "AI Insight"}","body":"${isAr ? "الخلاصة..." : "..."}","metric":"+23%"} ${isAr ? "— بطاقة خلاصة ذكية، ممتازة كتبويب أخير" : ""}
 
 ## ${isAr ? "بطاقات رياضية" : "Sports Cards"}
-- **match**: {"team1":"${isAr ? "الفريق الأول" : "Team A"}","score1":2,"team2":"${isAr ? "الفريق الثاني" : "Team B"}","score2":1,"status":"${isAr ? "انتهت" : "FT"}","venue":"${isAr ? "الملعب" : "stadium"}","date":"${isAr ? "التاريخ" : "date"}","details":[{"label":"${isAr ? "تفصيل" : "detail"}","value":"${isAr ? "قيمة" : "value"}"}]}
+- **match**: {"team1":"${isAr ? "الفريق الأول" : "Team A"}","team1_code":"sa","score1":2,"team2":"${isAr ? "الفريق الثاني" : "Team B"}","team2_code":"ar","score2":1,"status":"${isAr ? "انتهت" : "FT"}","venue":"${isAr ? "الملعب" : "stadium"}","date":"${isAr ? "التاريخ" : "date"}","details":[{"label":"${isAr ? "تفصيل" : "detail"}","value":"${isAr ? "قيمة" : "value"}"}]} ${isAr ? "— team1_code/team2_code: رمز الدولة ISO بحرفين صغيرين للمنتخبات الوطنية (sa السعودية، ar الأرجنتين، br البرازيل، fr فرنسا، gb-eng إنجلترا...) لعرض العلم. أضفها دائماً للمنتخبات." : ""}
 - **lineup**: {"formation":"4-3-3","team":"${isAr ? "الفريق" : "team"}","players":[{"name":"${isAr ? "اللاعب" : "player"}","number":9,"position":"${isAr ? "المركز" : "pos"}","rating":8.5}]}
-- **standings**: {"league":"${isAr ? "الدوري" : "league"}","rows":[{"pos":1,"team":"${isAr ? "الفريق" : "team"}","mp":20,"w":15,"d":3,"l":2,"pts":48}]}
+- **standings**: {"league":"${isAr ? "الدوري" : "league"}","rows":[{"pos":1,"team":"${isAr ? "الفريق" : "team"}","code":"sa","mp":20,"w":15,"d":3,"l":2,"pts":48}]} ${isAr ? "— code: رمز دولة ISO بحرفين للمنتخبات الوطنية لعرض العلم." : ""}
 - **player_profile**: {"name":"${isAr ? "الاسم" : "name"}","club":"${isAr ? "النادي" : "club"}","position":"${isAr ? "المركز" : "pos"}","nationality":"${isAr ? "الجنسية" : "nationality"}","stats":[{"label":"${isAr ? "الإحصاء" : "stat"}","value":"${isAr ? "القيمة" : "val"}"}],"image_query":"${isAr ? "اسم اللاعب" : "player name"}"}
 
 ## ${isAr ? "بطاقات الطقس" : "Weather Cards"}
@@ -889,12 +889,17 @@ export default async function handler(req, res) {
       if (!Array.isArray(card.followUps)) card.followUps = [];
       return res.status(200).json({ card, model_used: "gemini-vision", searched: false, sources: [], agent_used: effectiveAgent });
     }
-    const msg = vis.error === "rate_limited"
-      ? "تجاوزت الحد المجاني لتحليل الصور اليوم (Gemini). جرّب غداً."
-      : "تعذّر تحليل الصورة حالياً. جرّب صورة أوضح أو بعد قليل.";
+    const er = String(vis.error || "");
+    let msg;
+    if (er === "rate_limited") msg = "تجاوزت الحد المجاني لتحليل الصور (Gemini). انتظر قليلاً ثم أعد المحاولة.";
+    else if (er === "timeout") msg = "انتهت مهلة التحليل. جرّب صورة أصغر حجماً.";
+    else if (er.indexOf("gemini_403") !== -1 || er.indexOf("gemini_400") !== -1 || er === "gemini_all_failed" || er === "no_gemini_key")
+      msg = "مفتاح Gemini غير صالح لتحليل الصور. الحل: أنشئ مفتاحاً من Google AI Studio (aistudio.google.com/apikey) وضعه في GEMINI_API_KEY بـVercel. لا تستخدم مفتاح Custom Search، وتأكد أن المفتاح بلا قيود وأن Generative Language API مُفعّل.";
+    else msg = "تعذّر تحليل الصورة حالياً. جرّب صورة أوضح أو بعد قليل.";
+    const detail = vis.detail ? ("\n\nتفاصيل تقنية: " + String(vis.detail).slice(0, 160)) : "";
     return res.status(200).json({
-      card: { accent: "knowledge", kicker: "تعذّر التحليل", title: "مشكلة في تحليل الصورة", sub: "", tabs: [{ label: "ملاحظة", type: "text", data: { body: msg } }], followUps: [] },
-      searched: false, sources: [], agent_used: effectiveAgent,
+      card: { accent: "knowledge", kicker: "تعذّر التحليل", title: "مشكلة في تحليل الصورة", sub: "", tabs: [{ label: "السبب والحل", type: "text", data: { body: msg + detail } }], followUps: [] },
+      searched: false, sources: [], agent_used: effectiveAgent, error: er,
     });
   }
 
