@@ -334,7 +334,7 @@ function TabBody({ tab, theme, P }) {
   return <div style={{ color: P.text, fontSize: 14.5, lineHeight: 1.95, whiteSpace: 'pre-wrap' }}>{d.body || d.text || ''}</div>;
 }
 
-export function Card({ card, theme = 'marn' }) {
+export function Card({ card, theme = 'marn', sources, showFollowUps = true }) {
   const P = pal(theme);
   const [active, setActive] = useState(0);
   if (!card) return null;
@@ -353,11 +353,24 @@ export function Card({ card, theme = 'marn' }) {
         </div>
       ) : null}
       <div style={{ minHeight: 40 }}><TabBody tab={tab} theme={theme} P={P} /></div>
-      {Array.isArray(card.followUps) && card.followUps.length > 0 ? (
+      {showFollowUps && Array.isArray(card.followUps) && card.followUps.length > 0 ? (
         <div style={{ borderTop: '1px solid ' + P.line, marginTop: 14, paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 7 }}>
           {card.followUps.slice(0, 4).map((f, i) => (
             <div key={i} style={{ color: P.accent, fontSize: 13, display: 'flex', gap: 7 }}><span style={{ color: P.faint }}>•</span>{f}</div>
           ))}
+        </div>
+      ) : null}
+      {Array.isArray(sources) && sources.length > 0 ? (
+        <div style={{ borderTop: '1px solid ' + P.line, marginTop: 14, paddingTop: 12 }}>
+          <div style={{ color: P.sub, fontWeight: 700, fontSize: 12, marginBottom: 7 }}>{'المصادر (' + sources.length + ')'}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            {sources.slice(0, 20).map((s, i) => (
+              <a key={i} href={s.url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 7, color: P.accent, fontSize: 13, textDecoration: 'none' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={P.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title || s.domain || s.url}</span>
+              </a>
+            ))}
+          </div>
         </div>
       ) : null}
     </div>
