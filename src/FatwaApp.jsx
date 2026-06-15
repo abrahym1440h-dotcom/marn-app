@@ -1,6 +1,7 @@
 // ============================================================================
 // FatwaApp.jsx — قسم "فتوى" داخل مرن
 // ملف مستقل بالكامل. استورده في App.jsx:  import FatwaApp from './FatwaApp';
+import { Card as KitCard } from './CardKit.jsx';
 // ثم اعرضه شاشة كاملة عند appView === 'fatwa'  مثل GroupsApp و OrganizerApp:
 //   {appView === 'fatwa' && <FatwaApp onClose={() => setAppView(null)} />}
 // وزر في EmptyState:  onClick={() => setAppView('fatwa')}
@@ -562,7 +563,7 @@ function ChatView() {
             ) : (
               <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: '16px 16px 16px 4px', padding: 16, maxWidth: '92%' }}>
                 {m.card ? (
-                  <FatwaCard card={m.card} sources={m.sources} />
+                  <KitCard card={m.card} theme="fatwa" sources={m.sources} />
                 ) : m.parsed && m.parsed.structured ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {m.parsed.hukm && <Section label="الحكم الشرعي" color={T.accent} text={m.parsed.hukm} />}
