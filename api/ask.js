@@ -755,9 +755,12 @@ export default async function handler(req, res) {
   const RELIGIOUS_INTENT = /(?<![\u0621-\u064A])(?:ما حكم|حكم|هل يجوز|يجوز|حرام|حلال|صلاة|الصلاه|أصلي|الصيام|الصوم|أصوم|زكاة|زكاه|وضوء|طهارة|الغسل|عمرة|عمره|الحج|فتوى|أذكار|القرآن|سورة|سوره|آية|آيه|حديث|السنة النبوية|بدعة|بدعه|نكاح|طلاق|ميراث|ربا|يمين|حلفت|نذر|كفارة|كفاره|قضاء الصلاة|الجمع والقصر|سجود السهو)(?![\u0621-\u064A])/;
   const EDU_INTENT = /اشرح|درس |الدرس|مذاكر|أذاكر|اختبار|امتحان|واجب|منهج|رياضيات|فيزياء|كيمياء|أحياء|نحو|إعراب|بلاغ[ةه]|مسأل[ةه]|حل تمرين|تمارين|خط[ةه] دراس|خطة مذاكرة|بطاقات مراجع|فلاش كارد|معادل[ةه]|نظري[ةه]|قانون نيوتن|جدول الضرب/;
   let effectiveAgent = agent;
-  if (GENERAL_DOMAINS.test(question)) effectiveAgent = "marn";
-  else if (RELIGIOUS_INTENT.test(question)) effectiveAgent = "fatwa";
-  else if (EDU_INTENT.test(question)) effectiveAgent = "nibras";
+  // التعرّف التلقائي يطبّق فقط إذا لم يختر المستخدم وكيلاً صريحاً (أي بقي على مرن الافتراضي)
+  if (agent === "marn" || !agent) {
+    if (GENERAL_DOMAINS.test(question)) effectiveAgent = "marn";
+    else if (RELIGIOUS_INTENT.test(question)) effectiveAgent = "fatwa";
+    else if (EDU_INTENT.test(question)) effectiveAgent = "nibras";
+  }
 
   // فحص الكاش
   if (!forceSearch) {
