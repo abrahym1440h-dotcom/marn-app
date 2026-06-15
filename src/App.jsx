@@ -4,12 +4,13 @@ import FatwaApp from "./FatwaApp.jsx";
 import { Card as KitCard } from "./CardKit.jsx";
 import { flagUrl } from "./flags.js";
 
-function TeamFlag({ name, code, big, T }) {
+function TeamFlag({ name, code, big, inline, T }) {
   const url = flagUrl(code || name, big ? 80 : 40);
   if (url) {
-    const sz = big ? { width: 50, height: 34 } : { width: 26, height: 18 };
-    return <img src={url} alt="" style={{ ...sz, objectFit: "cover", borderRadius: 4, border: `1px solid ${T.line}`, display: "block" }} onError={(e) => { e.currentTarget.style.display = "none"; }} />;
+    const sz = big ? { width: 50, height: 34 } : inline ? { width: 22, height: 15 } : { width: 26, height: 18 };
+    return <img src={url} alt="" style={{ ...sz, objectFit: "cover", borderRadius: 4, border: `1px solid ${T.line}`, display: "inline-block", verticalAlign: "middle" }} onError={(e) => { e.currentTarget.style.display = "none"; }} />;
   }
+  if (inline) return null;
   const d = big ? 48 : 22;
   return <div style={{ width: d, height: d, borderRadius: "50%", background: T.pillFill, border: `1px solid ${T.line}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: big ? 20 : 11, fontWeight: 800, color: T.text }}>{(name || "?")[0]}</div>;
 }
@@ -552,6 +553,10 @@ export default function App() {
 
   const endRef = useRef(null);
   const inputRef = useRef(null);
+  useEffect(() => {
+    const el = inputRef.current;
+    if (el && el.tagName === "TEXTAREA") { el.style.height = "auto"; el.style.height = Math.min(el.scrollHeight, 140) + "px"; }
+  }, [draft]);
 
   // الوضع الفعلي
   const effectiveMode = settings.mode === "auto" ? (systemDark ? "dark" : "light") : settings.mode;
@@ -1186,13 +1191,14 @@ export default function App() {
               border: `1.5px solid ${T.line}`,
               borderRadius: 14,
               padding: "10px 10px 10px 14px",
-              display: "flex", alignItems: "center", gap: 8,
+              display: "flex", alignItems: "flex-end", gap: 8,
               boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
               transition: "border-color .15s",
             }}>
-              <input
+              <textarea
                 ref={inputRef}
                 value={draft}
+                rows={1}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
@@ -1201,9 +1207,9 @@ export default function App() {
                 placeholder={activeTool ? (activeTool.hint || t.placeholder) : (forceSearch ? (isRTL ? "ابحث في الإنترنت..." : "Search the web...") : (currentAgent && currentAgent.placeholder) || t.placeholder)}
                 style={{
                   flex: 1, background: "transparent", border: "none", outline: "none",
-                  color: T.text, fontSize: F.base, padding: "2px 4px", fontFamily: "inherit",
+                  color: T.text, fontSize: F.base, padding: "6px 4px", fontFamily: "inherit",
                   direction: isRTL ? "rtl" : "ltr", textAlign: isRTL ? "right" : "left",
-                  minWidth: 0,
+                  minWidth: 0, resize: "none", lineHeight: 1.6, maxHeight: 140, overflowY: "auto",
                 }}
               />
               <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
@@ -2458,7 +2464,7 @@ function TabContent({ tab, a, T, F }) {
             <div style={{ width:54, height:54, borderRadius:15, background:`${a}18`, border:`2px solid ${a}30`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:26, fontWeight:800, color:a, flexShrink:0 }}>{(d.name||"?").charAt(0)}</div>
             <div>
               <div style={{ fontSize:F.base+2, fontWeight:700 }}>{d.name}</div>
-              <div style={{ fontSize:F.base-1, color:T.sub, marginTop:2 }}>{d.club} • {d.nationality}</div>
+              <div style={{ fontSize:F.base-1, color:T.sub, marginTop:2, display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}><span>{d.club}</span>{d.nationality ? <span style={{ display:"inline-flex", alignItems:"center", gap:5 }}><span>•</span><TeamFlag name={d.nationality} code={d.nat_code} inline T={T} /><span>{d.nationality}</span></span> : null}</div>
               <div style={{ fontSize:F.label, color:a, fontWeight:600, marginTop:2 }}>{d.position}</div>
             </div>
           </div>
@@ -2767,6 +2773,15 @@ function TabContent({ tab, a, T, F }) {
     case "destination":
       return (
         <div>
+          {(d.country || d.city) ? (
+            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:13 }}>
+              <TeamFlag name={d.country} code={d.country_code} big T={T} />
+              <div>
+                {d.country ? <div style={{ fontSize:F.base+1, fontWeight:800, color:T.text }}>{d.country}</div> : null}
+                {d.city ? <div style={{ fontSize:F.label, color:T.sub }}>{d.city}</div> : null}
+              </div>
+            </div>
+          ) : null}
           <div style={{ display:"flex", gap:7, flexWrap:"wrap", marginBottom:14 }}>
             {d.currency && <ITag text={d.currency} color="#ff9f0a"/>}
             {d.language && <ITag text={d.language} color="#bf5af2"/>}
