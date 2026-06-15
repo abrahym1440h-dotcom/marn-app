@@ -2,6 +2,17 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { TRANSLATIONS } from "./i18n.js";
 import FatwaApp from "./FatwaApp.jsx";
 import { Card as KitCard } from "./CardKit.jsx";
+import { flagUrl } from "./flags.js";
+
+function TeamFlag({ name, code, big, T }) {
+  const url = flagUrl(code || name, big ? 80 : 40);
+  if (url) {
+    const sz = big ? { width: 50, height: 34 } : { width: 26, height: 18 };
+    return <img src={url} alt="" style={{ ...sz, objectFit: "cover", borderRadius: 4, border: `1px solid ${T.line}`, display: "block" }} onError={(e) => { e.currentTarget.style.display = "none"; }} />;
+  }
+  const d = big ? 48 : 22;
+  return <div style={{ width: d, height: d, borderRadius: "50%", background: T.pillFill, border: `1px solid ${T.line}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: big ? 20 : 11, fontWeight: 800, color: T.text }}>{(name || "?")[0]}</div>;
+}
 import NibrasApp from "./NibrasApp.jsx";
 
 
@@ -2350,7 +2361,7 @@ function TabContent({ tab, a, T, F }) {
         <div>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"18px 0 14px" }}>
             <div style={{ textAlign:"center", flex:1 }}>
-              <div style={{ width:48, height:48, borderRadius:"50%", background:T.pillFill, border:`1px solid ${T.line}`, margin:"0 auto 8px", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, fontWeight:800, color:T.text }}>{(d.team1||"?")[0]}</div>
+              <div style={{ margin:"0 auto 8px", display:"flex", justifyContent:"center" }}><TeamFlag name={d.team1} code={d.team1_code} big T={T} /></div>
               <div style={{ fontSize:F.base, fontWeight:700 }}>{d.team1}</div>
             </div>
             <div style={{ textAlign:"center", padding:"0 8px", minWidth:110 }}>
@@ -2362,12 +2373,12 @@ function TabContent({ tab, a, T, F }) {
               </div>
               {d.date && <div style={{ fontSize:10, color:T.faint, marginTop:5 }}>{d.date}</div>}
             </div>
-            <div style={{ textAlign:"center", flex:1, opacity:0.5 }}>
-              <div style={{ width:48, height:48, borderRadius:"50%", background:T.pillFill, border:`1px solid ${T.line}`, margin:"0 auto 8px", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, fontWeight:800, color:T.sub }}>{(d.team2||"?")[0]}</div>
+            <div style={{ textAlign:"center", flex:1 }}>
+              <div style={{ margin:"0 auto 8px", display:"flex", justifyContent:"center" }}><TeamFlag name={d.team2} code={d.team2_code} big T={T} /></div>
               <div style={{ fontSize:F.base, fontWeight:700, color:T.sub }}>{d.team2}</div>
             </div>
           </div>
-          {d.venue && <div style={{ textAlign:"center", fontSize:11, color:T.faint, paddingBottom:12, borderBottom:`1px solid ${T.line}`, marginBottom:12 }}>📍 {d.venue}</div>}
+          {d.venue && <div style={{ textAlign:"center", fontSize:11, color:T.faint, paddingBottom:12, borderBottom:`1px solid ${T.line}`, marginBottom:12 }}>{d.venue}</div>}
           {(d.details||[]).map((dt,i,arr) => {
             const hasNums = dt.v1!=null && dt.v2!=null;
             const total = hasNums ? (dt.v1+dt.v2)||1 : 1;
@@ -2405,7 +2416,7 @@ function TabContent({ tab, a, T, F }) {
             <tbody>{(d.rows||[]).map((r,i) => (
               <tr key={i} style={{ borderBottom:`1px solid ${T.line}` }}>
                 <td style={{ padding:"10px 8px", color:i<3?a:T.faint, fontWeight:700 }}>{r.pos}</td>
-                <td style={{ padding:"10px 8px", fontWeight:i===0?700:500 }}>{r.team}</td>
+                <td style={{ padding:"10px 8px", fontWeight:i===0?700:500 }}><span style={{ display:"inline-flex", alignItems:"center", gap:7 }}><TeamFlag name={r.team} code={r.code} T={T} />{r.team}</span></td>
                 <td style={{ padding:"10px 8px", textAlign:"center", color:"#34c759" }}>{r.w}</td>
                 <td style={{ padding:"10px 8px", textAlign:"center", color:T.sub }}>{r.d}</td>
                 <td style={{ padding:"10px 8px", textAlign:"center", color:"#ff453a" }}>{r.l}</td>
