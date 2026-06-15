@@ -11,6 +11,7 @@
 // ============================================================================
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Card } from './CardKit';
 
 // ---------------------------------------------------------------------------
 // أيقونات SVG مضمّنة (بدون مكتبات)
@@ -112,6 +113,12 @@ async function ask(userPrompt, system) {
   if (!res.ok) throw new Error('network');
   const data = await res.json();
   return data?.text || '';
+}
+async function askNibrasCard(question) {
+  const res = await fetch('/api/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question, agent: 'nibras', lang: 'ar' }) });
+  if (!res.ok) throw new Error('network');
+  const data = await res.json();
+  return data && data.card ? data.card : null;
 }
 function parseJSON(raw) {
   let t = (raw || '').trim().replace(/```json/gi, '').replace(/```/g, '').trim();
@@ -466,7 +473,11 @@ function ChatView() {
   const send = async (text) => {
     const q = (text ?? input).trim(); if (!q || loading) return;
     setInput(''); const next = [...messages, { role: 'user', text: q }]; setMessages(next); setLoading(true);
-    try { const a = await ask(q); setMessages([...next, { role: 'assistant', text: a }]); }
+    try {
+      const card = await askNibrasCard(q);
+      if (card) setMessages([...next, { role: 'assistant', card }]);
+      else { const a = await ask(q); setMessages([...next, { role: 'assistant', text: a }]); }
+    }
     catch { setMessages([...next, { role: 'assistant', text: 'تعذّر الاتصال بالخادم. حاول مرة أخرى.' }]); }
     finally { setLoading(false); }
   };
@@ -481,9 +492,17 @@ function ChatView() {
         </div>
       )}
       {messages.map((m, i) => (
-        <div key={i} style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-start' : 'flex-end', marginBottom: 14 }}>
-          <div style={{ maxWidth: '88%', borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px', padding: '12px 16px', fontSize: 15, lineHeight: 1.9, whiteSpace: 'pre-wrap', background: m.role === 'user' ? T.accent : T.surface, color: m.role === 'user' ? '#fff' : T.text, border: m.role === 'user' ? 'none' : `1px solid ${T.border}`, fontWeight: m.role === 'user' ? 600 : 400 }}>{m.text}</div>
-        </div>
+        m.role === 'user' ? (
+          <div key={i} style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 14 }}>
+            <div style={{ maxWidth: '88%', borderRadius: '16px 16px 4px 16px', padding: '12px 16px', fontSize: 15, lineHeight: 1.9, whiteSpace: 'pre-wrap', background: T.accent, color: '#fff', fontWeight: 600 }}>{m.text}</div>
+          </div>
+        ) : (
+          <div key={i} style={{ marginBottom: 14 }}>
+            {m.card ? <Card card={m.card} theme="nibras" /> : (
+              <div style={{ maxWidth: '92%', borderRadius: '16px 16px 16px 4px', padding: '12px 16px', fontSize: 15, lineHeight: 1.9, whiteSpace: 'pre-wrap', background: T.surface, color: T.text, border: `1px solid ${T.border}` }}>{m.text}</div>
+            )}
+          </div>
+        )
       ))}
       {loading && <Spinner text="نبراس يكتب..." />}
       <div ref={endRef} />
