@@ -388,23 +388,20 @@ function extractText(d) {
 }
 
 async function callFatwaApi(question, history) {
-  const messages = [
-    { role: 'system', content: FATWA_SYSTEM },
-    ...history.slice(-6).map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.raw || m.text || '' })),
-    { role: 'user', content: question },
-  ];
-  // نرسل كل الصيغ الشائعة معاً حتى يعمل مع أي ask.js دون أي تعديل
-  const body = { messages, question, prompt: question, message: question, query: question, system: FATWA_SYSTEM };
+  const hist = (history || [])
+    .filter((m) => m && m.role)
+    .slice(-6)
+    .map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text || m.raw || (m.card && m.card.title) || '' }));
+  const body = { question, agent: 'fatwa', lang: 'ar', forceSearch: true, history: hist };
   const res = await fetch('/api/ask', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error('network');
-  const raw = await res.text();
-  let data;
-  try { data = JSON.parse(raw); } catch { return raw.trim(); }
-  return extractText(data) || raw.trim();
+  const data = await res.json();
+  if (data && data.card) return { card: data.card, sources: Array.isArray(data.sources) ? data.sources : [], raw: '' };
+  return { card: null, sources: [], raw: extractText(data) || '' };
 }
 
 function parseFatwa(raw) {
@@ -537,8 +534,9 @@ function ChatView() {
     setMessages(next);
     setLoading(true);
     try {
-      const raw = await callFatwaApi(q, next);
-      setMessages([...next, { role: 'assistant', raw, parsed: parseFatwa(raw) }]);
+      const r = await callFatwaApi(q, next);
+      if (r && r.card) setMessages([...next, { role: 'assistant', card: r.card, sources: r.sources || [] }]);
+      else setMessages([...next, { role: 'assistant', raw: (r && r.raw) || '', parsed: parseFatwa((r && r.raw) || '') }]);
     } catch {
       setMessages([...next, { role: 'assistant', raw: '', parsed: { structured: false, text: 'تعذّر الاتصال بالخادم. تأكد من اتصالك ثم حاول مرة أخرى.' } }]);
     } finally { setLoading(false); }
@@ -563,14 +561,16 @@ function ChatView() {
               <div style={{ background: T.accent, color: '#fff', borderRadius: '16px 16px 4px 16px', padding: '12px 16px', maxWidth: '80%', fontSize: 15, fontWeight: 600 }}>{m.text}</div>
             ) : (
               <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: '16px 16px 16px 4px', padding: 16, maxWidth: '92%' }}>
-                {m.parsed.structured ? (
+                {m.card ? (
+                  <FatwaCard card={m.card} sources={m.sources} />
+                ) : m.parsed && m.parsed.structured ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {m.parsed.hukm && <Section label="الحكم الشرعي" color={T.accent} text={m.parsed.hukm} />}
                     {m.parsed.dalil && <div style={{ background: T.goldSoft, border: `1px solid ${T.gold}33`, borderRadius: 10, padding: 12 }}><div style={{ color: T.gold, fontWeight: 800, fontSize: 13, marginBottom: 6 }}>الدليل</div><div style={{ color: T.text, fontSize: 14, lineHeight: 1.9 }}>{m.parsed.dalil}</div></div>}
                     {m.parsed.sharh && <Section label="الشرح" color={T.good} text={m.parsed.sharh} />}
                   </div>
                 ) : (
-                  <div style={{ color: T.text, fontSize: 15, lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>{m.parsed.text}</div>
+                  <div style={{ color: T.text, fontSize: 15, lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>{m.parsed ? m.parsed.text : ''}</div>
                 )}
               </div>
             )}
@@ -605,6 +605,57 @@ function Section({ label, color, text }) {
     <div>
       <div style={{ color, fontWeight: 800, fontSize: 13, marginBottom: 6 }}>{label}</div>
       <div style={{ color: T.text, fontSize: 14, lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>{text}</div>
+    </div>
+  );
+}
+
+function FatwaCard({ card, sources }) {
+  const tabs = Array.isArray(card && card.tabs) ? card.tabs : [];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {card && card.title && <div style={{ color: T.text, fontWeight: 800, fontSize: 16 }}>{card.title}</div>}
+      {card && card.sub && <div style={{ color: T.textDim, fontSize: 13, lineHeight: 1.8, marginTop: -4 }}>{card.sub}</div>}
+      {tabs.map((tb, i) => {
+        const label = (tb && tb.label) || '';
+        const d = (tb && tb.data) || {};
+        const items = Array.isArray(d.items) ? d.items : null;
+        const body = d.body || d.text || '';
+        const isDalil = /دليل/.test(label);
+        const isHukm = /حكم/.test(label);
+        const titleColor = isDalil ? T.gold : isHukm ? T.accent : T.good;
+        if (!items && !body) return null;
+        return (
+          <div key={i} style={{ background: isDalil ? T.goldSoft : 'transparent', border: isDalil ? `1px solid ${T.gold}33` : 'none', borderRadius: isDalil ? 10 : 0, padding: isDalil ? 12 : 0 }}>
+            {label && <div style={{ color: titleColor, fontWeight: 800, fontSize: 13, marginBottom: 6 }}>{label}</div>}
+            {items ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {d.intro && <div style={{ color: T.textDim, fontSize: 13, marginBottom: 2 }}>{d.intro}</div>}
+                {items.map((it, j) => (
+                  <div key={j} style={{ display: 'flex', gap: 9, color: T.text, fontSize: 14.5, lineHeight: 1.95 }}>
+                    <span style={{ flexShrink: 0, marginTop: 9, width: 5, height: 5, borderRadius: '50%', background: titleColor }} />
+                    <span>{typeof it === 'string' ? it : (it.title ? (it.desc ? `${it.title} — ${it.desc}` : it.title) : (it.desc || ''))}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ color: T.text, fontSize: 14.5, lineHeight: 1.95, whiteSpace: 'pre-wrap' }}>{body}</div>
+            )}
+          </div>
+        );
+      })}
+      {Array.isArray(sources) && sources.length > 0 && (
+        <div style={{ borderTop: `1px solid ${T.borderSoft}`, paddingTop: 10 }}>
+          <div style={{ color: T.textDim, fontWeight: 700, fontSize: 12, marginBottom: 7 }}>المصادر</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            {sources.slice(0, 6).map((s, k) => (
+              <a key={k} href={s.url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 7, color: T.accent, fontSize: 13, textDecoration: 'none' }}>
+                <ExternalLink size={13} color={T.accent} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title || s.domain || s.url}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
