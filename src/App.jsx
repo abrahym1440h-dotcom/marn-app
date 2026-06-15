@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { TRANSLATIONS } from "./i18n.js";
 import FatwaApp from "./FatwaApp.jsx";
+import { Card as KitCard } from "./CardKit.jsx";
 import NibrasApp from "./NibrasApp.jsx";
 
 
@@ -2004,16 +2005,26 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
     );
   }
 
+  const kitAgent = (m.agentUsed === "nibras" || m.agentUsed === "fatwa") ? m.agentUsed : null;
   return (
     <div className="card-in" style={{ marginBottom: stage ? 30 : 20 }}>
-      <BigCard card={m.card} T={T} t={t} F={F} searched={m.searched} sources={m.sources} stage={stage} agentUsed={m.agentUsed}
-        onCopy={() => copyCard(m.card)}
-        onRegenerate={thinking ? null : onRegenerate}
-        isRTL={isRTL}
-      />
-      <FollowUps suggestions={m.followUps} T={T} F={F}
-        onSelect={onSelect} thinking={thinking} />
-      {!stage && <SourcesBar sources={m.sources} T={T} F={F} isRTL={isRTL} />}
+      {kitAgent ? (
+        <>
+          <KitCard card={m.card} theme={kitAgent} sources={kitAgent === "fatwa" ? m.sources : null} showFollowUps={false} />
+          <FollowUps suggestions={m.followUps} T={T} F={F} onSelect={onSelect} thinking={thinking} />
+        </>
+      ) : (
+        <>
+          <BigCard card={m.card} T={T} t={t} F={F} searched={m.searched} sources={m.sources} stage={stage} agentUsed={m.agentUsed}
+            onCopy={() => copyCard(m.card)}
+            onRegenerate={thinking ? null : onRegenerate}
+            isRTL={isRTL}
+          />
+          <FollowUps suggestions={m.followUps} T={T} F={F}
+            onSelect={onSelect} thinking={thinking} />
+          {!stage && <SourcesBar sources={m.sources} T={T} F={F} isRTL={isRTL} />}
+        </>
+      )}
       {timeStr && <div style={{ fontSize: F.label - 1, color: T.faint, marginTop: 4 }}>{timeStr}</div>}
     </div>
   );
