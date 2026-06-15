@@ -520,6 +520,7 @@ ${isAr ? `هذه القاعدة لا تُكسر أبداً:
 - **lineup**: {"formation":"4-3-3","team":"${isAr ? "الفريق" : "team"}","players":[{"name":"${isAr ? "اللاعب" : "player"}","number":9,"position":"${isAr ? "المركز" : "pos"}","rating":8.5}]}
 - **standings**: {"league":"${isAr ? "الدوري" : "league"}","rows":[{"pos":1,"team":"${isAr ? "الفريق" : "team"}","code":"sa","mp":20,"w":15,"d":3,"l":2,"pts":48}]} ${isAr ? "— code: رمز دولة ISO بحرفين للمنتخبات الوطنية لعرض العلم." : ""}
 - **player_profile**: {"name":"${isAr ? "الاسم" : "name"}","club":"${isAr ? "النادي" : "club"}","position":"${isAr ? "المركز" : "pos"}","nationality":"${isAr ? "الجنسية" : "nationality"}","nat_code":"sa","stats":[{"label":"${isAr ? "الإحصاء" : "stat"}","value":"${isAr ? "القيمة" : "val"}"}],"image_query":"${isAr ? "اسم اللاعب" : "player name"}"}
+${isAr ? "\n**دقّة الرياضة (إلزامي):** لا تخترع نتيجة مباراة أو حالتها (انتهت/لم تبدأ) أو هدّافاً. استند فقط لنتائج البحث المرفقة. إن لم تتوفّر نتيجة مؤكدة من البحث فاترك score1/score2 فارغة واجعل status=\"لم تبدأ\" أو \"غير مؤكد\"، ولا تذكر هدّافاً غير مؤكد." : ""}
 
 ## ${isAr ? "بطاقات الطقس" : "Weather Cards"}
 - **weather**: {"city":"${isAr ? "المدينة" : "city"}","temp":32,"feels_like":35,"condition":"${isAr ? "مشمس" : "Sunny"}","icon":"☀️","humidity":45,"wind":12,"forecast":[{"day":"${isAr ? "السبت" : "Sat"}","icon":"⛅","high":34,"low":28}]}
@@ -883,7 +884,14 @@ export default async function handler(req, res) {
 
   // ===== فرع الرؤية: إذا وُجدت صورة، حلّلها عبر Gemini (Cerebras لا يدعم الصور) =====
   if (imageBase64) {
-    const geminiKey = GEMINI_KEY_BY_AGENT[effectiveAgent] || GEMINI_KEY_BY_AGENT.marn;
+    // تحليل الصور يستخدم وكيل مرن افتراضياً (لا يُوجَّه لنبراس بسبب كلمة "اشرح") إلا إذا اختار المستخدم نبراس/فتوى صراحةً
+    const visAgent = (agent === "nibras" || agent === "fatwa") ? agent : "marn";
+    const visBasePrompt = (visAgent === "fatwa"
+      ? buildFatwaPrompt(lang, searchBlock, profileBlock)
+      : visAgent === "nibras"
+        ? buildNibrasPrompt(lang, searchBlock, profileBlock)
+        : buildSystemPrompt(lang, searchBlock, profileBlock, didSearch)) + timeBlock;
+    const geminiKey = GEMINI_KEY_BY_AGENT[visAgent] || GEMINI_KEY_BY_AGENT.marn;
     if (!geminiKey) {
       return res.status(200).json({
         card: {
@@ -891,10 +899,10 @@ export default async function handler(req, res) {
           sub: "", tabs: [{ label: "ملاحظة", type: "text", data: { body: "خاصية شرح الصور تحتاج مفتاح Gemini. أضف GEMINI_KEY في إعدادات Vercel." } }],
           followUps: [],
         },
-        searched: false, sources: [], agent_used: effectiveAgent,
+        searched: false, sources: [], agent_used: visAgent,
       });
     }
-    const visionSystem = systemPrompt + "\n\n# مهم جداً: المُدخل صورة. حلّلها بدقة. أخرج JSON فقط بنفس مخطط البطاقة (accent, kicker, title, sub, tabs[], followUps[]). لا تكتب أي نص خارج JSON.";
+    const visionSystem = visBasePrompt + "\n\n# مهم جداً: المُدخل صورة. حلّلها بدقة. أخرج JSON فقط بنفس مخطط البطاقة (accent, kicker, title, sub, tabs[], followUps[]). لا تكتب أي نص خارج JSON.";
     const vis = await geminiVision(question, imageBase64, imageMimeType, visionSystem, geminiKey);
     if (vis.text) {
       let card = extractJsonObject(vis.text);
@@ -906,7 +914,7 @@ export default async function handler(req, res) {
         };
       }
       if (!Array.isArray(card.followUps)) card.followUps = [];
-      return res.status(200).json({ card, model_used: "gemini-vision", searched: false, sources: [], agent_used: effectiveAgent });
+      return res.status(200).json({ card, model_used: "gemini-vision", searched: false, sources: [], agent_used: visAgent });
     }
     const er = String(vis.error || "");
     let msg;
@@ -918,7 +926,7 @@ export default async function handler(req, res) {
     const detail = vis.detail ? ("\n\nتفاصيل تقنية: " + String(vis.detail).slice(0, 160)) : "";
     return res.status(200).json({
       card: { accent: "knowledge", kicker: "تعذّر التحليل", title: "مشكلة في تحليل الصورة", sub: "", tabs: [{ label: "السبب والحل", type: "text", data: { body: msg + detail } }], followUps: [] },
-      searched: false, sources: [], agent_used: effectiveAgent, error: er,
+      searched: false, sources: [], agent_used: visAgent, error: er,
     });
   }
 
