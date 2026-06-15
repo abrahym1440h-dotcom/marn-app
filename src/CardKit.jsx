@@ -334,7 +334,7 @@ function TabBody({ tab, theme, P }) {
   return <div style={{ color: P.text, fontSize: 14.5, lineHeight: 1.95, whiteSpace: 'pre-wrap' }}>{d.body || d.text || ''}</div>;
 }
 
-export function Card({ card, theme = 'marn', sources, showFollowUps = true }) {
+function GenericCard({ card, theme = 'marn', sources, showFollowUps = true }) {
   const P = pal(theme);
   const [active, setActive] = useState(0);
   if (!card) return null;
@@ -360,19 +360,112 @@ export function Card({ card, theme = 'marn', sources, showFollowUps = true }) {
           ))}
         </div>
       ) : null}
-      {Array.isArray(sources) && sources.length > 0 ? (
-        <div style={{ borderTop: '1px solid ' + P.line, marginTop: 14, paddingTop: 12 }}>
-          <div style={{ color: P.sub, fontWeight: 700, fontSize: 12, marginBottom: 7 }}>{'المصادر (' + sources.length + ')'}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-            {sources.slice(0, 20).map((s, i) => (
-              <a key={i} href={s.url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 7, color: P.accent, fontSize: 13, textDecoration: 'none' }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={P.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg>
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title || s.domain || s.url}</span>
-              </a>
-            ))}
-          </div>
+      <SourcesToggle sources={sources} accent={P.accent} P={P} />
+    </div>
+  );
+}
+
+
+// ---------- زر المصادر القابل للطي ----------
+function SourcesToggle({ sources, accent, P }) {
+  const [open, setOpen] = useState(false);
+  if (!Array.isArray(sources) || sources.length === 0) return null;
+  return (
+    <div style={{ marginTop: 14 }}>
+      <button onClick={() => setOpen((o) => !o)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, background: P.card2, border: '1px solid ' + P.line, borderRadius: 12, padding: '11px 14px', cursor: 'pointer', fontFamily: FONT }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, color: accent, fontWeight: 700, fontSize: 13.5 }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
+          {'عرض المصادر (' + sources.length + ')'}
+        </span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={P.sub} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'none' }}><polyline points="6 9 12 15 18 9" /></svg>
+      </button>
+      {open ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+          {sources.slice(0, 20).map((s, i) => (
+            <a key={i} href={s.url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 8, background: P.card2, border: '1px solid ' + P.line, borderRadius: 10, padding: '10px 12px', color: P.text, fontSize: 13, textDecoration: 'none' }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg>
+              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title || s.domain || s.url}</span>
+              <span style={{ color: accent, fontSize: 11, flexShrink: 0 }}>فتح</span>
+            </a>
+          ))}
         </div>
       ) : null}
     </div>
   );
+}
+
+// ---------- فاصل قسم ----------
+function SecLine({ label, color, P }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '15px 0 9px' }}>
+      <span style={{ color, fontWeight: 800, fontSize: 13 }}>{label}</span>
+      <span style={{ flex: 1, height: 1, background: P.line }} />
+    </div>
+  );
+}
+
+// ---------- بطاقة فتوى (تصميم الشبكة) ----------
+function FatwaCard9({ card, sources, P }) {
+  const tabs = Array.isArray(card.tabs) ? card.tabs : [];
+  const find = (kw) => tabs.find((t) => ((t && t.label) || '').indexOf(kw) !== -1);
+  const items = (t) => (t && t.data && Array.isArray(t.data.items)) ? t.data.items : [];
+  const body = (t) => (t && t.data && (t.data.body || t.data.text)) || '';
+  const txt = (it) => (typeof it === 'string' ? it : (it && (it.title || it.desc)) || '');
+  const verdict = (card.hero && card.hero.value) || card.title || '';
+  const summary = card.sub || '';
+  const hukm = find('حكم'), dalil = find('دليل'), sharh = find('شرح'), sci = find('أهل العلم'), note = find('تنبيه');
+  return (
+    <div style={{ background: P.surface, border: '1px solid ' + P.line, borderRadius: 16, padding: 16, fontFamily: FONT, direction: 'rtl' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 12 }}>
+        <div style={{ background: P.accent + '14', border: '1px solid ' + P.accent + '33', borderRadius: 12, padding: 12, textAlign: 'center' }}>
+          <div style={{ color: P.sub, fontSize: 11 }}>الحكم</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: P.accent, marginTop: 3 }}>{verdict}</div>
+        </div>
+        <div style={{ background: P.card2, border: '1px solid ' + P.line, borderRadius: 12, padding: 12 }}>
+          <div style={{ color: P.sub, fontSize: 11, marginBottom: 3 }}>الخلاصة</div>
+          <div style={{ color: P.text, fontSize: 12.5, lineHeight: 1.7 }}>{summary}</div>
+        </div>
+      </div>
+      {card.title ? <div style={{ color: P.text, fontWeight: 800, fontSize: 15, marginBottom: 6 }}>{card.title}</div> : null}
+      {body(hukm) ? <div style={{ color: P.text, fontSize: 14, lineHeight: 1.95, marginBottom: 4 }}>{body(hukm)}</div> : null}
+      {items(dalil).length > 0 ? (
+        <>
+          <SecLine label="الأدلة" color={P.gold} P={P} />
+          <div style={{ display: 'grid', gap: 8 }}>
+            {items(dalil).map((it, i) => (
+              <div key={i} style={{ background: P.gold + '0e', border: '1px solid ' + P.gold + '2e', borderRadius: 10, padding: 10 }}>
+                <div style={{ color: P.text, fontSize: 13, lineHeight: 1.9 }}>{txt(it)}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : null}
+      {items(sharh).length > 0 ? (
+        <>
+          <SecLine label="الشرح المفصّل" color={P.accent} P={P} />
+          {items(sharh).map((p, i) => (
+            <div key={i} style={{ display: 'flex', gap: 8, color: P.text, fontSize: 13, lineHeight: 1.85, marginBottom: 4 }}>
+              <span style={{ color: P.accent, marginTop: 8, width: 5, height: 5, borderRadius: '50%', background: P.accent, flexShrink: 0 }} />
+              <span>{txt(p)}</span>
+            </div>
+          ))}
+        </>
+      ) : null}
+      {body(sci) ? (
+        <>
+          <SecLine label="من كلام أهل العلم" color={P.good} P={P} />
+          <div style={{ borderRight: '3px solid ' + P.accent + '66', background: P.accent + '0c', borderRadius: '0 10px 10px 0', padding: 11, color: P.text, fontSize: 13, lineHeight: 1.9 }}>{body(sci)}</div>
+        </>
+      ) : null}
+      {body(note) ? <div style={{ marginTop: 10, color: P.faint, fontSize: 12, lineHeight: 1.7 }}>{body(note)}</div> : null}
+      <SourcesToggle sources={sources} accent={P.accent} P={P} />
+    </div>
+  );
+}
+
+// ---------- المُوزِّع: فتوى تأخذ تصميم الشبكة، والباقي عام ----------
+export function Card(props) {
+  const theme = props.theme || 'marn';
+  if (theme === 'fatwa') return <FatwaCard9 card={props.card || {}} sources={props.sources} P={pal('fatwa')} />;
+  return <GenericCard {...props} />;
 }
