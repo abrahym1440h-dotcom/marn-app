@@ -463,9 +463,78 @@ function FatwaCard9({ card, sources, P }) {
   );
 }
 
+
+// ---------- أيقونات SVG ----------
+function Ic({ name, color, size }) {
+  const P3 = {
+    mosque: <><path d="M3 21h18M5 21V11l7-5 7 5v10M9 21v-4a3 3 0 0 1 6 0v4M12 2v2" /></>,
+    scale: <path d="M12 3v18M5 7h14M7 7l-3 6a3 3 0 0 0 6 0zM17 7l-3 6a3 3 0 0 0 6 0z" />,
+    idea: <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z" />,
+    quote: <path d="M7 7h4v4a4 4 0 0 1-4 4M13 7h4v4a4 4 0 0 1-4 4" />,
+  };
+  return (
+    <svg width={size || 16} height={size || 16} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+      {P3[name] || P3.scale}
+    </svg>
+  );
+}
+
+// ---------- بطاقة فتوى (تصميم 7: أشرطة مرقّمة) ----------
+function Ribbon({ label, color, icon, children }) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: color, color: '#06140E', fontWeight: 800, fontSize: 12.5, padding: '5px 14px 5px 10px', borderRadius: '0 999px 999px 0', marginRight: -18, paddingRight: 24 }}>
+        <Ic name={icon} color="#06140E" size={15} />{label}
+      </div>
+      <div style={{ padding: '9px 14px 0 0' }}>{children}</div>
+    </div>
+  );
+}
+function FatwaCard7({ card, sources, P }) {
+  const tabs = Array.isArray(card.tabs) ? card.tabs : [];
+  const find = (kw) => tabs.find((t) => ((t && t.label) || '').indexOf(kw) !== -1);
+  const items = (t) => (t && t.data && Array.isArray(t.data.items)) ? t.data.items : [];
+  const body = (t) => (t && t.data && (t.data.body || t.data.text)) || '';
+  const txt = (it) => (typeof it === 'string' ? it : (it && (it.title || it.desc)) || '');
+  const verdict = (card.hero && card.hero.value) || card.title || '';
+  const hukm = find('حكم'), dalil = find('دليل'), sharh = find('شرح'), sci = find('أهل العلم'), note = find('تنبيه');
+  return (
+    <div style={{ fontFamily: FONT, direction: 'rtl', paddingRight: 18 }}>
+      <div style={{ textAlign: 'center', marginBottom: 14 }}>
+        <div style={{ fontSize: 22, fontWeight: 800, color: P.accent }}>{verdict}</div>
+        <div style={{ color: P.sub, fontSize: 13 }}>{card.title || ''}</div>
+      </div>
+      <Ribbon label="الحكم" color={P.accent} icon="mosque">
+        <div style={{ color: P.text, fontSize: 13.5, lineHeight: 1.9 }}>{body(hukm) || card.sub || ''}</div>
+      </Ribbon>
+      {items(dalil).length > 0 ? (
+        <Ribbon label="الأدلة" color={P.gold} icon="scale">
+          {items(dalil).map((e, i) => (
+            <div key={i} style={{ color: P.text, fontSize: 13, lineHeight: 1.9, marginBottom: 6 }}>{txt(e)}</div>
+          ))}
+        </Ribbon>
+      ) : null}
+      {items(sharh).length > 0 ? (
+        <Ribbon label="الشرح" color={P.good} icon="idea">
+          {items(sharh).map((p, i) => (
+            <div key={i} style={{ color: P.text, fontSize: 13, lineHeight: 1.85, marginBottom: 4 }}>• {txt(p)}</div>
+          ))}
+        </Ribbon>
+      ) : null}
+      {body(sci) ? (
+        <Ribbon label="من كلام أهل العلم" color={P.accent} icon="quote">
+          <div style={{ color: P.text, fontSize: 13, lineHeight: 1.9 }}>{body(sci)}</div>
+        </Ribbon>
+      ) : null}
+      {body(note) ? <div style={{ marginTop: 4, color: P.faint, fontSize: 12, lineHeight: 1.7 }}>{body(note)}</div> : null}
+      <SourcesToggle sources={sources} accent={P.accent} P={P} />
+    </div>
+  );
+}
+
 // ---------- المُوزِّع: فتوى تأخذ تصميم الشبكة، والباقي عام ----------
 export function Card(props) {
   const theme = props.theme || 'marn';
-  if (theme === 'fatwa') return <FatwaCard9 card={props.card || {}} sources={props.sources} P={pal('fatwa')} />;
+  if (theme === 'fatwa') return <FatwaCard7 card={props.card || {}} sources={props.sources} P={pal('fatwa')} />;
   return <GenericCard {...props} />;
 }
