@@ -1,6 +1,8 @@
 // الوسيط الآمن - النسخة المتقدمة
 // فيه: إصلاح parsing، cache ذكي، دعم كامل للأسئلة الشخصية والطبية، 50+ نوع بطاقة
 
+import { getStructuredData } from "./dataapi.js";
+
 /* ===== Cache بسيط في الذاكرة ===== */
 const cache = new Map(); // key → { card, searched, ts }
 const CACHE_TTL = 60 * 60 * 1000; // ساعة واحدة
@@ -833,6 +835,8 @@ export default async function handler(req, res) {
   }
   if (shouldSearch && !servedFromCache) {
     // الأسئلة التكميلية القصيرة: ابنِ استعلام البحث من سياق المحادثة
+    let apiData = null;
+    try { apiData = await getStructuredData(question); } catch (e) { apiData = null; }
     let searchQuery = question;
     if (question.length < 70 && Array.isArray(history) && history.length) {
       const prevQs = history.filter(h => h.role === "user").map(h => String(h.content || "")).slice(-2);
@@ -864,6 +868,11 @@ export default async function handler(req, res) {
       sources = results.sources || [];
     }
     // مصدر X/تويتر اختياري — للآراء والترند فقط، موسوم كغير مؤكد
+    if (apiData) {
+      searchBlock = apiData.block + searchBlock;
+      didSearch = true;
+      sources = [...apiData.sources, ...sources];
+    }
     if (WANT_X) {
       try {
         const xr = await searchCascade(`${searchQuery} (site:x.com OR site:twitter.com)`, agentKeys, null);
