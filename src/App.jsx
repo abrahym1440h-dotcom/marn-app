@@ -5,22 +5,39 @@ import { Card as KitCard } from "./CardKit.jsx";
 import { flagUrl } from "./flags.js";
 import { clubInfo } from "./clubs.js";
 
+function crestHash(s){let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0;}return Math.abs(h);}
 function ClubCrest({ name, color, size }) {
   const n = String(name || "").replace(/^نادي\s+/, "").trim();
-  const words = n.split(/\s+/);
+  const words = n.split(/\s+/).filter(Boolean);
   const initials = words.length >= 2 ? ((words[0][0] || "") + (words[1][0] || "")) : n.replace(/^ال/, "").slice(0, 2);
   const s = size || 24;
+  const gid = "cg" + crestHash(n + color);
   return (
-    <svg width={s} height={s} viewBox="0 0 24 24">
-      <path d="M12 1.5 L21 4.5 V11 C21 16.8 12 22 12 22 C12 22 3 16.8 3 11 V4.5 Z" fill={color} stroke="rgba(255,255,255,0.25)" strokeWidth="0.6" />
-      <text x="12" y="12.8" textAnchor="middle" dominantBaseline="middle" fontSize="6.5" fontWeight="800" fill="#fff" fontFamily="'Tajawal',sans-serif">{initials}</text>
+    <svg width={s} height={s} viewBox="0 0 48 48" style={{ display: "inline-block", verticalAlign: "middle" }}>
+      <defs>
+        <radialGradient id={gid} cx="34%" cy="26%" r="90%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
+          <stop offset="55%" stopColor="#ffffff" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <circle cx="24" cy="24" r="22.5" fill={color} />
+      <circle cx="24" cy="24" r="22.5" fill={`url(#${gid})`} />
+      <circle cx="24" cy="24" r="22.5" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.4" />
+      <circle cx="24" cy="24" r="18.5" fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="1" />
+      <text x="24" y="25.5" textAnchor="middle" dominantBaseline="central" fontSize="16" fontWeight="800" fill="#fff" fontFamily="'Tajawal',sans-serif" style={{ letterSpacing: "0.5px" }}>{initials}</text>
     </svg>
   );
 }
 function TeamFlag({ name, code, big, inline, T }) {
   // النادي أولاً: الأندية تعرض شعاراً (حتى لو أرسل النموذج رمز دولة بالخطأ)
   const club = clubInfo(name);
-  if (club) return <ClubCrest name={name} color={club.color} size={big ? 48 : inline ? 20 : 24} />;
+  if (club) {
+    if (club.logo) {
+      const sz = big ? 50 : inline ? 20 : 26;
+      return <img src={club.logo} alt="" style={{ width: sz, height: sz, objectFit: "contain", display: "inline-block", verticalAlign: "middle" }} onError={(e) => { e.currentTarget.style.display = "none"; }} />;
+    }
+    return <ClubCrest name={name} color={club.color} size={big ? 48 : inline ? 20 : 24} />;
+  }
   // المنتخبات الوطنية: علم
   const url = flagUrl(code || name, big ? 80 : 40);
   if (url) {
