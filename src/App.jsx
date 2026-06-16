@@ -1171,7 +1171,7 @@ export default function App() {
                     editingMsg={editingMsg} setEditingMsg={setEditingMsg}
                     onEditSend={(newText) => editAndResend(activeChat, i, newText)}
                     onRegenerate={() => regenerate(activeChat, i)}
-                    onSelect={(q) => send(q)} thinking={thinking} />
+                    onSelect={(q) => send(q)} thinking={thinking} agentColor={currentAgent.color} />
                 ))}
                 {thinking && (
                   <div style={{ display: "flex", gap: 6, padding: "8px 4px 20px" }}>
@@ -1285,7 +1285,7 @@ export default function App() {
                 </button>
                 <button onClick={() => send()} disabled={(!draft.trim() && !pendingImage) || thinking}
                   style={{
-                    background: (draft.trim() || pendingImage) ? (T.gradBtn||"linear-gradient(135deg,#0F2060,#2A5ED8)") : T.pillFill,
+                    background: (draft.trim() || pendingImage) ? `linear-gradient(135deg, ${currentAgent.color}, ${currentAgent.color}cc)` : T.pillFill,
                     color: (draft.trim() || pendingImage) ? "#fff" : T.faint,
                     border: (draft.trim() || pendingImage) ? "none" : `1px solid ${T.line}`, borderRadius: 9,
                     width: 34, height: 34,
@@ -1967,7 +1967,7 @@ function AgentOtherTools({ T, F, onOpenView }) {
 }
 
 /* ============ عنصر الرسالة ============ */
-function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard, activeChat,
+function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard, activeChat, agentColor = "#2A6BF0",
   editingMsg, setEditingMsg, onEditSend, onRegenerate, onSelect, thinking, stage }) {
   const timeStr = m.at ? formatTime(m.at, lang, (typeof window !== "undefined" && window.__marnTimeFmt) || "12") : "";
   const isEditing = editingMsg && editingMsg.idx === idx;
@@ -2009,7 +2009,7 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
               <button onClick={() => editDraft.trim() && onEditSend(editDraft)}
                 disabled={!editDraft.trim()}
                 style={{
-                  background: ACCENTS.knowledge, color: "#fff", border: "none",
+                  background: agentColor, color: "#fff", border: "none",
                   borderRadius: 8, padding: "6px 14px", fontSize: F.label, fontWeight: 600,
                   cursor: editDraft.trim() ? "pointer" : "default", fontFamily: "inherit",
                   opacity: editDraft.trim() ? 1 : 0.5,
@@ -2043,7 +2043,7 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
             <img src={m.image} alt="صورة مرفقة" style={{ maxWidth: 220, maxHeight: 220, borderRadius: "14px 14px 4px 14px", marginBottom: 6, display: "block", marginInlineStart: "auto", objectFit: "cover" }} />
           )}
           <div style={{
-            background: T.userFill||"linear-gradient(135deg,#0F2060,#1E4BB8)", color: T.userText||"#fff",
+            background: `linear-gradient(135deg, ${agentColor}, ${agentColor}cc)`, color: "#fff",
             borderRadius: "16px 16px 4px 16px", padding: "10px 15px",
             fontSize: F.base, fontWeight: 400, maxWidth: "100%", lineHeight: 1.6,
             boxShadow: "none",
