@@ -2344,6 +2344,43 @@ function TabContent({ tab, a, T, F }) {
         </div>
       );
 
+    case "matches": {
+      const games = Array.isArray(d.games) ? d.games : [];
+      if (!games.length) return <p style={{ color:T.sub, fontSize:F.base-1, lineHeight:1.8 }}>{d.intro || (isRTL ? "لا توجد مباريات مؤكدة من المصادر." : "No confirmed matches.")}</p>;
+      return (
+        <div>
+          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 12px", lineHeight:1.7 }}>{d.intro}</p>}
+          <div style={{ display:"flex", flexDirection:"column" }}>
+            {games.map((g,i) => (
+              <div key={i} style={{ padding:"12px 2px", borderBottom:i<games.length-1?`1px solid ${T.line}`:"none" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:9 }}>
+                  <div style={{ flex:1, display:"flex", alignItems:"center", gap:8, justifyContent:"flex-end", minWidth:0 }}>
+                    <span style={{ fontSize:F.base-0.5, fontWeight:700, color:T.text, textAlign:"end", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{g.team1}</span>
+                    <TeamFlag name={g.team1} code={g.team1_code} T={T} />
+                  </div>
+                  <div style={{ flexShrink:0, minWidth:52, textAlign:"center" }}>
+                    {g.score ? <span style={{ fontWeight:800, fontSize:F.base+1, color:a }}>{g.score}</span>
+                      : <span style={{ fontSize:F.label, color:T.sub, fontWeight:700 }}>{g.time||"—"}</span>}
+                  </div>
+                  <div style={{ flex:1, display:"flex", alignItems:"center", gap:8, minWidth:0 }}>
+                    <TeamFlag name={g.team2} code={g.team2_code} T={T} />
+                    <span style={{ fontSize:F.base-0.5, fontWeight:700, color:T.text, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{g.team2}</span>
+                  </div>
+                </div>
+                {(g.date || g.competition || g.status) && (
+                  <div style={{ display:"flex", justifyContent:"center", gap:8, marginTop:5, fontSize:F.label-0.5, color:T.faint, flexWrap:"wrap" }}>
+                    {g.date && <span>{g.date}</span>}
+                    {g.competition && <span>· {g.competition}</span>}
+                    {g.status && <span>· {g.status}</span>}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
     case "list":
       return (
         <div>
