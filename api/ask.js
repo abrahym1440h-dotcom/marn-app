@@ -65,10 +65,16 @@ const NO_SEARCH = [
   /^(شكرا|thanks|thank you)\b/i,
 ];
 
+// طلبات تعليمية/إبداعية/حسابية بحتة تُجاب من المعرفة بلا بحث (دائمة وغير زمنية)
+const NO_SEARCH_INTENT = /^\s*(اشرح|اشرحي|علّم|علمني|عرّف|ما معنى|ما هو تعريف|لخّص|لخص|اكتب|صمّم|صمم|ترجم|صحّح|صحح|أعد صياغة|اعد صياغة|احسب|حلّ |حل المسألة|ما الفرق|كيف أ|كيف اكتب|اقترح|أعطني فكرة|اكتب لي|fix|write|translate|summarize|explain|define)/i;
+const RECENCY = /اليوم|أمس|الآن|حالي|الحالية|أحدث|آخر|مؤخر|قادم|المقبل|الجديد|سعر|نتيجة|مباراة|أخبار|today|now|latest|recent|current|news|price|score|\b20(2[4-9]|3\d)\b/i;
 function needsSearch(q) {
-  if (NO_SEARCH.some(p => p.test(q))) return false;
-  if (q.trim().length < 6) return false;
-  return SEARCH_PATTERNS.some(p => p.test(q));
+  const s = (q || "").trim();
+  if (NO_SEARCH.some(p => p.test(s))) return false;        // تحية/شكر
+  if (s.length < 6) return false;
+  if (RECENCY.test(s)) return true;                         // أي إشارة حداثة → ابحث دائماً
+  if (NO_SEARCH_INTENT.test(s) && !SEARCH_PATTERNS.some(p => p.test(s))) return false; // طلب تعليمي/إبداعي بحت
+  return true;                                              // الافتراضي: ابحث (حقائق/أشخاص/أماكن/كيانات) لتجنّب الاختلاق
 }
 
 /* ===== المدقق الآلي: يراجع البطاقة ضد نصوص البحث ويحذف غير المدعوم ===== */
