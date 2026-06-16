@@ -2468,8 +2468,7 @@ function TabContent({ tab, a, T, F }) {
               <div style={{ fontSize:F.base, fontWeight:700, color:T.sub }}>{d.team2}</div>
             </div>
           </div>
-          {d.venue && <div style={{ textAlign:"center", fontSize:11, color:T.faint, paddingBottom:8 }}>{d.venue}</div>}
-          <div style={{ paddingBottom:12, borderBottom:`1px solid ${T.line}`, marginBottom:12 }}><Stadium T={T} /></div>
+          {d.venue && <div style={{ textAlign:"center", fontSize:11, color:T.faint, paddingBottom:12, borderBottom:`1px solid ${T.line}`, marginBottom:12 }}>{d.venue}</div>}
           {(d.details||[]).map((dt,i,arr) => {
             const hasNums = dt.v1!=null && dt.v2!=null;
             const total = hasNums ? (dt.v1+dt.v2)||1 : 1;
