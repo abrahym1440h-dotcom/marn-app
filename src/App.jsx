@@ -3,16 +3,56 @@ import { TRANSLATIONS } from "./i18n.js";
 import FatwaApp from "./FatwaApp.jsx";
 import { Card as KitCard } from "./CardKit.jsx";
 import { flagUrl } from "./flags.js";
+import { clubInfo } from "./clubs.js";
 
+function ClubCrest({ name, color, size }) {
+  const n = String(name || "").replace(/^نادي\s+/, "").trim();
+  const words = n.split(/\s+/);
+  const initials = words.length >= 2 ? ((words[0][0] || "") + (words[1][0] || "")) : n.replace(/^ال/, "").slice(0, 2);
+  const s = size || 24;
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24">
+      <path d="M12 1.5 L21 4.5 V11 C21 16.8 12 22 12 22 C12 22 3 16.8 3 11 V4.5 Z" fill={color} stroke="rgba(255,255,255,0.25)" strokeWidth="0.6" />
+      <text x="12" y="12.8" textAnchor="middle" dominantBaseline="middle" fontSize="6.5" fontWeight="800" fill="#fff" fontFamily="'Tajawal',sans-serif">{initials}</text>
+    </svg>
+  );
+}
 function TeamFlag({ name, code, big, inline, T }) {
   const url = flagUrl(code || name, big ? 80 : 40);
   if (url) {
     const sz = big ? { width: 50, height: 34 } : inline ? { width: 22, height: 15 } : { width: 26, height: 18 };
     return <img src={url} alt="" style={{ ...sz, objectFit: "cover", borderRadius: 4, border: `1px solid ${T.line}`, display: "inline-block", verticalAlign: "middle" }} onError={(e) => { e.currentTarget.style.display = "none"; }} />;
   }
+  const club = clubInfo(name);
+  if (club) return <ClubCrest name={name} color={club.color} size={big ? 48 : inline ? 20 : 24} />;
   if (inline) return null;
   const d = big ? 48 : 22;
   return <div style={{ width: d, height: d, borderRadius: "50%", background: T.pillFill, border: `1px solid ${T.line}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: big ? 20 : 11, fontWeight: 800, color: T.text }}>{(name || "?")[0]}</div>;
+}
+function WorldCupLogo({ size }) {
+  const s = size || 38;
+  return (
+    <svg width={s} height={s} viewBox="0 0 48 48" fill="none">
+      <circle cx="24" cy="24" r="22.5" fill="#0E1A2B" stroke="#C9A227" strokeWidth="1.5" />
+      <path d="M17 11h14v6a7 7 0 0 1-14 0z" fill="#C9A227" />
+      <path d="M17 12h-3a3 3 0 0 0 3 3M31 12h3a3 3 0 0 1-3 3" stroke="#C9A227" strokeWidth="1.4" fill="none" />
+      <rect x="22" y="23" width="4" height="5" fill="#C9A227" />
+      <rect x="18.5" y="28" width="11" height="3.4" rx="1" fill="#C9A227" />
+      <text x="24" y="42" textAnchor="middle" fontSize="7.5" fontWeight="800" fill="#C9A227" fontFamily="sans-serif">2026</text>
+    </svg>
+  );
+}
+function Stadium({ T }) {
+  return (
+    <svg width="100%" height="66" viewBox="0 0 240 66" style={{ display: "block", margin: "2px auto 0" }}>
+      <ellipse cx="120" cy="34" rx="114" ry="28" fill="#0c1d12" stroke={T.line} />
+      <ellipse cx="120" cy="34" rx="92" ry="21" fill="#123320" stroke="#1e5a36" />
+      <line x1="120" y1="14" x2="120" y2="54" stroke="#2e7d4f" strokeWidth="1" />
+      <circle cx="120" cy="34" r="8" fill="none" stroke="#2e7d4f" strokeWidth="1" />
+      <rect x="34" y="26" width="13" height="16" rx="2" fill="none" stroke="#2e7d4f" strokeWidth="1" />
+      <rect x="193" y="26" width="13" height="16" rx="2" fill="none" stroke="#2e7d4f" strokeWidth="1" />
+    </svg>
+  );
 }
 import NibrasApp from "./NibrasApp.jsx";
 
@@ -555,7 +595,11 @@ export default function App() {
   const inputRef = useRef(null);
   useEffect(() => {
     const el = inputRef.current;
-    if (el && el.tagName === "TEXTAREA") { el.style.height = "auto"; el.style.height = Math.min(el.scrollHeight, 140) + "px"; }
+    if (el && el.tagName === "TEXTAREA") {
+      if (!draft) { el.style.height = "26px"; return; }
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 140) + "px";
+    }
   }, [draft]);
 
   // الوضع الفعلي
@@ -1209,7 +1253,7 @@ export default function App() {
                   flex: 1, background: "transparent", border: "none", outline: "none",
                   color: T.text, fontSize: F.base, padding: "6px 4px", fontFamily: "inherit",
                   direction: isRTL ? "rtl" : "ltr", textAlign: isRTL ? "right" : "left",
-                  minWidth: 0, resize: "none", lineHeight: 1.6, maxHeight: 140, overflowY: "auto",
+                  minWidth: 0, resize: "none", lineHeight: 1.6, height: 26, minHeight: 26, maxHeight: 140, overflowY: "auto", boxSizing: "border-box",
                 }}
               />
               <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
@@ -2365,7 +2409,10 @@ function TabContent({ tab, a, T, F }) {
     case "match":
       return (
         <div>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"18px 0 14px" }}>
+          {(d.group || /كأس العالم|world ?cup|مونديال/i.test(String(d.competition || d.league || ""))) ? (
+            <div style={{ display:"flex", justifyContent:"center", paddingTop:4 }}><WorldCupLogo size={42} /></div>
+          ) : null}
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 0 14px" }}>
             <div style={{ textAlign:"center", flex:1 }}>
               <div style={{ margin:"0 auto 8px", display:"flex", justifyContent:"center" }}><TeamFlag name={d.team1} code={d.team1_code} big T={T} /></div>
               <div style={{ fontSize:F.base, fontWeight:700 }}>{d.team1}</div>
@@ -2384,7 +2431,8 @@ function TabContent({ tab, a, T, F }) {
               <div style={{ fontSize:F.base, fontWeight:700, color:T.sub }}>{d.team2}</div>
             </div>
           </div>
-          {d.venue && <div style={{ textAlign:"center", fontSize:11, color:T.faint, paddingBottom:12, borderBottom:`1px solid ${T.line}`, marginBottom:12 }}>{d.venue}</div>}
+          {d.venue && <div style={{ textAlign:"center", fontSize:11, color:T.faint, paddingBottom:8 }}>{d.venue}</div>}
+          <div style={{ paddingBottom:12, borderBottom:`1px solid ${T.line}`, marginBottom:12 }}><Stadium T={T} /></div>
           {(d.details||[]).map((dt,i,arr) => {
             const hasNums = dt.v1!=null && dt.v2!=null;
             const total = hasNums ? (dt.v1+dt.v2)||1 : 1;
