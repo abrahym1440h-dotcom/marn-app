@@ -18,13 +18,15 @@ function ClubCrest({ name, color, size }) {
   );
 }
 function TeamFlag({ name, code, big, inline, T }) {
+  // النادي أولاً: الأندية تعرض شعاراً (حتى لو أرسل النموذج رمز دولة بالخطأ)
+  const club = clubInfo(name);
+  if (club) return <ClubCrest name={name} color={club.color} size={big ? 48 : inline ? 20 : 24} />;
+  // المنتخبات الوطنية: علم
   const url = flagUrl(code || name, big ? 80 : 40);
   if (url) {
     const sz = big ? { width: 50, height: 34 } : inline ? { width: 22, height: 15 } : { width: 26, height: 18 };
     return <img src={url} alt="" style={{ ...sz, objectFit: "cover", borderRadius: 4, border: `1px solid ${T.line}`, display: "inline-block", verticalAlign: "middle" }} onError={(e) => { e.currentTarget.style.display = "none"; }} />;
   }
-  const club = clubInfo(name);
-  if (club) return <ClubCrest name={name} color={club.color} size={big ? 48 : inline ? 20 : 24} />;
   if (inline) return null;
   const d = big ? 48 : 22;
   return <div style={{ width: d, height: d, borderRadius: "50%", background: T.pillFill, border: `1px solid ${T.line}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: big ? 20 : 11, fontWeight: 800, color: T.text }}>{(name || "?")[0]}</div>;
@@ -2469,6 +2471,23 @@ function TabContent({ tab, a, T, F }) {
             </div>
           </div>
           {d.venue && <div style={{ textAlign:"center", fontSize:11, color:T.faint, paddingBottom:12, borderBottom:`1px solid ${T.line}`, marginBottom:12 }}>{d.venue}</div>}
+          {Array.isArray(d.scorers) && d.scorers.length ? (
+            <div style={{ paddingBottom:12, borderBottom:`1px solid ${T.line}`, marginBottom:12 }}>
+              <div style={{ fontSize:F.label, color:T.faint, textAlign:"center", marginBottom:7 }}>{isRTL?"الأهداف":"Goals"}</div>
+              <div style={{ display:"flex", justifyContent:"space-between", gap:12 }}>
+                <div style={{ flex:1 }}>
+                  {d.scorers.filter(s=>String(s.team)==="1"||s.team===1).map((s,i)=>(
+                    <div key={i} style={{ fontSize:F.base-1, color:T.text, marginBottom:4, display:"flex", gap:6, alignItems:"baseline" }}><span style={{ color:a, fontWeight:800 }}>•</span><span>{s.player}{s.minute?` ${s.minute}'`:""}</span></div>
+                  ))}
+                </div>
+                <div style={{ flex:1, textAlign:"end" }}>
+                  {d.scorers.filter(s=>String(s.team)==="2"||s.team===2).map((s,i)=>(
+                    <div key={i} style={{ fontSize:F.base-1, color:T.text, marginBottom:4, display:"flex", gap:6, alignItems:"baseline", justifyContent:"flex-end" }}><span>{s.player}{s.minute?` ${s.minute}'`:""}</span><span style={{ color:a, fontWeight:800 }}>•</span></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : null}
           {(d.details||[]).map((dt,i,arr) => {
             const hasNums = dt.v1!=null && dt.v2!=null;
             const total = hasNums ? (dt.v1+dt.v2)||1 : 1;
