@@ -345,7 +345,7 @@ ${isAr ? `- **كن شاملاً وغنياً جداً** — هذه ميزة مر
 - الشمولية = تنظيم دقيق لكمٍّ كبير من المعلومات **الحقيقية**، وليست حشواً بتخمين.
 - لا رسم بياني إلا بأرقام حقيقية (معروفة أو من البحث)؛ وإن لم تتوفر أرقام للرسم، ابقَ غنياً بالقوائم والحقائق والجداول.
 - عند جهل **الموضوع كله** (لا معرفة ولا بحث): قل بصراحة «لست متأكداً» واقترح البحث الحي — لكن هذا نادر؛ في الغالب لديك ما يكفي لإجابة غنية صحيحة.
-الخلاصة: **غنى كامل لكل سؤال + صفر اختلاق.** الدقّة شرطٌ لا يُكسر، والشمولية مطلوبة من معلومات حقيقية فقط.` : `Never fabricate anything to fill the card: no names, numbers, dates, stats, events, or chart data. If you don't know it with high confidence or it isn't in search results, omit it. Tab count follows only verified info — no filler tabs/numbers/charts. Charts only with real numbers; otherwise no chart. hero is optional. A plain text tab is allowed when most honest. When in doubt, say you're unsure. This overrides comprehensiveness, dashboard, hero, and template rules.`}
+الخلاصة: **غنى كامل لكل سؤال + صفر اختلاق.** الدقّة شرطٌ لا يُكسر، والشمولية مطلوبة من معلومات حقيقية فقط.\n- **تحقّق قبل الإخراج**: راجع كل اسم/رقم/تاريخ/إحصائية/هدّاف في بطاقتك — هل هو في نتائج البحث أو من معرفتك الموثوقة؟ إن لم تستطع التحقق منه، احذفه قبل الإرسال. لا ترسل إجابة فيها عنصر غير مُتحقَّق منه.` : `Never fabricate anything to fill the card: no names, numbers, dates, stats, events, or chart data. If you don't know it with high confidence or it isn't in search results, omit it. Tab count follows only verified info — no filler tabs/numbers/charts. Charts only with real numbers; otherwise no chart. hero is optional. A plain text tab is allowed when most honest. When in doubt, say you're unsure. This overrides comprehensiveness, dashboard, hero, and template rules.`}
 
 # ${isAr ? "⭐ القاعدة الأولى والأهم — الشمولية الكاملة (إلزامية)" : "⭐ RULE #1 — TOTAL COMPREHENSIVENESS (MANDATORY)"}
 ${isAr 
@@ -840,6 +840,7 @@ export default async function handler(req, res) {
     }
     // الأسئلة الإخبارية الواسعة: عدة استعلامات بالتوازي لتغطية أوسع (تقلل فجوات التأليف)
     const BROAD_NEWS = /أحداث|الأحداث|أخبار|ملخص اليوم|وش صاير|مستجدات|تطورات/.test(question) && !isFatwa;
+    const WANT_X = !isFatwa; // X مصدر مكمّل لأي بحث: قوي للأسئلة الحديثة/المحلية/المتخصّصة التي يضعف فيها جوجل
     let results;
     if (BROAD_NEWS) {
       const dateTag = new Intl.DateTimeFormat("ar", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date());
@@ -861,6 +862,17 @@ export default async function handler(req, res) {
         : `\n\n===== WEB SEARCH RESULTS =====\n⚠️ AUTHORITATIVE FACTS ONLY. Follow them. Never contradict.\n${results.text}\n===== END =====`;
       didSearch = true;
       sources = results.sources || [];
+    }
+    // مصدر X/تويتر اختياري — للآراء والترند فقط، موسوم كغير مؤكد
+    if (WANT_X) {
+      try {
+        const xr = await searchCascade(`${searchQuery} (site:x.com OR site:twitter.com)`, agentKeys, null);
+        if (xr && xr.text) {
+          searchBlock += `\n\n===== ${isAr ? "مصدر إضافي من منصة X/تويتر" : "Additional source — X/Twitter"} =====\nℹ️ ${isAr ? "قد يحتوي معلومات حديثة أو محلية أو متخصّصة غير موجودة في جوجل، وفيه معلومات صحيحة كثيرة — استخدمه كمصدر. لكن: (1) عند تعارضه مع مصدر موثوق أعلاه رجّح الموثوق. (2) لا تنقل إشاعة أو رأياً شخصياً واضحاً كحقيقة. (3) المعلومة المتطابقة مع مصدر آخر أو الواضحة من حساب رسمي يمكن اعتمادها." : "May contain recent/local/niche info missing from Google, with much correct information — use it as a source. But prefer authoritative sources on conflict, do not treat rumors/personal opinions as fact, and rely on info corroborated or from official accounts."}\n${xr.text.slice(0, 4500)}\n===== END =====`;
+          for (const s of (xr.sources || [])) { if (s.url && !sources.find(z => z.url === s.url)) sources.push(s); }
+          didSearch = true;
+        }
+      } catch (e) {}
     }
   }
 
