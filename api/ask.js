@@ -787,8 +787,9 @@ export default async function handler(req, res) {
     else if (EDU_INTENT.test(question)) effectiveAgent = "nibras";
   }
 
-  // فحص الكاش
-  if (!forceSearch) {
+  // فحص الكاش — لا نُخزّن/نُرجِع كاش للأسئلة الحيّة (مباريات، نتائج، طقس، أخبار، أسعار)
+  const isLive = GENERAL_DOMAINS.test(question || "");
+  if (!forceSearch && !isLive) {
     const cached = getCache(question, lang, agent);
     if (cached) {
       return res.status(200).json({ ...cached, fromCache: true });
@@ -1064,7 +1065,7 @@ export default async function handler(req, res) {
         }
 
         const result = { card, model_used: model, searched: servedFromCache ? "cache" : didSearch, sources, agent_used: effectiveAgent };
-        setCache(question, lang, agent, result);
+        if (!isLive) setCache(question, lang, agent, result);
         return res.status(200).json(result);
 
       } catch (e) {
