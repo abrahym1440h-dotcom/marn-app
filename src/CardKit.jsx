@@ -533,8 +533,138 @@ function FatwaCard7({ card, sources, P }) {
 }
 
 // ---------- المُوزِّع: فتوى تأخذ تصميم الشبكة، والباقي عام ----------
+function FlashCards({ cards, P }) {
+  const [flip, setFlip] = useState({});
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 7 }}>
+      {arr(cards, []).map((c, i) => {
+        const f = !!flip[i];
+        return (
+          <button key={i} onClick={() => setFlip((s) => ({ ...s, [i]: !s[i] }))} style={{ minHeight: 76, border: '1px solid ' + P.rose + '44', background: f ? P.rose + '1a' : P.card2, borderRadius: 11, padding: 8, cursor: 'pointer', fontFamily: FONT, color: f ? P.rose : P.text, fontSize: 11.5, fontWeight: 700, lineHeight: 1.6, textAlign: 'center', transition: 'background .2s' }}>
+            {f ? (c.b || c.back || '') : (c.f || c.front || '')}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function NSec({ label, color, children, P }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 9 }}>
+        <span style={{ color, fontWeight: 800, fontSize: 13 }}>{label}</span>
+        <span style={{ flex: 1, height: 1, background: P.line }} />
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function NibrasStudyCard({ card, sources }) {
+  const c = card || {};
+  const P = pal('nibras');
+  const [tab, setTab] = useState(0);
+  const tabs = ['تعلّم', 'احفظ', 'اختبر'];
+  const explain = arr(c.explain, []);
+  const terms = arr(c.terms, []);
+  const keys = arr(c.keys, []);
+  const steps = arr(c.steps, []);
+  const bars = arr(c.bars, []);
+  const mistakes = arr(c.mistakes, []);
+  const cards = arr(c.cards, []);
+  const quiz = arr(c.quiz, []);
+  const mx = bars.length ? Math.max(...bars.map((b) => Number(b.v) || 0), 1) : 1;
+  const dot = (col) => ({ flexShrink: 0, marginTop: 8, width: 5, height: 5, borderRadius: '50%', background: col });
+
+  return (
+    <div style={{ fontFamily: FONT, direction: 'rtl' }}>
+      {/* رأس */}
+      {c.kicker ? <div style={{ color: P.accent, fontSize: 11.5, fontWeight: 800, marginBottom: 4 }}>{c.kicker}</div> : null}
+      {c.title ? <div style={{ color: P.text, fontSize: 19, fontWeight: 800, lineHeight: 1.4 }}>{c.title}</div> : null}
+      {c.sub ? <div style={{ color: P.sub, fontSize: 13, marginBottom: 14, lineHeight: 1.7 }}>{c.sub}</div> : <div style={{ height: 12 }} />}
+
+      {/* تبويبات المجموعات */}
+      <div style={{ display: 'flex', gap: 7, marginBottom: 16 }}>
+        {tabs.map((t, i) => (
+          <button key={i} onClick={() => setTab(i)} style={{ flex: 1, border: '1px solid ' + (tab === i ? P.accent : P.line), background: tab === i ? P.accent : 'transparent', color: tab === i ? '#0F0A04' : P.sub, borderRadius: 11, padding: '9px', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: FONT }}>{t}</button>
+        ))}
+      </div>
+
+      {/* تعلّم */}
+      {tab === 0 ? (
+        <div>
+          <NSec label="الشرح" color={P.cyan} P={P}>
+            {c.concept ? <div style={{ color: P.text, fontSize: 14, lineHeight: 1.95, marginBottom: explain.length ? 8 : 0 }}>{c.concept}</div> : null}
+            {explain.map((p, i) => <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 5 }}><span style={dot(P.cyan)} /><span style={{ color: P.text, fontSize: 13, lineHeight: 1.85 }}>{p}</span></div>)}
+          </NSec>
+          {terms.length ? (
+            <NSec label="المصطلحات" color={P.purple} P={P}>
+              {terms.map((t, i) => <div key={i} style={{ display: 'flex', gap: 7, background: P.card2, border: '1px solid ' + P.line, borderRadius: 9, padding: '8px 10px', marginBottom: 5 }}><b style={{ color: P.purple, fontSize: 12.5, whiteSpace: 'nowrap' }}>{t.t || t.term}</b><span style={{ color: P.faint }}>—</span><span style={{ color: P.text, fontSize: 12, lineHeight: 1.6 }}>{t.d || t.def}</span></div>)}
+            </NSec>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* احفظ */}
+      {tab === 1 ? (
+        <div>
+          {keys.length ? (
+            <NSec label="للمذاكرة" color={P.accent} P={P}>
+              <div style={{ background: P.accent + '10', border: '1px solid ' + P.accent + '30', borderRadius: 11, padding: 11 }}>
+                {keys.map((k, i) => <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 6 }}><span style={{ color: P.good, fontWeight: 800 }}>✓</span><span style={{ color: P.text, fontSize: 13, lineHeight: 1.8, fontWeight: 500 }}>{k}</span></div>)}
+              </div>
+              {c.fact ? <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: P.card2, border: '1px dashed ' + P.accent + '55', borderRadius: 10, padding: '9px 12px', marginTop: 8 }}><span style={{ color: P.accent, fontWeight: 800, fontSize: 14 }}>{c.fact}</span></div> : null}
+            </NSec>
+          ) : null}
+          {steps.length ? (
+            <NSec label="مثال محلول" color={P.good} P={P}>
+              {steps.map((s, i) => <div key={i} style={{ display: 'flex', gap: 9, marginBottom: 6 }}><span style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 7, background: P.good + '1e', color: P.good, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 12 }}>{i + 1}</span><div style={{ color: P.text, fontSize: 12.5, lineHeight: 1.8 }}><b>{s.t || s.title}:</b> <span style={{ color: P.sub }}>{s.d || s.desc}</span></div></div>)}
+            </NSec>
+          ) : null}
+          {bars.length ? (
+            <NSec label="رسم توضيحي" color={P.accent} P={P}>
+              {bars.map((b, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 7 }}><span style={{ width: 80, fontSize: 11.5, color: P.sub, textAlign: 'right', flexShrink: 0 }}>{b.l || b.label}</span><span style={{ flex: 1, height: 12, background: P.card2, borderRadius: 999, overflow: 'hidden' }}><span style={{ display: 'block', height: '100%', width: ((Number(b.v) || 0) / mx * 100) + '%', background: P.accent, borderRadius: 999 }} /></span></div>)}
+            </NSec>
+          ) : null}
+          {mistakes.length ? (
+            <NSec label="أخطاء شائعة" color={P.red} P={P}>
+              {mistakes.map((m, i) => <div key={i} style={{ display: 'flex', gap: 8, background: P.red + '0e', borderRight: '3px solid ' + P.red, borderRadius: '0 9px 9px 0', padding: '8px 10px', marginBottom: 5 }}><span style={{ color: P.red, fontWeight: 800 }}>!</span><span style={{ color: P.text, fontSize: 12, lineHeight: 1.75 }}>{m}</span></div>)}
+            </NSec>
+          ) : null}
+          {cards.length ? (
+            <NSec label="بطاقات تذكّر — اضغط لتقلبها" color={P.rose} P={P}>
+              <FlashCards cards={cards} P={P} />
+            </NSec>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* اختبر */}
+      {tab === 2 ? (
+        <div>
+          {quiz.length ? (
+            <NSec label="اختبار سريع" color={P.accent} P={P}>
+              <Quiz items={quiz} P={P} />
+            </NSec>
+          ) : null}
+          {c.summary ? (
+            <NSec label="الخلاصة" color={P.good} P={P}>
+              <div style={{ background: P.good + '10', border: '1px solid ' + P.good + '30', borderRadius: 10, padding: 10, color: P.text, fontSize: 13, lineHeight: 1.85 }}>{c.summary}</div>
+              {c.tip ? <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: P.card2, borderRadius: 10, padding: '9px 11px', marginTop: 8 }}><span style={{ color: P.sub, fontSize: 12, lineHeight: 1.7 }}><b style={{ color: P.accent }}>نصيحة:</b> {c.tip}</span></div> : null}
+            </NSec>
+          ) : null}
+        </div>
+      ) : null}
+
+      {Array.isArray(sources) && sources.length ? <SourcesToggle sources={sources} accent={P.accent} P={P} /> : null}
+    </div>
+  );
+}
+
 export function Card(props) {
   const theme = props.theme || 'marn';
   if (theme === 'fatwa') return <FatwaCard7 card={props.card || {}} sources={props.sources} P={pal('fatwa')} />;
+  if (theme === 'nibras' && props.card && props.card.study) return <NibrasStudyCard card={props.card} sources={props.sources} />;
   return <GenericCard {...props} />;
 }
