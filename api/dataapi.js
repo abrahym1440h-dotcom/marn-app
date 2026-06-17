@@ -25,9 +25,9 @@ async function rapidGet(host, path, timeoutMs = 6500) {
       signal: ctrl.signal,
     });
     clearTimeout(timer);
-    if (!res.ok) return null;
+    if (!res.ok) { console.log(`[rapidGet] ${host}${path.slice(0, 60)} → HTTP ${res.status}`); return null; }
     const txt = await res.text();
-    if (!txt) return null;
+    if (!txt) { console.log(`[rapidGet] ${host} → رد فارغ`); return null; }
     try { return JSON.parse(txt); } catch { return txt; }
   } catch (e) {
     clearTimeout(timer);
@@ -135,20 +135,21 @@ async function getExercise(q) {
 // ===== الموزّع الرئيسي =====
 // يُرجع { block, sources } أو null
 async function getStructuredData(question) {
-  if (!RAPID_KEY) return null;
+  if (!RAPID_KEY) { console.log("[dataapi] لا يوجد RAPIDAPI_KEY"); return null; }
   const q = String(question || "");
-  let fn = null;
-  if (IS.sports.test(q)) fn = getSports;
-  else if (IS.movies.test(q)) fn = getMovies;
-  else if (IS.weather.test(q)) fn = getWeather;
-  else if (IS.finance.test(q)) fn = getFinance;
-  else if (IS.flights.test(q)) fn = getFlights;
-  else if (IS.exercise.test(q)) fn = getExercise;
-  else if (IS.news.test(q)) fn = getNews;
-  if (!fn) return null;
+  let fn = null, kind = null;
+  if (IS.sports.test(q)) { fn = getSports; kind = "sports"; }
+  else if (IS.movies.test(q)) { fn = getMovies; kind = "movies"; }
+  else if (IS.weather.test(q)) { fn = getWeather; kind = "weather"; }
+  else if (IS.finance.test(q)) { fn = getFinance; kind = "finance"; }
+  else if (IS.flights.test(q)) { fn = getFlights; kind = "flights"; }
+  else if (IS.exercise.test(q)) { fn = getExercise; kind = "exercise"; }
+  else if (IS.news.test(q)) { fn = getNews; kind = "news"; }
+  if (!fn) { console.log("[dataapi] لا مجال مطابق لـ:", q.slice(0, 40)); return null; }
   let r = null;
-  try { r = await fn(q); } catch (e) { r = null; }
-  if (!r) return null;
+  try { r = await fn(q); } catch (e) { console.log("[dataapi] خطأ", kind, e && e.message); r = null; }
+  if (!r) { console.log(`[dataapi] ${kind}: الـ API رجّع فاضي/فشل → سيرجع للبحث`); return null; }
+  console.log(`[dataapi] ${kind}: نجح ✓ طول البيانات=${(r.text || "").length} | عيّنة:`, (r.text || "").slice(0, 220));
   const block = `\n\n===== ${r.label} — مصدر موثوق رسمي (استخدم هذه الأرقام والأسماء حرفياً) =====\n⚠️ هذه بيانات حقيقية من واجهة برمجية رسمية. اعتمدها فوق أي مصدر آخر. انقل منها النتائج/الأسماء/الأرقام كما هي. إن لم تجد تفصيلاً هنا فاحذفه ولا تخترعه.\n${r.text}\n===== END =====`;
   return { block, sources: [{ title: r.label, url: r.url }] };
 }
