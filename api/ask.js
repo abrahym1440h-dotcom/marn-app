@@ -704,6 +704,18 @@ ${searchBlock || ""}`;
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
+  // ===== ميزانية الوقت: حد أقصى صارم لكل العملية =====
+  const REQ_START = Date.now();
+  const TOTAL_BUDGET_MS = 52000; // أقل من حد Vercel (60ث) بهامش أمان
+  const timeLeft = () => TOTAL_BUDGET_MS - (Date.now() - REQ_START);
+  const withBudget = (promise, capMs, fallback = null) => {
+    const cap = Math.max(0, Math.min(capMs, timeLeft()));
+    return Promise.race([
+      Promise.resolve(promise).catch(() => fallback),
+      new Promise(r => setTimeout(() => r(fallback), cap)),
+    ]);
+  };
+
   const SEARCH_KEYS = {
     marn: {
       tavily:   (process.env.TAVILY_KEY_MARN   || process.env.TAVILY_API_KEY || "").trim(),
@@ -750,6 +762,7 @@ export default async function handler(req, res) {
     imageMimeType = body?.imageMimeType || "image/jpeg";
   } catch { return res.status(400).json({ error: "Bad request" }); }
   if (!question) return res.status(400).json({ error: "Question missing" });
+  const isAr = lang === "ar";
 
   // ===== OCR صورة (نبراس): استخراج نص خام عبر Gemini فقط — يتجاوز Cerebras =====
   if (imageBase64 && rawMode) {
@@ -837,32 +850,47 @@ export default async function handler(req, res) {
     servedFromCache = true;
   }
   if (shouldSearch && !servedFromCache) {
-    // الأسئلة التكميلية القصيرة: ابنِ استعلام البحث من سياق المحادثة
-    let apiData = null;
-    try { apiData = await getStructuredData(question); } catch (e) { apiData = null; }
+    // بناء استعلام البحث من السياق للأسئلة القصيرة
     let searchQuery = question;
     if (question.length < 70 && Array.isArray(history) && history.length) {
       const prevQs = history.filter(h => h.role === "user").map(h => String(h.content || "")).slice(-2);
       if (prevQs.length) searchQuery = `${prevQs.join(" ")} — ${question}`;
     }
-    // الأسئلة الإخبارية الواسعة: عدة استعلامات بالتوازي لتغطية أوسع (تقلل فجوات التأليف)
     const BROAD_NEWS = /أحداث|الأحداث|أخبار|ملخص اليوم|وش صاير|مستجدات|تطورات/.test(question) && !isFatwa;
-    const WANT_X = !isFatwa; // X مصدر مكمّل لأي بحث: قوي للأسئلة الحديثة/المحلية/المتخصّصة التي يضعف فيها جوجل
-    let results;
+    const WANT_X = !isFatwa;
+
+    // ===== كل مصادر البحث بالتوازي (لا تسلسل) ضمن ميزانية الوقت =====
+    const tasks = [];
+    // 1) بيانات منظّمة من RapidAPI
+    tasks.push(withBudget(getStructuredData(question), 9000).then(d => ({ kind: "api", d })));
+    // 2) البحث الرئيسي (أو الإخباري الواسع)
     if (BROAD_NEWS) {
       const dateTag = new Intl.DateTimeFormat("ar", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date());
       const queries = [searchQuery, `أهم أخبار اليوم ${dateTag}`, `أخبار السعودية والعالم اليوم عاجل`];
-      const batch = await Promise.all(queries.map(q => searchCascade(q, agentKeys, null).catch(() => null)));
-      const seen = new Set(); const texts = []; const srcs = [];
-      for (const r of batch) {
-        if (!r) continue;
-        if (r.text) texts.push(r.text);
-        for (const s of (r.sources || [])) { if (s.url && !seen.has(s.url)) { seen.add(s.url); srcs.push(s); } }
-      }
-      results = texts.length ? { text: texts.join("\n\n---\n\n").slice(0, 16000), sources: srcs.slice(0, 20) } : null;
+      tasks.push(withBudget(
+        Promise.all(queries.map(qq => searchCascade(qq, agentKeys, null).catch(() => null))).then(batch => {
+          const seen = new Set(); const texts = []; const srcs = [];
+          for (const r of batch) { if (!r) continue; if (r.text) texts.push(r.text); for (const s of (r.sources || [])) { if (s.url && !seen.has(s.url)) { seen.add(s.url); srcs.push(s); } } }
+          return texts.length ? { text: texts.join("\n\n---\n\n").slice(0, 16000), sources: srcs.slice(0, 20) } : null;
+        }), 18000
+      ).then(d => ({ kind: "main", d })));
     } else {
-      results = await searchCascade(searchQuery, agentKeys, isFatwa ? FATWA_DOMAINS : null);
+      tasks.push(withBudget(searchCascade(searchQuery, agentKeys, isFatwa ? FATWA_DOMAINS : null), 18000).then(d => ({ kind: "main", d })));
     }
+    // 3) X/تويتر (مكمّل)
+    if (WANT_X) {
+      tasks.push(withBudget(searchCascade(`${searchQuery} (site:x.com OR site:twitter.com)`, agentKeys, null), 15000).then(d => ({ kind: "x", d })).catch(() => ({ kind: "x", d: null })));
+    }
+
+    const settled = await Promise.all(tasks);
+    let apiData = null, results = null, xr = null;
+    for (const s of settled) {
+      if (s.kind === "api") apiData = s.d;
+      else if (s.kind === "main") results = s.d;
+      else if (s.kind === "x") xr = s.d;
+    }
+
+    // دمج بالأولوية: API (موثوق) ثم البحث الرئيسي ثم X
     if (results && results.text) {
       searchBlock = isFatwa
         ? `\n\n===== فتاوى ونصوص من مصادر موثوقة (ابن باز، اللجنة الدائمة، إسلام ويب، الدرر السنية) =====\n⚠️ انقل الحكم والأدلة من هذه النصوص حصراً مع نسبتها. لا تجتهد من عندك.\n${results.text}\n===== END =====`
@@ -870,21 +898,15 @@ export default async function handler(req, res) {
       didSearch = true;
       sources = results.sources || [];
     }
-    // مصدر X/تويتر اختياري — للآراء والترند فقط، موسوم كغير مؤكد
     if (apiData) {
-      searchBlock = apiData.block + searchBlock;
+      searchBlock = apiData.block + searchBlock; // أعلى أولوية
       didSearch = true;
       sources = [...apiData.sources, ...sources];
     }
-    if (WANT_X) {
-      try {
-        const xr = await searchCascade(`${searchQuery} (site:x.com OR site:twitter.com)`, agentKeys, null);
-        if (xr && xr.text) {
-          searchBlock += `\n\n===== ${isAr ? "مصدر إضافي من منصة X/تويتر" : "Additional source — X/Twitter"} =====\nℹ️ ${isAr ? "قد يحتوي معلومات حديثة أو محلية أو متخصّصة غير موجودة في جوجل، وفيه معلومات صحيحة كثيرة — استخدمه كمصدر. لكن: (1) عند تعارضه مع مصدر موثوق أعلاه رجّح الموثوق. (2) لا تنقل إشاعة أو رأياً شخصياً واضحاً كحقيقة. (3) المعلومة المتطابقة مع مصدر آخر أو الواضحة من حساب رسمي يمكن اعتمادها." : "May contain recent/local/niche info missing from Google, with much correct information — use it as a source. But prefer authoritative sources on conflict, do not treat rumors/personal opinions as fact, and rely on info corroborated or from official accounts."}\n${xr.text.slice(0, 4500)}\n===== END =====`;
-          for (const s of (xr.sources || [])) { if (s.url && !sources.find(z => z.url === s.url)) sources.push(s); }
-          didSearch = true;
-        }
-      } catch (e) {}
+    if (xr && xr.text) {
+      searchBlock += `\n\n===== ${isAr ? "مصدر إضافي من منصة X/تويتر" : "Additional source — X/Twitter"} =====\nℹ️ ${isAr ? "قد يحتوي معلومات حديثة أو محلية أو متخصّصة. عند تعارضه مع مصدر موثوق أعلاه رجّح الموثوق، ولا تنقل إشاعة أو رأياً كحقيقة." : "May contain recent/local info. Prefer authoritative sources on conflict; do not treat rumors as fact."}\n${xr.text.slice(0, 4500)}\n===== END =====`;
+      for (const s of (xr.sources || [])) { if (s.url && !sources.find(z => z.url === s.url)) sources.push(s); }
+      didSearch = true;
     }
   }
 
@@ -986,7 +1008,8 @@ export default async function handler(req, res) {
       attempts++;
       try {
         const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), 35000);
+        const llmCap = Math.max(8000, Math.min(35000, timeLeft() - 6000)); // اترك 6ث للمدقّق/الإرسال
+        const t = setTimeout(() => ctrl.abort(), llmCap);
         const response = await fetch("https://api.cerebras.ai/v1/chat/completions", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: "Bearer " + apiKey },
@@ -1095,9 +1118,9 @@ export default async function handler(req, res) {
           return tab;
         });
 
-        // ===== المدقق الآلي: للأخبار والوقائع، راجع البطاقة ضد المصادر واحذف غير المدعوم =====
-        if (didSearch && searchBlock && !isCasualChat) {
-          const audited = await groundCard(card, searchBlock, apiKey);
+        // ===== المدقق الآلي: يعمل فقط إن توفّر وقت كافٍ ضمن الميزانية =====
+        if (didSearch && searchBlock && !isCasualChat && timeLeft() > 9000) {
+          const audited = await withBudget(groundCard(card, searchBlock, apiKey), Math.min(8000, timeLeft() - 2000), null);
           if (audited) {
             if (!Array.isArray(audited.followUps)) audited.followUps = card.followUps;
             card = audited;
