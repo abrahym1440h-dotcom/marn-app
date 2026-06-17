@@ -86,11 +86,31 @@ async function getSports(q) {
     : todayRiyadh();
   const targetDate = date; // yyyy-mm-dd
 
-  let data = await rapidGet(HOSTS.sports, `/api/v1/sport/football/scheduled-events/${date}`);
-  if (!hasData(data)) {
-    const term = q.replace(/[^\u0621-\u064Aa-zA-Z\s]/g, " ").trim().split(/\s+/).slice(0, 4).join(" ");
-    if (term) data = await rapidGet(HOSTS.sports, `/api/v1/search/all?q=${enc(term)}`);
+  // هل السؤال عن نتيجة مباراة محددة سابقة؟ (مو "اليوم/الغد")
+  const isPastResult = /نتيجة|انتهت|كم سجّل|من فاز|خسر|فاز|result|score of|ended/i.test(q) && !/اليوم|الغد|بكرة|today|tomorrow/i.test(q);
+
+  let data = null;
+  if (isPastResult) {
+    // ابحث في آخر 7 أيام عن المباراة المطلوبة
+    const teams = q.replace(/[^\u0621-\u064Aa-zA-Z\s]/g, " ").trim().split(/\s+/).filter(w => w.length > 2);
+    for (let back = 0; back <= 6 && !data; back++) {
+      const d = new Date(Date.now() + 3 * 3600 * 1000 - back * 86400000).toISOString().slice(0, 10);
+      const dayData = await rapidGet(HOSTS.sports, `/api/v1/sport/football/scheduled-events/${d}`, 5000);
+      const evs = (dayData && Array.isArray(dayData.events)) ? dayData.events : null;
+      if (evs && evs.length && teams.length) {
+        // فلتر المباريات اللي فيها أحد الفرق المذكورة
+        const matched = evs.filter(e => {
+          const names = `${e?.homeTeam?.name || ""} ${e?.awayTeam?.name || ""} ${e?.homeTeam?.nameTranslation?.ar || ""} ${e?.awayTeam?.nameTranslation?.ar || ""}`;
+          return teams.some(t => names.includes(t));
+        });
+        if (matched.length) data = { events: matched };
+      }
+    }
+    if (!data) return null; // ما لقى المباراة → يرجع للبحث
+  } else {
+    data = await rapidGet(HOSTS.sports, `/api/v1/sport/football/scheduled-events/${date}`, 5500);
   }
+
   const events = (data && Array.isArray(data.events)) ? data.events : (Array.isArray(data) ? data : null);
   if (!events || !events.length) return null;
 
@@ -104,8 +124,8 @@ async function getSports(q) {
     try { return new Date(ts * 1000).toISOString().slice(0, 10); } catch { return ""; }
   };
 
-  // فلتر صارم: فقط مباريات تاريخها يطابق اليوم المطلوب (تمنع البيانات القديمة)
-  const todayEvents = events.filter(e => {
+  // فلتر التاريخ: لمباريات اليوم نشدّد على تاريخ اليوم؛ لنتيجة سابقة نقبل كما هي
+  const todayEvents = isPastResult ? events : events.filter(e => {
     const d = tsToDate(e?.startTimestamp);
     return d === targetDate;
   });
