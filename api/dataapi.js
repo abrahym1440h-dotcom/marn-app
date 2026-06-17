@@ -92,7 +92,27 @@ async function getSports(q) {
     const term = q.replace(/[^\u0621-\u064Aa-zA-Z\s]/g, " ").trim().split(/\s+/).slice(0, 4).join(" ");
     if (term) data = await rapidGet(HOSTS.sports, `/api/v1/search/all?q=${enc(term)}`);
   }
-  return hasData(data) ? { label: "بيانات رياضية حيّة (SportAPI)", text: trim(data, 4200), url: `https://${HOSTS.sports}` } : null;
+  const events = (data && Array.isArray(data.events)) ? data.events : (Array.isArray(data) ? data : null);
+  if (!events || !events.length) return null;
+
+  // استخرج الحقول المهمة فقط من كل مباراة (نظيف وكامل)
+  const fmtTime = (ts) => {
+    if (!ts) return "";
+    try { return new Intl.DateTimeFormat("ar-SA", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Riyadh" }).format(new Date(ts * 1000)); }
+    catch { return ""; }
+  };
+  const lines = events.slice(0, 25).map((e) => {
+    const home = e?.homeTeam?.name || e?.home?.name || "";
+    const away = e?.awayTeam?.name || e?.away?.name || "";
+    const hs = e?.homeScore?.current; const as = e?.awayScore?.current;
+    const score = (hs != null && as != null) ? `${hs}-${as}` : "";
+    const status = e?.status?.description || e?.status?.type || "";
+    const tour = e?.tournament?.name || "";
+    const time = fmtTime(e?.startTimestamp);
+    return `- ${home} ضد ${away}${score ? ` | النتيجة: ${score}` : ""}${status ? ` | ${status}` : ""}${time ? ` | ${time}` : ""}${tour ? ` | ${tour}` : ""}`;
+  });
+  const text = `التاريخ: ${date}\nعدد المباريات: ${events.length}\n${lines.join("\n")}`;
+  return { label: `مباريات حقيقية من SportAPI (${date})`, text: text.slice(0, 4500), url: `https://${HOSTS.sports}` };
 }
 async function getMovies(q) {
   const term = q.replace(/فيلم|أفلام|مسلسل|معلومات|عن|movie|series|about/gi, " ").trim().slice(0, 60) || q.slice(0, 60);
@@ -150,7 +170,7 @@ async function getStructuredData(question) {
   try { r = await fn(q); } catch (e) { console.log("[dataapi] خطأ", kind, e && e.message); r = null; }
   if (!r) { console.log(`[dataapi] ${kind}: الـ API رجّع فاضي/فشل → سيرجع للبحث`); return null; }
   console.log(`[dataapi] ${kind}: نجح ✓ طول البيانات=${(r.text || "").length} | عيّنة:`, (r.text || "").slice(0, 220));
-  const block = `\n\n===== ${r.label} — مصدر موثوق رسمي (استخدم هذه الأرقام والأسماء حرفياً) =====\n⚠️ هذه بيانات حقيقية من واجهة برمجية رسمية. اعتمدها فوق أي مصدر آخر. انقل منها النتائج/الأسماء/الأرقام كما هي. إن لم تجد تفصيلاً هنا فاحذفه ولا تخترعه.\n${r.text}\n===== END =====`;
+  const block = `\n\n===== ${r.label} — مصدر موثوق رسمي (استخدم هذه الأرقام والأسماء حرفياً) =====\n⚠️ هذه بيانات حقيقية رسمية (JSON). **انسخ منها حرفياً** أسماء الفرق والتواريخ والنتائج والبطولات كما هي تماماً — ممنوع تغيير أي اسم أو تاريخ أو ترجمة خاطئة أو خلط بين المباريات. كل مباراة لها homeTeam وawayTeam وstartTimestamp في نفس العنصر؛ لا تخلط بينها. إن لم تجد تفصيلاً هنا فاحذفه ولا تخترعه. تجاهل أي مصدر آخر يخالف هذه البيانات.\n${r.text}\n===== END =====`;
   return { block, sources: [{ title: r.label, url: r.url }] };
 }
 
