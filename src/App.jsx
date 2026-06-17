@@ -879,7 +879,10 @@ export default function App() {
     }));
 
     try {
+      const __ac = new AbortController();
+      const __to = setTimeout(() => __ac.abort(), 30000);
       const r = await fetch("/api/ask", {
+        signal: __ac.signal,
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -902,6 +905,7 @@ export default function App() {
       });
       let data = null;
       try { data = await r.json(); } catch {}
+      clearTimeout(__to);
 
       setChats(prev => {
         const cur = prev[chatId];
@@ -4207,11 +4211,14 @@ ${q}
 جاوب كمنظّم رحلات ذكي يساعد المجموعة. كن عملياً ومفيداً ومختصراً. لو طُلب جدول أو اقتراحات أو قائمة، رتّبها بوضوح.`;
 
     try {
+      const __ac = new AbortController();
+      const __to = setTimeout(() => __ac.abort(), 30000);
       const r = await fetch("/api/ask", {
+        signal: __ac.signal,
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: ctx, history: [], lang: isRTL ? "ar" : "en", forceSearch: false }),
       });
-      const data = await r.json().catch(()=>null);
+      const data = await r.json().catch(()=>null); clearTimeout(__to);
       let answer = "";
       if (data?.card) {
         const c = data.card;
@@ -5142,11 +5149,14 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
 - إذا كانت عادة واحدة في اليوم (مثل قراءة، رياضة، شرب ماء)، اجعل parts مصفوفة فارغة [].
 - advice: نصيحة قصيرة (سطر واحد) تساعد المستخدم يلتزم بهذه العادة.
 أرجع JSON فقط.`;
+      const __ac = new AbortController();
+      const __to = setTimeout(() => __ac.abort(), 30000);
       const r = await fetch("/api/ask", {
+        signal: __ac.signal,
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ question: prompt, history:[], lang:"ar", forceSearch:false }),
       });
-      const data = await r.json().catch(()=>null);
+      const data = await r.json().catch(()=>null); clearTimeout(__to);
       let raw = "";
       if (data?.card) {
         (data.card.tabs||[]).forEach(t=>{ if(t.data?.body) raw += t.data.body; });
