@@ -2165,13 +2165,13 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
                 {AG_ICON[usedAgent.id] ? AG_ICON[usedAgent.id](usedAgent.color, 11) : null}{usedAgent.name}
               </div>
             )}
-            {searched && (
+            {searched && searched !== "cache" && (
               <div style={{
                 fontSize: F.label - 1, fontWeight: 600, color: "#34D399",
                 background: "rgba(52,211,153,0.1)", padding: "2px 8px",
                 borderRadius: 6, border: "1px solid rgba(52,211,153,0.2)", display: "flex", alignItems: "center", gap: 4,
               }}>
-                <Icon.Search /> {searched === "cache" ? "من الذاكرة" : t.liveSearch}
+                <Icon.Search /> {t.liveSearch}
               </div>
             )}
           </div>
@@ -2474,12 +2474,20 @@ function TabContent({ tab, a, T, F }) {
               <div style={{ fontSize:F.base, fontWeight:700 }}>{d.team1}</div>
             </div>
             <div style={{ textAlign:"center", padding:"0 8px", minWidth:110 }}>
-              <div style={{ fontSize:44, fontWeight:700, color:T.text, letterSpacing:3, lineHeight:1 }}>
-                {d.score1!=null?d.score1:"–"}<span style={{ color:T.line, fontWeight:300 }}>:</span>{d.score2!=null?d.score2:"–"}
-              </div>
-              <div style={{ marginTop:6 }}>
-                <span style={{ fontSize:11, color:T.sub, background:T.pillFill, padding:"3px 10px", borderRadius:20, border:`1px solid ${T.line}` }}>{d.status}</span>
-              </div>
+              {d.score1!=null && d.score2!=null ? (
+                <div style={{ fontSize:44, fontWeight:700, color:T.text, letterSpacing:3, lineHeight:1 }}>
+                  {d.score1}<span style={{ color:T.line, fontWeight:300 }}>:</span>{d.score2}
+                </div>
+              ) : (
+                <div style={{ fontSize:22, fontWeight:700, color:a, letterSpacing:2, lineHeight:1 }}>
+                  {d.time || "—"}
+                </div>
+              )}
+              {d.status && !/غير محدد|غير مؤكد|unknown|undefined/i.test(d.status) ? (
+                <div style={{ marginTop:6 }}>
+                  <span style={{ fontSize:11, color:T.sub, background:T.pillFill, padding:"3px 10px", borderRadius:20, border:`1px solid ${T.line}` }}>{d.status}</span>
+                </div>
+              ) : null}
               {d.date && <div style={{ fontSize:10, color:T.faint, marginTop:5 }}>{d.date}</div>}
             </div>
             <div style={{ textAlign:"center", flex:1 }}>
