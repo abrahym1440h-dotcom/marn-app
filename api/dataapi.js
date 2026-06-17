@@ -91,20 +91,25 @@ async function getSports(q) {
 
   let data = null;
   if (isPastResult) {
-    // ابحث في آخر 7 أيام عن المباراة المطلوبة
+    // ابحث في آخر 3 أيام بالتوازي (مو متسلسل) لتجنّب تجاوز مهلة Vercel
     const teams = q.replace(/[^\u0621-\u064Aa-zA-Z\s]/g, " ").trim().split(/\s+/).filter(w => w.length > 2);
-    for (let back = 0; back <= 6 && !data; back++) {
-      const d = new Date(Date.now() + 3 * 3600 * 1000 - back * 86400000).toISOString().slice(0, 10);
-      const dayData = await rapidGet(HOSTS.sports, `/api/v1/sport/football/scheduled-events/${d}`, 5000);
-      const evs = (dayData && Array.isArray(dayData.events)) ? dayData.events : null;
-      if (evs && evs.length && teams.length) {
-        // فلتر المباريات اللي فيها أحد الفرق المذكورة
-        const matched = evs.filter(e => {
-          const names = `${e?.homeTeam?.name || ""} ${e?.awayTeam?.name || ""} ${e?.homeTeam?.nameTranslation?.ar || ""} ${e?.awayTeam?.nameTranslation?.ar || ""}`;
-          return teams.some(t => names.includes(t));
-        });
-        if (matched.length) data = { events: matched };
-      }
+    const days = [0, 1, 2, 3].map(back =>
+      new Date(Date.now() + 3 * 3600 * 1000 - back * 86400000).toISOString().slice(0, 10)
+    );
+    const results = await Promise.all(
+      days.map(d => rapidGet(HOSTS.sports, `/api/v1/sport/football/scheduled-events/${d}`, 4000).catch(() => null))
+    );
+    const allEvents = [];
+    for (const dd of results) {
+      const evs = (dd && Array.isArray(dd.events)) ? dd.events : null;
+      if (evs) allEvents.push(...evs);
+    }
+    if (allEvents.length && teams.length) {
+      const matched = allEvents.filter(e => {
+        const names = `${e?.homeTeam?.name || ""} ${e?.awayTeam?.name || ""} ${e?.homeTeam?.nameTranslation?.ar || ""} ${e?.awayTeam?.nameTranslation?.ar || ""}`;
+        return teams.some(t => names.includes(t));
+      });
+      if (matched.length) data = { events: matched };
     }
     if (!data) return null; // ما لقى المباراة → يرجع للبحث
   } else {
@@ -202,7 +207,13 @@ async function getStructuredData(question) {
   else if (IS.news.test(q)) { fn = getNews; kind = "news"; }
   if (!fn) { console.log("[dataapi] لا مجال مطابق لـ:", q.slice(0, 40)); return null; }
   let r = null;
-  try { r = await fn(q); } catch (e) { console.log("[dataapi] خطأ", kind, e && e.message); r = null; }
+  try {
+    // سباق: إمّا تنتهي الدالة، أو تنقطع بعد 8 ثوانٍ (أقل من حد Vercel) → لا تعليق أبداً
+    r = await Promise.race([
+      fn(q),
+      new Promise(resolve => setTimeout(() => resolve(null), 8000)),
+    ]);
+  } catch (e) { console.log("[dataapi] خطأ", kind, e && e.message); r = null; }
   if (!r) { console.log(`[dataapi] ${kind}: الـ API رجّع فاضي/فشل → سيرجع للبحث`); return null; }
   console.log(`[dataapi] ${kind}: نجح ✓ طول البيانات=${(r.text || "").length} | عيّنة:`, (r.text || "").slice(0, 220));
   const block = `\n\n===== ${r.label} — مصدر موثوق رسمي (استخدم هذه الأرقام والأسماء حرفياً) =====\n⚠️ هذه بيانات حقيقية رسمية (JSON). **انسخ منها حرفياً** أسماء الفرق والتواريخ والنتائج والبطولات كما هي تماماً — ممنوع تغيير أي اسم أو تاريخ أو ترجمة خاطئة أو خلط بين المباريات. كل مباراة لها homeTeam وawayTeam وstartTimestamp في نفس العنصر؛ لا تخلط بينها. إن لم تجد تفصيلاً هنا فاحذفه ولا تخترعه. تجاهل أي مصدر آخر يخالف هذه البيانات.\n${r.text}\n===== END =====`;
