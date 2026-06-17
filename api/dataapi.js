@@ -81,13 +81,12 @@ function extractCity(q) {
 
 // ===== جالبو كل مجال =====
 async function getSports(q) {
-  // مباريات اليوم/الغد للكرة
   const date = /غد|بكرة|tomorrow/i.test(q)
     ? new Date(Date.now() + 27 * 3600 * 1000).toISOString().slice(0, 10)
     : todayRiyadh();
-  // محاولة 1: مباريات مجدولة لكرة القدم اليوم
+  const targetDate = date; // yyyy-mm-dd
+
   let data = await rapidGet(HOSTS.sports, `/api/v1/sport/football/scheduled-events/${date}`);
-  // محاولة 2: بحث عن فريق/مباراة محددة
   if (!hasData(data)) {
     const term = q.replace(/[^\u0621-\u064Aa-zA-Z\s]/g, " ").trim().split(/\s+/).slice(0, 4).join(" ");
     if (term) data = await rapidGet(HOSTS.sports, `/api/v1/search/all?q=${enc(term)}`);
@@ -95,24 +94,40 @@ async function getSports(q) {
   const events = (data && Array.isArray(data.events)) ? data.events : (Array.isArray(data) ? data : null);
   if (!events || !events.length) return null;
 
-  // استخرج الحقول المهمة فقط من كل مباراة (نظيف وكامل)
   const fmtTime = (ts) => {
     if (!ts) return "";
     try { return new Intl.DateTimeFormat("ar-SA", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Riyadh" }).format(new Date(ts * 1000)); }
     catch { return ""; }
   };
-  const lines = events.slice(0, 25).map((e) => {
+  const tsToDate = (ts) => {
+    if (!ts) return "";
+    try { return new Date(ts * 1000).toISOString().slice(0, 10); } catch { return ""; }
+  };
+
+  // فلتر صارم: فقط مباريات تاريخها يطابق اليوم المطلوب (تمنع البيانات القديمة)
+  const todayEvents = events.filter(e => {
+    const d = tsToDate(e?.startTimestamp);
+    return d === targetDate;
+  });
+
+  // لو الـ API أرجع بيانات قديمة كلها → لا نرسلها للنموذج
+  if (!todayEvents.length) {
+    console.log(`[dataapi] sports: كل ${events.length} مباراة بتواريخ غير اليوم (${targetDate}) → رُفضت`);
+    return null;
+  }
+
+  const lines = todayEvents.slice(0, 20).map((e) => {
     const home = e?.homeTeam?.name || e?.home?.name || "";
     const away = e?.awayTeam?.name || e?.away?.name || "";
-    const hs = e?.homeScore?.current; const as = e?.awayScore?.current;
-    const score = (hs != null && as != null) ? `${hs}-${as}` : "";
+    const hs = e?.homeScore?.current; const as2 = e?.awayScore?.current;
+    const score = (hs != null && as2 != null) ? `${hs}-${as2}` : "";
     const status = e?.status?.description || e?.status?.type || "";
     const tour = e?.tournament?.name || "";
     const time = fmtTime(e?.startTimestamp);
     return `- ${home} ضد ${away}${score ? ` | النتيجة: ${score}` : ""}${status ? ` | ${status}` : ""}${time ? ` | ${time}` : ""}${tour ? ` | ${tour}` : ""}`;
   });
-  const text = `التاريخ: ${date}\nعدد المباريات: ${events.length}\n${lines.join("\n")}`;
-  return { label: `مباريات حقيقية من SportAPI (${date})`, text: text.slice(0, 4500), url: `https://${HOSTS.sports}` };
+  const text = `التاريخ: ${targetDate}\nعدد المباريات اليوم: ${todayEvents.length}\n${lines.join("\n")}`;
+  return { label: `مباريات حقيقية من SportAPI (${targetDate})`, text: text.slice(0, 4500), url: `https://${HOSTS.sports}` };
 }
 async function getMovies(q) {
   const term = q.replace(/فيلم|أفلام|مسلسل|معلومات|عن|movie|series|about/gi, " ").trim().slice(0, 60) || q.slice(0, 60);
