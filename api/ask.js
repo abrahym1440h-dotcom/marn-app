@@ -5,7 +5,7 @@ import { getStructuredData } from "./dataapi.js";
 
 /* ===== Cache بسيط في الذاكرة ===== */
 const cache = new Map(); // key → { card, searched, ts }
-const CACHE_TTL = 60 * 60 * 1000; // ساعة واحدة
+const CACHE_TTL = 15 * 60 * 1000; // 15 دقيقة فقط (للمحتوى التعليمي الثابت)
 const CACHE_MAX = 200;
 
 function hashStr(s) {
@@ -807,9 +807,12 @@ export default async function handler(req, res) {
 
   // فحص الكاش — لا نُخزّن/نُرجِع كاش للأسئلة الحيّة (مباريات، نتائج، طقس، أخبار، أسعار)
   const isLive = GENERAL_DOMAINS.test(question || "");
-  if (!forceSearch && !isLive) {
+  // الكاش فقط للمحتوى التعليمي الثابت (مو للأسئلة الواقعية أو اللي تحتاج بحث)
+  const PURE_EDU = /^(ما هو تعريف|ما معنى|اشرح|ما الفرق بين|كيف يعمل|ما هي خطوات|علّمني|لخّص مفهوم)/i;
+  const okToCache = !forceSearch && !isLive && PURE_EDU.test((question||"").trim());
+  if (okToCache) {
     const cached = getCache(question, lang, agent);
-    if (cached) {
+    if (cached && cached.searched === false) { // فقط لو ما استخدم بحث
       return res.status(200).json({ ...cached, fromCache: true });
     }
   }
@@ -1102,7 +1105,7 @@ export default async function handler(req, res) {
         }
 
         const result = { card, model_used: model, searched: servedFromCache ? "cache" : didSearch, sources, agent_used: effectiveAgent };
-        if (!isLive) setCache(question, lang, agent, result);
+        if (!isLive && !didSearch && !servedFromCache) setCache(question, lang, agent, result); // فقط المحتوى التعليمي الثابت بلا بحث
         return res.status(200).json(result);
 
       } catch (e) {
