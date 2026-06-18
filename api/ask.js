@@ -879,15 +879,21 @@ export default async function handler(req, res) {
     }
     // 3) X/تويتر (مكمّل)
     if (WANT_X) {
-      tasks.push(withBudget(searchCascade(`${searchQuery} (site:x.com OR site:twitter.com)`, agentKeys, null), 15000).then(d => ({ kind: "x", d })).catch(() => ({ kind: "x", d: null })));
+      // الأسئلة الرياضية: ركّز X على حسابات موثوقة معروفة (عمرو @bt3 وسهم @1SMi_)
+      const IS_SPORTS_Q = /مبارا|مباريات|نتيجة|الدوري|كأس|هدّاف|هدف|يلعب| ضد |تشكيل|ترتيب|مونديال|كرة القدم|لاعب|نادي|دوري|بطولة|football|match|league|score/i.test(question);
+      const TRUSTED_SPORTS = "(from:bt3 OR from:1SMi_)";
+      const xQuery = IS_SPORTS_Q
+        ? `${searchQuery} ${TRUSTED_SPORTS}`
+        : `${searchQuery} (site:x.com OR site:twitter.com)`;
+      tasks.push(withBudget(searchCascade(xQuery, agentKeys, null), 15000).then(d => ({ kind: "x", d, trusted: IS_SPORTS_Q })).catch(() => ({ kind: "x", d: null })));
     }
 
     const settled = await Promise.all(tasks);
-    let apiData = null, results = null, xr = null;
+    let apiData = null, results = null, xr = null, xTrusted = false;
     for (const s of settled) {
       if (s.kind === "api") apiData = s.d;
       else if (s.kind === "main") results = s.d;
-      else if (s.kind === "x") xr = s.d;
+      else if (s.kind === "x") { xr = s.d; xTrusted = !!s.trusted; }
     }
 
     // دمج بالأولوية: API (موثوق) ثم البحث الرئيسي ثم X
@@ -904,7 +910,13 @@ export default async function handler(req, res) {
       sources = [...apiData.sources, ...sources];
     }
     if (xr && xr.text) {
-      searchBlock += `\n\n===== ${isAr ? "مصدر إضافي من منصة X/تويتر" : "Additional source — X/Twitter"} =====\nℹ️ ${isAr ? "قد يحتوي معلومات حديثة أو محلية أو متخصّصة. عند تعارضه مع مصدر موثوق أعلاه رجّح الموثوق، ولا تنقل إشاعة أو رأياً كحقيقة." : "May contain recent/local info. Prefer authoritative sources on conflict; do not treat rumors as fact."}\n${xr.text.slice(0, 4500)}\n===== END =====`;
+      const xLabel = xTrusted
+        ? "مصدر رياضي موثوق من X (حسابات معروفة: عمرو @bt3 وسهم @1SMi_)"
+        : (isAr ? "مصدر إضافي من منصة X/تويتر" : "Additional source — X/Twitter");
+      const xNote = xTrusted
+        ? "هذه تغريدات من حسابات رياضية موثوقة ومعروفة. يمكن الاعتماد عليها للأخبار والنتائج الرياضية الحديثة. انقل منها الأرقام والأسماء بدقة."
+        : (isAr ? "قد يحتوي معلومات حديثة أو محلية أو متخصّصة. عند تعارضه مع مصدر موثوق أعلاه رجّح الموثوق، ولا تنقل إشاعة أو رأياً كحقيقة." : "May contain recent/local info. Prefer authoritative sources on conflict; do not treat rumors as fact.");
+      searchBlock += `\n\n===== ${xLabel} =====\nℹ️ ${xNote}\n${xr.text.slice(0, 4500)}\n===== END =====`;
       for (const s of (xr.sources || [])) { if (s.url && !sources.find(z => z.url === s.url)) sources.push(s); }
       didSearch = true;
     }
