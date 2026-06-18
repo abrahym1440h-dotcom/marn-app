@@ -112,10 +112,11 @@ async function groundCard(card, sourceText, apiKey) {
   } catch { return null; }
 }
 
-async function searchWeb(query, key, domains) {
+async function searchWeb(query, key, domains, extSignal) {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 18000);
+    if (extSignal) extSignal.addEventListener('abort', () => ctrl.abort(), { once: true });
     const r = await fetch("https://api.tavily.com/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -147,11 +148,12 @@ async function searchWeb(query, key, domains) {
 }
 
 /* ===== Serper.dev — بحث جوجل سريع ===== */
-async function searchSerper(query, key, domains) {
+async function searchSerper(query, key, domains, extSignal) {
   if (!key) return null;
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 14000);
+    if (extSignal) extSignal.addEventListener('abort', () => ctrl.abort(), { once: true });
     const scopedQuery = (Array.isArray(domains) && domains.length)
       ? `${query} (${domains.map(d => `site:${d}`).join(" OR ")})`
       : query;
@@ -186,11 +188,12 @@ ${(x.snippet||"").slice(0,600)}`);
 }
 
 /* ===== Google Programmable Search (CSE) — 100 يومياً تتجدد ===== */
-async function searchGoogleCSE(query, key, cx, domains) {
+async function searchGoogleCSE(query, key, cx, domains, extSignal) {
   if (!key || !cx) return null;
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 14000);
+    if (extSignal) extSignal.addEventListener('abort', () => ctrl.abort(), { once: true });
     let url = `https://www.googleapis.com/customsearch/v1?key=${key}&cx=${cx}&q=${encodeURIComponent(query)}&num=10`;
     if (Array.isArray(domains) && domains.length) url += "&siteSearch=" + encodeURIComponent(domains[0]);
     const r = await fetch(url, { signal: ctrl.signal });
@@ -216,17 +219,19 @@ ${(x.snippet||"").slice(0,600)}`);
 }
 
 /* ===== كاسكيد موحّد: Tavily → Serper → Google CSE ===== */
-async function searchCascade(query, keys, domains) {
+async function searchCascade(query, keys, domains, extSignal) {
   if (keys.tavily) {
-    const r = await searchWeb(query, keys.tavily, domains);
+    const r = await searchWeb(query, keys.tavily, domains, extSignal);
     if (r?.text?.length > 80) return { ...r, provider: "Tavily" };
   }
+  if (extSignal?.aborted) return null;
   if (keys.serper) {
-    const r = await searchSerper(query, keys.serper, domains);
+    const r = await searchSerper(query, keys.serper, domains, extSignal);
     if (r?.text?.length > 80) return { ...r, provider: "Serper" };
   }
+  if (extSignal?.aborted) return null;
   if (keys.google && keys.googleCx) {
-    const r = await searchGoogleCSE(query, keys.google, keys.googleCx, domains);
+    const r = await searchGoogleCSE(query, keys.google, keys.googleCx, domains, extSignal);
     if (r?.text?.length > 80) return { ...r, provider: "GoogleCSE" };
   }
   return null;
@@ -709,13 +714,17 @@ export default async function handler(req, res) {
 
   // ===== ميزانية الوقت: حد أقصى صارم لكل العملية =====
   const REQ_START = Date.now();
-  const TOTAL_BUDGET_MS = 52000; // أقل من حد Vercel (60ث) بهامش أمان
+  const TOTAL_BUDGET_MS = 45000; // أقل من حد Vercel (60ث) بهامش أمان كبير
   const timeLeft = () => TOTAL_BUDGET_MS - (Date.now() - REQ_START);
-  const withBudget = (promise, capMs, fallback = null) => {
+  // يمرّر AbortSignal للعملية لإلغائها فعلياً عند انتهاء المهلة (لا تبقى معلّقة)
+  const withBudget = (fnOrPromise, capMs, fallback = null) => {
     const cap = Math.max(0, Math.min(capMs, timeLeft()));
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), cap);
+    const p = typeof fnOrPromise === "function" ? fnOrPromise(ac.signal) : fnOrPromise;
     return Promise.race([
-      Promise.resolve(promise).catch(() => fallback),
-      new Promise(r => setTimeout(() => r(fallback), cap)),
+      Promise.resolve(p).catch(() => fallback).finally(() => clearTimeout(timer)),
+      new Promise(r => setTimeout(() => { ac.abort(); r(fallback); }, cap)),
     ]);
   };
 
@@ -873,19 +882,19 @@ export default async function handler(req, res) {
     // 2) البحث الرئيسي
     if (IS_SPORTS_Q) {
       // الرياضة: مصدر واحد موثوق فقط = 365scores (إحصائيات/أرقام/لاعبين) — لا 40 مصدر فوضى
-      tasks.push(withBudget(searchCascade(searchQuery, agentKeys, ["365scores.com"]), 16000).then(d => ({ kind: "main", d })));
+      tasks.push(withBudget((sig)=>searchCascade(searchQuery, agentKeys, ["365scores.com"], sig), 16000).then(d => ({ kind: "main", d })));
     } else if (BROAD_NEWS) {
       const dateTag = new Intl.DateTimeFormat("ar", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date());
       const queries = [searchQuery, `أهم أخبار اليوم ${dateTag}`, `أخبار السعودية والعالم اليوم عاجل`];
-      tasks.push(withBudget(
-        Promise.all(queries.map(qq => searchCascade(qq, agentKeys, null).catch(() => null))).then(batch => {
+      tasks.push(withBudget((sig)=>
+        Promise.all(queries.map(qq => searchCascade(qq, agentKeys, null, sig).catch(() => null))).then(batch => {
           const seen = new Set(); const texts = []; const srcs = [];
           for (const r of batch) { if (!r) continue; if (r.text) texts.push(r.text); for (const s of (r.sources || [])) { if (s.url && !seen.has(s.url)) { seen.add(s.url); srcs.push(s); } } }
           return texts.length ? { text: texts.join("\n\n---\n\n").slice(0, 16000), sources: srcs.slice(0, 20) } : null;
         }), 18000
       ).then(d => ({ kind: "main", d })));
     } else {
-      tasks.push(withBudget(searchCascade(searchQuery, agentKeys, isFatwa ? FATWA_DOMAINS : null), 18000).then(d => ({ kind: "main", d })));
+      tasks.push(withBudget((sig)=>searchCascade(searchQuery, agentKeys, isFatwa ? FATWA_DOMAINS : null, sig), 18000).then(d => ({ kind: "main", d })));
     }
     // 3) X/تويتر
     if (WANT_X) {
@@ -894,7 +903,7 @@ export default async function handler(req, res) {
       const xQuery = IS_SPORTS_Q
         ? `${searchQuery} ${TRUSTED_SPORTS}`
         : `${searchQuery} (site:x.com OR site:twitter.com)`;
-      tasks.push(withBudget(searchCascade(xQuery, agentKeys, null), 15000).then(d => ({ kind: "x", d, trusted: IS_SPORTS_Q })).catch(() => ({ kind: "x", d: null })));
+      tasks.push(withBudget((sig)=>searchCascade(xQuery, agentKeys, null, sig), 15000).then(d => ({ kind: "x", d, trusted: IS_SPORTS_Q })).catch(() => ({ kind: "x", d: null })));
     }
 
     const settled = await Promise.all(tasks);
@@ -1024,12 +1033,14 @@ export default async function handler(req, res) {
 
   let lastError = "";
   for (const model of MODELS_TO_TRY) {
+    if (timeLeft() < 7000) break; // لم يبقَ وقت كافٍ لمحاولة جديدة → اخرج فوراً
     let attempts = 0;
     while (attempts < 2) {
+      if (timeLeft() < 7000) break; // حارس صارم قبل كل محاولة
       attempts++;
       try {
         const ctrl = new AbortController();
-        const llmCap = Math.max(8000, Math.min(35000, timeLeft() - 6000)); // اترك 6ث للمدقّق/الإرسال
+        const llmCap = Math.max(6000, Math.min(30000, timeLeft() - 5000));
         const t = setTimeout(() => ctrl.abort(), llmCap);
         const response = await fetch("https://api.cerebras.ai/v1/chat/completions", {
           method: "POST",
