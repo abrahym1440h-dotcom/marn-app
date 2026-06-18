@@ -198,8 +198,8 @@ async function getStructuredData(question) {
   if (!RAPID_KEY) { console.log("[dataapi] لا يوجد RAPIDAPI_KEY"); return null; }
   const q = String(question || "");
   let fn = null, kind = null;
-  if (IS.sports.test(q)) { fn = getSports; kind = "sports"; }
-  else if (IS.movies.test(q)) { fn = getMovies; kind = "movies"; }
+  // ملاحظة: الرياضة مُلغاة من SportAPI (بياناته المجانية غير موثوقة + تسبب بطء) — تعتمد على البحث + حسابات تويتر الموثوقة
+  if (IS.movies.test(q)) { fn = getMovies; kind = "movies"; }
   else if (IS.weather.test(q)) { fn = getWeather; kind = "weather"; }
   else if (IS.finance.test(q)) { fn = getFinance; kind = "finance"; }
   else if (IS.flights.test(q)) { fn = getFlights; kind = "flights"; }
