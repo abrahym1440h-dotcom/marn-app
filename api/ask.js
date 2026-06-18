@@ -152,7 +152,10 @@ async function searchSerper(query, key, domains) {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 14000);
-    const body = { q: query, num: 20, hl: "ar" };
+    const scopedQuery = (Array.isArray(domains) && domains.length)
+      ? `${query} (${domains.map(d => `site:${d}`).join(" OR ")})`
+      : query;
+    const body = { q: scopedQuery, num: 20, hl: "ar" };
     const r = await fetch("https://google.serper.dev/search", {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-API-KEY": key },
@@ -858,13 +861,20 @@ export default async function handler(req, res) {
     }
     const BROAD_NEWS = /أحداث|الأحداث|أخبار|ملخص اليوم|وش صاير|مستجدات|تطورات/.test(question) && !isFatwa;
     const WANT_X = !isFatwa;
+    // كشف السؤال الرياضي مرة واحدة
+    const IS_SPORTS_Q = /مبارا|مباريات|نتيجة|الدوري|كأس|هدّاف|هدف|يلعب| ضد |تشكيل|ترتيب|مونديال|كرة القدم|لاعب|نادي|دوري|بطولة|football|match|league|score/i.test(question);
 
     // ===== كل مصادر البحث بالتوازي (لا تسلسل) ضمن ميزانية الوقت =====
     const tasks = [];
-    // 1) بيانات منظّمة من RapidAPI
-    tasks.push(withBudget(getStructuredData(question), 9000).then(d => ({ kind: "api", d })));
-    // 2) البحث الرئيسي (أو الإخباري الواسع)
-    if (BROAD_NEWS) {
+    // 1) بيانات منظّمة من RapidAPI (الرياضة مُلغاة منها — لن تُستدعى لأسئلة الكرة)
+    if (!IS_SPORTS_Q) {
+      tasks.push(withBudget(getStructuredData(question), 9000).then(d => ({ kind: "api", d })));
+    }
+    // 2) البحث الرئيسي
+    if (IS_SPORTS_Q) {
+      // الرياضة: مصدر واحد موثوق فقط = 365scores (إحصائيات/أرقام/لاعبين) — لا 40 مصدر فوضى
+      tasks.push(withBudget(searchCascade(searchQuery, agentKeys, ["365scores.com"]), 16000).then(d => ({ kind: "main", d })));
+    } else if (BROAD_NEWS) {
       const dateTag = new Intl.DateTimeFormat("ar", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date());
       const queries = [searchQuery, `أهم أخبار اليوم ${dateTag}`, `أخبار السعودية والعالم اليوم عاجل`];
       tasks.push(withBudget(
@@ -877,10 +887,9 @@ export default async function handler(req, res) {
     } else {
       tasks.push(withBudget(searchCascade(searchQuery, agentKeys, isFatwa ? FATWA_DOMAINS : null), 18000).then(d => ({ kind: "main", d })));
     }
-    // 3) X/تويتر (مكمّل)
+    // 3) X/تويتر
     if (WANT_X) {
       // الأسئلة الرياضية: ركّز X على حسابات موثوقة معروفة (عمرو @bt3 وسهم @1SMi_)
-      const IS_SPORTS_Q = /مبارا|مباريات|نتيجة|الدوري|كأس|هدّاف|هدف|يلعب| ضد |تشكيل|ترتيب|مونديال|كرة القدم|لاعب|نادي|دوري|بطولة|football|match|league|score/i.test(question);
       const TRUSTED_SPORTS = "(from:bt3 OR from:1SMi_)";
       const xQuery = IS_SPORTS_Q
         ? `${searchQuery} ${TRUSTED_SPORTS}`
