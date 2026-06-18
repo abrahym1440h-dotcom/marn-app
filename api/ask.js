@@ -89,10 +89,11 @@ async function groundCard(card, sourceText, apiKey) {
 1) أي معلومة خبرية/نتيجة مباراة/منتج/رقم/اسم حدث وردت في البطاقة ولا يدعمها نص المصادر صراحةً → احذف العنصر/الحقل بالكامل من البطاقة. **لا تضع نصاً بديلاً مثل «غير متوفر» أو «غير مؤكد»**؛ احذفه نهائياً حتى لا يظهر للمستخدم.
 1.5) بالذات جداول المباريات والمواعيد والنتائج والتشكيلات: أي مباراة أو تاريخ أو وقت أو نتيجة أو هدّاف غير موجود حرفياً في المصادر → احذفه بالكامل من games/events/items/rows. الأفضل عرض مباراتين مؤكدتين على اختلاق عشر؛ وإن لم تجد أي مباراة مؤكدة فاجعل المصفوفة فارغة.
 2) صحّح أي رقم أو اسم يخالف المصادر ليطابقها حرفياً.
+2.5) **الإحصائيات الرياضية المدعومة بالمصادر (استحواذ/تسديدات/هدّافين/تشكيلات) أبقِها كاملة** — لا تحذف رقماً موجوداً في المصادر. احذف فقط ما لا تجد له أصلاً.
 3) لا تضف معلومات جديدة، ولا تغيّر بنية JSON (نفس الحقول والأنواع والتبويبات قدر الإمكان).
 4) المعرفة الثابتة (تعريفات، تواريخ تاريخية مستقرة) اتركها.
 أعد JSON فقط بلا أي نص آخر.`;
-    const usr = `## نصوص المصادر:\n${String(sourceText).slice(0, 9000)}\n\n## البطاقة:\n${JSON.stringify(card)}`;
+    const usr = `## نصوص المصادر:\n${String(sourceText).slice(0, 14000)}\n\n## البطاقة:\n${JSON.stringify(card)}`;
     const r = await fetch("https://api.cerebras.ai/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + apiKey },
@@ -429,7 +430,16 @@ ${isAr ? `لكل موضوع قالب بصري متخصّص يجعل الإجاب
 - تطبيق/جهاز/تقنية → app_card / app_review / tech_compare | مستودع كود → github
 - أخبار → news | اقتصاد → economy | طاقة → energy | مرور → traffic
 - أمن سيبراني → security | تعلّم لغة → language_learning | شخصية عامة → profile
-أكمل بعد القالب المتخصّص بتبويبات داعمة (timeline/compare/facts) حسب الحاجة. المعلومات تبقى صحيحة وشاملة — القالب لا يلغي الدقة.` : `Every topic has a specialized visual template that makes the answer feel like a full APP for that topic. If a specialized template applies, using it is MANDATORY and it must be the FIRST tab; use generic stats/facts only when nothing fits: weather→weather; match/team/league→match+standings+lineup; player→player_profile; stock→stock; crypto→crypto; recipe→recipe+nutrition; restaurant→restaurant; destination→destination+itinerary; flight→flight; car→car; real estate→real_estate; job→job; workout→workout; symptoms→symptoms+nutrition; book→book_review; movie→movie_review; podcast→podcast; app/tech→app_card/app_review/tech_compare; repo→github; news→news; economy→economy; energy→energy; traffic→traffic; security→security; language→language_learning; public figure→profile. Follow with supporting tabs (timeline/compare/facts). Accuracy and completeness still required.`}
+أكمل بعد القالب المتخصّص بتبويبات داعمة (timeline/compare/facts) حسب الحاجة. المعلومات تبقى صحيحة وشاملة — القالب لا يلغي الدقة.
+
+⚽ **قاعدة المباريات (إلزامية للأسئلة الرياضية):** عند أي سؤال عن مباراة، ابنِ بطاقة غنية متعددة التبويبات من نتائج البحث:
+  • التبويب الأول **match**: النتيجة + الحالة + الملعب + **team1_code/team2_code** (رمز الدولة ISO للمنتخبات لعرض العلم) + **scorers** (كل الأهداف: اللاعب والدقيقة) + **details** (الإحصائيات الحقيقية: الاستحواذ، التسديدات، التسديدات على المرمى، الركنيات، التمريرات، xG — بصيغة v1/v2 من نتائج البحث).
+  • تبويب **lineup** لكل فريق: التشكيلة الأساسية الكاملة من نتائج البحث (الخطة + كل اللاعبين).
+  • تبويب **stats** أو **compare** إضافي للأرقام البارزة (مثل: تصدّيات الحارس، الإنذارات، أفضل لاعب).
+  • انسخ كل رقم/اسم/إحصائية **حرفياً** من نتائج البحث (Sofascore/FotMob/ESPN/Opta). الإحصائيات موجودة في المصادر — استخرجها كاملة ولا تتركها فارغة. وإن لم تَرِد إحصائية معيّنة في البحث فاحذفها فقط (لا تخترع رقماً).
+  • **الأعلام إلزامية**: ضع team1_code/team2_code لكل منتخب وطني في كل بطاقة match وmatches.` : `Follow with supporting tabs (timeline/compare/facts). Accuracy and completeness still required.
+
+⚽ MATCH RULE (mandatory for sports questions): build a rich multi-tab card from search results: first tab **match** (score+status+venue+team codes for flags+**scorers** with minutes+**details** = real stats possession/shots/corners/xG as v1/v2); a **lineup** tab per team (formation + full XI); an extra **stats/compare** tab for standout numbers. Copy every number/name verbatim from search (Sofascore/FotMob/ESPN/Opta). Stats exist in sources — extract them fully, never leave empty; omit only stats not present (never invent). Flags mandatory: set team codes for every national team.`}
 
 # ${isAr ? "🎛️ قاعدة لوحة البيانات (الأهم للشكل)" : "Dashboard Rule (most important for layout)"}
 ${isAr ? `اجعل كل إجابة تبدو **لوحة بيانات بصرية / إنفوجرافيك** لا نصاً مكتوباً:
@@ -881,8 +891,9 @@ export default async function handler(req, res) {
     }
     // 2) البحث الرئيسي
     if (IS_SPORTS_Q) {
-      // الرياضة: مصدر واحد موثوق فقط = 365scores (إحصائيات/أرقام/لاعبين) — لا 40 مصدر فوضى
-      tasks.push(withBudget((sig)=>searchCascade(searchQuery, agentKeys, ["365scores.com"], sig), 16000).then(d => ({ kind: "main", d })));
+      // الرياضة: مصادر غنية بالإحصائيات الحقيقية (استحواذ/تسديدات/هدّافين/تشكيلات)
+      const SPORTS_SITES = ["sofascore.com", "fotmob.com", "espn.com", "365scores.com", "theanalyst.com", "foxsports.com"];
+      tasks.push(withBudget((sig)=>searchCascade(`${searchQuery} stats lineup possession shots scorers`, agentKeys, SPORTS_SITES, sig), 18000).then(d => ({ kind: "main", d })));
     } else if (BROAD_NEWS) {
       const dateTag = new Intl.DateTimeFormat("ar", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date());
       const queries = [searchQuery, `أهم أخبار اليوم ${dateTag}`, `أخبار السعودية والعالم اليوم عاجل`];
