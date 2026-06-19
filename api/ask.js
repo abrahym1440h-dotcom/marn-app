@@ -444,16 +444,9 @@ ${isAr ? `لكل موضوع قالب بصري متخصّص يجعل الإجاب
 - news → **news** | economy → **economy** | energy → **energy** | traffic → **traffic**
 - cybersecurity → **security** | language learning → **language_learning** | public figure → **profile**
 - comparing things → **compare** | ranking/best → **leaderboard** | timeline → **timeline** | how-to → **steps**
-After the specialized template, add supporting tabs (timeline/compare/facts/charts) for richness. The template never overrides accuracy — every number from sources.`}
+After the specialized template, add supporting tabs (timeline/compare/facts/charts) for richness. The template never overrides accuracy — every number from sources.
 
-⚽ **قاعدة المباريات (إلزامية للأسئلة الرياضية):** عند أي سؤال عن مباراة، ابنِ بطاقة غنية متعددة التبويبات من نتائج البحث:
-  • التبويب الأول **match**: النتيجة + الحالة + الملعب + **team1_code/team2_code** (رمز الدولة ISO للمنتخبات لعرض العلم) + **scorers** (كل هدف: **اسم اللاعب كامل + الدقيقة معاً** — مثل "جوناثان ديفيد - د.64"؛ ممنوع تكتب الدقيقة بدون الاسم) + **details** (الإحصائيات الحقيقية: الاستحواذ، التسديدات، التسديدات على المرمى، الركنيات، التمريرات، xG — بصيغة v1/v2 من نتائج البحث).
-  • تبويب **lineup** لكل فريق: التشكيلة الأساسية الكاملة من نتائج البحث (الخطة + كل اللاعبين).
-  • تبويب **stats** أو **compare** إضافي للأرقام البارزة (مثل: تصدّيات الحارس، الإنذارات، أفضل لاعب).
-  • انسخ كل رقم/اسم/إحصائية **حرفياً** من نتائج البحث (Sofascore/FotMob/ESPN/Opta). الإحصائيات موجودة في المصادر — استخرجها كاملة ولا تتركها فارغة. وإن لم تَرِد إحصائية معيّنة في البحث فاحذفها فقط (لا تخترع رقماً).
-  • **الأعلام إلزامية**: ضع team1_code/team2_code لكل منتخب وطني في كل بطاقة match وmatches.` : `Follow with supporting tabs (timeline/compare/facts). Accuracy and completeness still required.
-
-⚽ MATCH RULE (mandatory for sports questions): build a rich multi-tab card from search results: first tab **match** (score+status+venue+team codes for flags+**scorers** with minutes+**details** = real stats possession/shots/corners/xG as v1/v2); a **lineup** tab per team (formation + full XI); an extra **stats/compare** tab for standout numbers. Copy every number/name verbatim from search (Sofascore/FotMob/ESPN/Opta). Stats exist in sources — extract them fully, never leave empty; omit only stats not present (never invent). Flags mandatory: set team codes for every national team.`}
+⚽ MATCH RULE (mandatory for sports questions): build a rich multi-tab card from search results: first tab **match** (score+status+venue+team codes for flags+**scorers** with player name AND minute together like "Jonathan David - 64'"+**details** = real stats possession/shots/corners/xG as v1/v2); a **lineup** tab per team (formation + full XI); an extra **stats/compare** tab. Copy every number/name verbatim from search (FIFA/ESPN/FotMob/Sofascore). Stats exist in sources — extract fully, never leave empty; omit only what's absent (never invent). Flags mandatory: set team1_code/team2_code for every national team.`}
 
 # ${isAr ? "🎛️ قاعدة لوحة البيانات (الأهم للشكل)" : "Dashboard Rule (most important for layout)"}
 ${isAr ? `اجعل كل إجابة تبدو **لوحة بيانات بصرية / إنفوجرافيك** لا نصاً مكتوباً:
