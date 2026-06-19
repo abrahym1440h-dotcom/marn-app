@@ -433,7 +433,7 @@ ${isAr ? `لكل موضوع قالب بصري متخصّص يجعل الإجاب
 أكمل بعد القالب المتخصّص بتبويبات داعمة (timeline/compare/facts) حسب الحاجة. المعلومات تبقى صحيحة وشاملة — القالب لا يلغي الدقة.
 
 ⚽ **قاعدة المباريات (إلزامية للأسئلة الرياضية):** عند أي سؤال عن مباراة، ابنِ بطاقة غنية متعددة التبويبات من نتائج البحث:
-  • التبويب الأول **match**: النتيجة + الحالة + الملعب + **team1_code/team2_code** (رمز الدولة ISO للمنتخبات لعرض العلم) + **scorers** (كل الأهداف: اللاعب والدقيقة) + **details** (الإحصائيات الحقيقية: الاستحواذ، التسديدات، التسديدات على المرمى، الركنيات، التمريرات، xG — بصيغة v1/v2 من نتائج البحث).
+  • التبويب الأول **match**: النتيجة + الحالة + الملعب + **team1_code/team2_code** (رمز الدولة ISO للمنتخبات لعرض العلم) + **scorers** (كل هدف: **اسم اللاعب كامل + الدقيقة معاً** — مثل "جوناثان ديفيد - د.64"؛ ممنوع تكتب الدقيقة بدون الاسم) + **details** (الإحصائيات الحقيقية: الاستحواذ، التسديدات، التسديدات على المرمى، الركنيات، التمريرات، xG — بصيغة v1/v2 من نتائج البحث).
   • تبويب **lineup** لكل فريق: التشكيلة الأساسية الكاملة من نتائج البحث (الخطة + كل اللاعبين).
   • تبويب **stats** أو **compare** إضافي للأرقام البارزة (مثل: تصدّيات الحارس، الإنذارات، أفضل لاعب).
   • انسخ كل رقم/اسم/إحصائية **حرفياً** من نتائج البحث (Sofascore/FotMob/ESPN/Opta). الإحصائيات موجودة في المصادر — استخرجها كاملة ولا تتركها فارغة. وإن لم تَرِد إحصائية معيّنة في البحث فاحذفها فقط (لا تخترع رقماً).
@@ -892,8 +892,9 @@ export default async function handler(req, res) {
     // 2) البحث الرئيسي
     if (IS_SPORTS_Q) {
       // الرياضة: مصادر غنية بالإحصائيات الحقيقية (استحواذ/تسديدات/هدّافين/تشكيلات)
-      const SPORTS_SITES = ["sofascore.com", "fotmob.com", "espn.com", "365scores.com", "theanalyst.com", "foxsports.com"];
-      tasks.push(withBudget((sig)=>searchCascade(`${searchQuery} stats lineup possession shots scorers`, agentKeys, SPORTS_SITES, sig), 18000).then(d => ({ kind: "main", d })));
+      // الرياضة: مصادر رسمية مضمونة فقط (FIFA الرسمي أدقّها للهدّافين والدقائق)
+      const SPORTS_SITES = ["fifa.com", "espn.com", "fotmob.com", "sofascore.com"];
+      tasks.push(withBudget((sig)=>searchCascade(`${searchQuery} result goals scorers lineup stats`, agentKeys, SPORTS_SITES, sig), 18000).then(d => ({ kind: "main", d })));
     } else if (BROAD_NEWS) {
       const dateTag = new Intl.DateTimeFormat("ar", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date());
       const queries = [searchQuery, `أهم أخبار اليوم ${dateTag}`, `أخبار السعودية والعالم اليوم عاجل`];
@@ -1170,7 +1171,19 @@ export default async function handler(req, res) {
           }
         }
 
-        const result = { card, model_used: model, searched: servedFromCache ? "cache" : didSearch, sources, agent_used: effectiveAgent };
+        // تنظيف المصادر: مصدر واحد لكل دومين، وحد أقصى 8 (لا فوضى 40 مصدر)
+        let cleanSources = sources;
+        try {
+          const byDomain = new Map();
+          for (const s of (sources || [])) {
+            if (!s || !s.url) continue;
+            let dom = "";
+            try { dom = new URL(s.url).hostname.replace(/^www\./, ""); } catch { dom = s.url; }
+            if (!byDomain.has(dom)) byDomain.set(dom, s);
+          }
+          cleanSources = Array.from(byDomain.values()).slice(0, 8);
+        } catch (e) { cleanSources = (sources || []).slice(0, 8); }
+        const result = { card, model_used: model, searched: servedFromCache ? "cache" : didSearch, sources: cleanSources, agent_used: effectiveAgent };
         if (!isLive && !didSearch && !servedFromCache) setCache(question, lang, agent, result); // فقط المحتوى التعليمي الثابت بلا بحث
         return res.status(200).json(result);
 
