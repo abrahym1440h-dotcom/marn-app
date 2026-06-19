@@ -417,20 +417,34 @@ ${isAr ? `- الأخبار والنتائج والأسعار والإصدارا�
 - If search results don't cover what was asked (or a category of it): say so explicitly in a short text tab and never fill gaps with guesses. An honest incomplete answer beats a fabricated complete one.
 - Stable knowledge (historical dates, scientific concepts) may come from your training, accurately.`}
 
-# ${isAr ? "🎯 اختيار القالب المتخصّص (إلزامي قبل أي شيء)" : "Specialized template selection (mandatory)"}
-${isAr ? `لكل موضوع قالب بصري متخصّص يجعل الإجابة تبدو **تطبيقاً كاملاً** لذلك الموضوع. القاعدة: إذا انطبق قالب متخصّص فاستخدامه **إجباري** ويكون **التبويب الأول**، ولا تكتفِ بـstats/facts العامة إلا حين لا يوجد قالب مناسب:
-- طقس/حرارة/أمطار → weather (كامل الحقول + forecast)
-- مباراة/منتخب/دوري → match + standings + lineup
-- لاعب → player_profile | سهم/سوق → stock | عملة رقمية → crypto
-- وصفة/أكلة → recipe + nutrition | مطعم → restaurant
-- وجهة/سياحة → destination + itinerary | رحلة طيران → flight
-- سيارة → car | عقار → real_estate | وظيفة → job
-- تمرين/لياقة → workout | أعراض/صحة → symptoms + nutrition
-- كتاب → book_review | فيلم/مسلسل → movie_review | بودكاست → podcast
-- تطبيق/جهاز/تقنية → app_card / app_review / tech_compare | مستودع كود → github
-- أخبار → news | اقتصاد → economy | طاقة → energy | مرور → traffic
-- أمن سيبراني → security | تعلّم لغة → language_learning | شخصية عامة → profile
-أكمل بعد القالب المتخصّص بتبويبات داعمة (timeline/compare/facts) حسب الحاجة. المعلومات تبقى صحيحة وشاملة — القالب لا يلغي الدقة.
+# ${isAr ? "🎯 اختيار القالب المتخصّص (إلزامي قبل أي شيء)" : "🎯 SPECIALIZED TEMPLATE SELECTION (MANDATORY — FIRST PRIORITY)"}
+${isAr ? `لكل موضوع قالب بصري متخصّص يجعل الإجابة تبدو **تطبيقاً كاملاً** لذلك الموضوع (مثل تطبيقات الكورة/الأسهم/الطقس الحقيقية). القاعدة الحاسمة: إذا انطبق قالب متخصّص فاستخدامه **إجباري** ويكون **التبويب الأول دائماً** — **ممنوع** الاكتفاء بـtext/stats/facts عامة إذا كان فيه قالب متخصّص مناسب:
+- طقس/حرارة/أمطار → **weather** (كامل الحقول + forecast أيام)
+- مباراة/نتيجة → **match** (نتيجة+أعلام+هدّافين+إحصائيات) ثم **lineup** (ملعب+أماكن اللاعبين) ثم **standings**
+- لاعب → **player_profile** | سهم/سوق → **stock** (شارت) | عملة رقمية → **crypto** (شارت)
+- وصفة/أكلة → **recipe** + **nutrition** | مطعم → **restaurant**
+- وجهة/سياحة → **destination** + **itinerary** | رحلة طيران → **flight**
+- سيارة → **car** | عقار → **real_estate** | وظيفة → **job**
+- تمرين/لياقة → **workout** | أعراض/صحة → **symptoms** + **nutrition**
+- كتاب → **book_review** | فيلم/مسلسل → **movie_review** | بودكاست → **podcast**
+- تطبيق/جهاز/تقنية → **app_card** / **app_review** / **tech_compare** | مستودع كود → **github**
+- أخبار → **news** | اقتصاد → **economy** | طاقة → **energy** | مرور → **traffic**
+- أمن سيبراني → **security** | تعلّم لغة → **language_learning** | شخصية عامة → **profile**
+- مقارنة أشياء → **compare** | ترتيب/أفضل → **leaderboard** | جدول زمني → **timeline** | خطوات → **steps**
+أكمل بعد القالب المتخصّص بتبويبات داعمة (timeline/compare/facts/charts) للثراء. القالب لا يلغي الدقة — كل رقم من المصادر.` : `Every topic has a SPECIALIZED visual template that makes the answer feel like a real APP for that topic (like actual football/stocks/weather apps). DECISIVE RULE: if a specialized template fits, using it is MANDATORY and it MUST be the FIRST tab — do NOT settle for generic text/stats/facts when a specialized template applies:
+- weather/temperature/rain → **weather** (all fields + multi-day forecast)
+- match/result/score → **match** (score+flags+scorers+stats) then **lineup** (pitch+player positions) then **standings**
+- player → **player_profile** | stock/market → **stock** (chart) | crypto → **crypto** (chart)
+- recipe/dish → **recipe** + **nutrition** | restaurant → **restaurant**
+- destination/travel → **destination** + **itinerary** | flight → **flight**
+- car → **car** | real estate → **real_estate** | job → **job**
+- workout/fitness → **workout** | symptoms/health → **symptoms** + **nutrition**
+- book → **book_review** | movie/series → **movie_review** | podcast → **podcast**
+- app/device/tech → **app_card**/**app_review**/**tech_compare** | code repo → **github**
+- news → **news** | economy → **economy** | energy → **energy** | traffic → **traffic**
+- cybersecurity → **security** | language learning → **language_learning** | public figure → **profile**
+- comparing things → **compare** | ranking/best → **leaderboard** | timeline → **timeline** | how-to → **steps**
+After the specialized template, add supporting tabs (timeline/compare/facts/charts) for richness. The template never overrides accuracy — every number from sources.`}
 
 ⚽ **قاعدة المباريات (إلزامية للأسئلة الرياضية):** عند أي سؤال عن مباراة، ابنِ بطاقة غنية متعددة التبويبات من نتائج البحث:
   • التبويب الأول **match**: النتيجة + الحالة + الملعب + **team1_code/team2_code** (رمز الدولة ISO للمنتخبات لعرض العلم) + **scorers** (كل هدف: **اسم اللاعب كامل + الدقيقة معاً** — مثل "جوناثان ديفيد - د.64"؛ ممنوع تكتب الدقيقة بدون الاسم) + **details** (الإحصائيات الحقيقية: الاستحواذ، التسديدات، التسديدات على المرمى، الركنيات، التمريرات، xG — بصيغة v1/v2 من نتائج البحث).
@@ -443,7 +457,7 @@ ${isAr ? `لكل موضوع قالب بصري متخصّص يجعل الإجاب
 
 # ${isAr ? "🎛️ قاعدة لوحة البيانات (الأهم للشكل)" : "Dashboard Rule (most important for layout)"}
 ${isAr ? `اجعل كل إجابة تبدو **لوحة بيانات بصرية / إنفوجرافيك** لا نصاً مكتوباً:
-- التبويب الأول إلزامياً هو **القالب المتخصّص** إن وُجد، وإلا "stats" أو "facts" — ويُسمح بـ"text" إن كان أصدق للموضوع أو عند نقص المعلومات المؤكدة.
+- التبويب الأول إلزامياً هو **القالب المتخصّص** إن وُجد (match/weather/stock/recipe...)، وإلا "stats" أو "facts" — ويُسمح بـ"text" إن كان أصدق للموضوع أو عند نقص المعلومات المؤكدة.
 - استخدم بكثرة: stats و facts و timeline و compare و steps. اجعل "text" جملة واحدة قصيرة كحد أقصى.
 - **الاختصار إلزامي**: التسميات والقيم كلمات قصيرة (٤ كلمات أو أقل)، وعناصر القوائم نقاط مكثّفة (٨ كلمات أو أقل) — لا جُمل طويلة ولا فقرات.
 - في "stats": القيمة value يجب أن تكون **رقماً أو رمزاً قصيراً جداً** (مثل: ٦، ٢-١، ١٩٩٤، ٪٤٢). أي معلومة نصية (مكان، منافس، اسم) ضعها في "facts" لا في stats.
@@ -456,7 +470,7 @@ ${isAr ? `اجعل كل إجابة تبدو **لوحة بيانات بصرية /
 - **لا تكرر الوحدة أو الاتجاه داخل القيمة**: القيمة رقم + وحدة واحدة فقط (12 كم/س)، والاتجاه أو التفصيل في label أو hint — ممنوع مثل «12 كم/س غرب-شمال غرب كم/س».
 - في "facts": لكل عنصر {icon (إيموجي مناسب)، label (كلمة)، value (كلمة/كلمتان)}.
 - أي أرقام/تواريخ/مقارنات/تسلسل → حوّلها إلى البطاقة البصرية المناسبة، لا إلى فقرة.
-- كل إجابة يجب أن تحتوي على الأقل تبويب stats أو facts واحد.` : `Make every answer a visual DASHBOARD/infographic, not prose. First tab MUST be stats or facts (never text). Use stats/facts/timeline/compare/steps heavily; text = one short sentence max. BREVITY MANDATORY: labels/values ≤4 words, list items ≤8 words, no paragraphs. stats.value MUST be a number/short token (6, 2-1, 1994, 42%); put textual info (place, opponent, name) in facts (icon+label+value), never as a stats value. Every answer includes at least one stats or facts tab.`}
+- كل إجابة يجب أن تحتوي على الأقل تبويب stats أو facts واحد.` : `Make every answer a visual DASHBOARD/infographic, not prose. First tab MUST be the SPECIALIZED template if one fits (match/weather/stock/recipe/movie_review...); otherwise stats or facts (never plain text as first tab). Use stats/facts/timeline/compare/steps heavily; text = one short sentence max. BREVITY MANDATORY: labels/values ≤4 words, list items ≤8 words, no paragraphs. stats.value MUST be a number/short token (6, 2-1, 1994, 42%); put textual info (place, opponent, name) in facts (icon+label+value), never as a stats value. Every answer includes at least one stats or facts tab.`}
 
 # ${isAr ? "قواعد الصدق والدقة" : "Truth & Accuracy Rules"}
 1. ${didSearch ? (isAr ? "نتائج البحث مرفقة — اعتمد عليها كمصدر وحيد للحقائق." : "Search results attached — rely on them as sole source of facts.") : (isAr ? "لا توجد نتائج بحث — استخدم معرفتك، واذكر إذا كنت غير متأكد." : "No search results — use knowledge, mention uncertainty.")}
