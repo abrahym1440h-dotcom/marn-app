@@ -75,6 +75,24 @@ function Stadium({ T }) {
 }
 import NibrasApp from "./NibrasApp.jsx";
 
+// حاجز أخطاء: يمنع انهيار التطبيق كامل لو فشل رسم بطاقة/تبويب
+class CardErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { failed: false }; }
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(err) { try { console.error("[CardErrorBoundary]", err && err.message); } catch (e) {} }
+  render() {
+    if (this.state.failed) {
+      return (
+        <div style={{ padding: "14px 16px", color: "#9aa4b2", fontSize: 14, textAlign: "center", lineHeight: 1.7 }}>
+          تعذّر عرض هذا الجزء بشكل كامل.
+          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>المحتوى وصل لكن تنسيقه غير متوقّع — جرّب إعادة السؤال.</div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 
 /* ===== شعار مرن ===== */
 
@@ -2099,11 +2117,13 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
         </>
       ) : (
         <>
+          <CardErrorBoundary>
           <BigCard card={m.card} T={T} t={t} F={F} searched={m.searched} sources={m.sources} stage={stage} agentUsed={m.agentUsed}
             onCopy={() => copyCard(m.card)}
             onRegenerate={thinking ? null : onRegenerate}
             isRTL={isRTL}
           />
+          </CardErrorBoundary>
           <FollowUps suggestions={m.followUps} T={T} F={F}
             onSelect={onSelect} thinking={thinking} />
           {!stage && <SourcesBar sources={m.sources} T={T} F={F} isRTL={isRTL} />}
@@ -2236,7 +2256,7 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
       )}
 
       <div key={activeTab} className="tab-in">
-        <TabContent tab={active} a={a} T={TT} F={F} />
+        <CardErrorBoundary><TabContent tab={active} a={a} T={TT} F={F} /></CardErrorBoundary>
       </div>
 
       {hasSources && showSources && (
@@ -5610,4 +5630,3 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
     </div>
   );
 }
-
