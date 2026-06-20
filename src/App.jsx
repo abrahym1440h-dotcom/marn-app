@@ -2574,48 +2574,75 @@ function TabContent({ tab, a, T, F, isRTL }) {
     case "standings":
       return (
         <div>
-          {d.league && <div style={{ fontSize:F.label, color:T.sub, marginBottom:10 }}>{d.league}</div>}
-          <table style={{ width:"100%", borderCollapse:"collapse", fontSize:F.base-1.5 }}>
-            <thead><tr style={{ borderBottom:`2px solid ${T.line}` }}>
-              {["#","النادي","ف","ت","خ","ن"].map((h,i) => <th key={i} style={{ padding:"6px 8px", textAlign:i<=1?"right":"center", color:T.faint, fontWeight:600, fontSize:F.label-1 }}>{h}</th>)}
-            </tr></thead>
-            <tbody>{(d.rows||[]).map((r,i) => (
-              <tr key={i} style={{ borderBottom:`1px solid ${T.line}` }}>
-                <td style={{ padding:"10px 8px", color:i<3?a:T.faint, fontWeight:700 }}>{r.pos}</td>
-                <td style={{ padding:"10px 8px", fontWeight:i===0?700:500 }}><span style={{ display:"inline-flex", alignItems:"center", gap:7 }}><TeamFlag name={r.team} code={r.code} T={T} />{r.team}</span></td>
-                <td style={{ padding:"10px 8px", textAlign:"center", color:"#34c759" }}>{r.w}</td>
-                <td style={{ padding:"10px 8px", textAlign:"center", color:T.sub }}>{r.d}</td>
-                <td style={{ padding:"10px 8px", textAlign:"center", color:"#ff453a" }}>{r.l}</td>
-                <td style={{ padding:"10px 8px", textAlign:"center", color:a, fontWeight:800 }}>{r.pts}</td>
-              </tr>
-            ))}</tbody>
-          </table>
+          {d.league && <div style={{ fontSize:F.label, color:T.faint, letterSpacing:1, fontWeight:600, marginBottom:14 }}>{d.league}</div>}
+          <div style={{ display:"grid", gridTemplateColumns:"28px 1fr auto auto auto auto", gap:0, fontSize:F.label-1, color:T.faint, fontWeight:600, padding:"0 12px 8px", borderBottom:`1px solid ${T.line}` }}>
+            <span>#</span><span>{isRTL?"النادي":"Team"}</span>
+            <span style={{ width:26, textAlign:"center" }}>{isRTL?"ف":"W"}</span>
+            <span style={{ width:26, textAlign:"center" }}>{isRTL?"ت":"D"}</span>
+            <span style={{ width:26, textAlign:"center" }}>{isRTL?"خ":"L"}</span>
+            <span style={{ width:34, textAlign:"center" }}>{isRTL?"نقاط":"Pts"}</span>
+          </div>
+          {(d.rows||[]).map((r,i) => {
+            const top = i < 2;
+            return (
+              <div key={i} style={{ display:"grid", gridTemplateColumns:"28px 1fr auto auto auto auto", alignItems:"center", padding:"13px 12px", borderRadius:12, marginTop:i===0?8:4, background: top ? `linear-gradient(90deg, ${a}14, transparent)` : "transparent", borderInlineStart: top ? `2px solid ${a}` : "2px solid transparent" }}>
+                <span style={{ color:top?a:T.faint, fontWeight:700, fontSize:F.base-1 }}>{r.pos}</span>
+                <span style={{ fontWeight:i===0?700:600, display:"inline-flex", alignItems:"center", gap:8, minWidth:0 }}><TeamFlag name={r.team} code={r.code} T={T} /><span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{r.team}</span></span>
+                <span style={{ width:26, textAlign:"center", color:"#34c759", fontSize:F.label }}>{r.w}</span>
+                <span style={{ width:26, textAlign:"center", color:T.sub, fontSize:F.label }}>{r.d}</span>
+                <span style={{ width:26, textAlign:"center", color:"#ff453a", fontSize:F.label }}>{r.l}</span>
+                <span style={{ width:34, textAlign:"center", color:T.text, fontWeight:800, fontSize:F.base }}>{r.pts}</span>
+              </div>
+            );
+          })}
         </div>
       );
 
-    case "lineup":
+    case "lineup": {
+      const players = Array.isArray(d.players) ? d.players : [];
+      // توزيع اللاعبين على خطوط الملعب حسب formation (مثل "4-3-3")
+      const formArr = String(d.formation||"").split("-").map(n=>parseInt(n)).filter(n=>n>0);
+      let rows = [];
+      if (formArr.length && players.length >= formArr.reduce((a,b)=>a+b,0)) {
+        // حارس + الخطوط
+        rows.push([players[0]]);
+        let idx = 1;
+        for (const cnt of formArr) { rows.push(players.slice(idx, idx+cnt)); idx += cnt; }
+      }
+      const useField = rows.length > 0;
       return (
         <div>
-          {d.team && <div style={{ fontSize:F.label, color:T.sub, marginBottom:10 }}>{d.team} • {d.formation}</div>}
-          {(d.players||[]).map((p,i,arr) => (
-            <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:i===arr.length-1?"none":`1px solid ${T.line}` }}>
-              <div style={{ width:28, height:28, borderRadius:"50%", background:`${a}18`, color:a, display:"flex", alignItems:"center", justifyContent:"center", fontSize:F.label-1, fontWeight:700, flexShrink:0 }}>{p.number}</div>
-              <div style={{ flex:1 }}>
-                <div style={{ fontWeight:600, fontSize:F.base-0.5 }}>{p.name}</div>
-                <div style={{ fontSize:F.label-1, color:T.sub }}>{p.position}</div>
-              </div>
-              {p.rating && (
-                <div style={{ textAlign:"center" }}>
-                  <div style={{ fontSize:F.label, fontWeight:700, color:p.rating>=8.5?"#34c759":p.rating>=7.5?a:T.sub }}>{p.rating}</div>
-                  <div style={{ width:40, height:3, background:T.line, borderRadius:2, marginTop:3 }}>
-                    <div style={{ height:"100%", width:`${((p.rating-6)/4)*100}%`, background:p.rating>=8.5?"#34c759":a, borderRadius:2 }}/>
-                  </div>
+          {(d.team || d.formation) && <div style={{ textAlign:"center", fontSize:F.label, color:T.faint, letterSpacing:1, fontWeight:600, marginBottom:14 }}>{d.team}{d.team&&d.formation?" · ":""}{d.formation}</div>}
+          {useField ? (
+            <div style={{ background:"radial-gradient(120% 55% at 50% 0%, rgba(52,199,89,0.07), transparent), linear-gradient(180deg,#0c1622,#0a121c)", border:`1px solid ${T.line}`, borderRadius:20, padding:"22px 6px", display:"flex", flexDirection:"column", justifyContent:"space-between", minHeight:340 }}>
+              {rows.map((line,li) => (
+                <div key={li} style={{ display:"flex", justifyContent:"space-around", margin:"10px 0" }}>
+                  {line.map((p,pi) => p ? (
+                    <div key={pi} style={{ textAlign:"center", width:60 }}>
+                      <div style={{ width:38, height:38, borderRadius:"50%", background: li===0 ? "linear-gradient(160deg,#F2C745,#C99A00)" : `linear-gradient(160deg,${a},${a}bb)`, color: li===0?"#1a1400":"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:800, margin:"0 auto 5px", boxShadow:"0 5px 14px rgba(0,0,0,0.4)" }}>{p.number}</div>
+                      <div style={{ fontSize:10, color:"#cdd8e6", fontWeight:600, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{p.name}</div>
+                    </div>
+                  ) : null)}
                 </div>
-              )}
+              ))}
             </div>
-          ))}
+          ) : (
+            players.map((p,i,arr) => (
+              <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 0", borderBottom:i===arr.length-1?"none":`1px solid ${T.line}` }}>
+                <div style={{ width:30, height:30, borderRadius:"50%", background:`${a}18`, color:a, display:"flex", alignItems:"center", justifyContent:"center", fontSize:F.label-1, fontWeight:700, flexShrink:0 }}>{p.number}</div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontWeight:600, fontSize:F.base-0.5 }}>{p.name}</div>
+                  {p.position && <div style={{ fontSize:F.label-1, color:T.sub }}>{p.position}</div>}
+                </div>
+                {p.rating && (
+                  <div style={{ fontSize:F.label, fontWeight:700, color:p.rating>=8.5?"#34c759":p.rating>=7.5?a:T.sub }}>{p.rating}</div>
+                )}
+              </div>
+            ))
+          )}
         </div>
       );
+    }
 
     case "player_profile":
       return (
