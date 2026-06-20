@@ -2183,7 +2183,7 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
       <div style={{ position: "relative", marginBottom: stage ? 18 : 16 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 7 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0, flexWrap: "wrap" }}>
-            {card.kicker && <div style={{ color: a, fontSize: F.label, fontWeight: 800, background: `${a}14`, border: `1px solid ${a}33`, padding: "3px 11px", borderRadius: 999, letterSpacing: 0.4 }}>{card.kicker}</div>}
+            {card.kicker && <div style={{ color: a, fontSize: F.label - 0.5, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase" }}>{card.kicker}</div>}
             {usedAgent && (
               <div style={{ color: usedAgent.color, fontSize: F.label - 1, fontWeight: 700, background: `${usedAgent.color}14`, border: `1px solid ${usedAgent.color}33`, padding: "3px 10px", borderRadius: 999, display: "flex", alignItems: "center", gap: 5 }}>
                 {AG_ICON[usedAgent.id] ? AG_ICON[usedAgent.id](usedAgent.color, 11) : null}{usedAgent.name}
@@ -2215,8 +2215,8 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
             </button>
           </div>
         </div>
-        <h2 style={{ fontSize: F.h2, fontWeight: 800, margin: 0, letterSpacing: "-0.4px", lineHeight: 1.3, color: TT.text }}>{card.title}</h2>
-        {card.sub && <div style={{ color: TT.sub, fontSize: F.base - 1, marginTop: 6, lineHeight: 1.6 }}>{card.sub}</div>}
+        <h2 style={{ fontSize: F.h2 + 4, fontWeight: 800, margin: 0, letterSpacing: "-0.6px", lineHeight: 1.25, color: TT.text }}>{card.title}</h2>
+        {card.sub && <div style={{ color: TT.sub, fontSize: F.base - 1, marginTop: 7, lineHeight: 1.6 }}>{card.sub}</div>}
       </div>
 
       {/* البطل — أهم قيمة بتصميم رسمي */}
@@ -2240,16 +2240,18 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
       )}
 
       {tabs.length > 1 && (
-        <div style={{ display: "flex", gap: 6, marginBottom: stage ? 18 : 16, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 2 }}>
+        <div style={{ display: "flex", gap: 22, marginBottom: stage ? 20 : 18, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 0, borderBottom: `1px solid ${TT.line}` }}>
           {tabs.map((tt, i) => (
             <button key={i} onClick={() => setActiveTab(i)} style={{
               flexShrink: 0,
-              background: i === activeTab ? `${a}16` : TT.pillFill,
-              border: `1px solid ${i === activeTab ? a + "55" : TT.line}`,
-              borderRadius: 999, padding: stage ? "7px 14px" : "6px 13px",
-              color: i === activeTab ? a : TT.sub,
-              fontSize: F.label + 0.5, fontWeight: i === activeTab ? 700 : 600,
-              cursor: "pointer", fontFamily: "inherit", transition: "all .15s", whiteSpace: "nowrap",
+              background: "transparent",
+              border: "none",
+              borderBottom: `2px solid ${i === activeTab ? a : "transparent"}`,
+              borderRadius: 0, padding: stage ? "0 0 12px" : "0 0 11px",
+              color: i === activeTab ? TT.text : TT.sub,
+              fontSize: F.base - 1, fontWeight: i === activeTab ? 700 : 500,
+              cursor: "pointer", fontFamily: "inherit", transition: "all .2s", whiteSpace: "nowrap",
+              marginBottom: -1,
             }}>{tt.label}</button>
           ))}
         </div>
@@ -5630,3 +5632,4 @@ function OrganizerApp({ T, isRTL, dark, organizer, setOrganizer, userProfile, on
     </div>
   );
 }
+
