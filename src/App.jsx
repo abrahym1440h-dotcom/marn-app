@@ -2431,13 +2431,12 @@ function TabContent({ tab, a, T, F, isRTL }) {
     case "list":
       return (
         <div>
-          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 14px", lineHeight:1.7 }}>{d.intro}</p>}
-          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 16px", lineHeight:1.7 }}>{d.intro}</p>}
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
             {(d.items||[]).map((x,i) => (
-              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"12px 14px", borderRadius:12, background:T.pillFill, border:`1px solid ${T.line}`, position:"relative", overflow:"hidden" }}>
-                <div style={{ position:"absolute", insetInlineStart:0, top:0, bottom:0, width:3, background:a, opacity:.55 }}/>
-                <span style={{ flexShrink:0, width:22, height:22, borderRadius:7, background:`${a}1f`, color:a, display:"flex", alignItems:"center", justifyContent:"center", fontSize:F.label, fontWeight:800, marginTop:1 }}>{i+1}</span>
-                <span style={{ flex:1, fontSize:F.base-0.5, lineHeight:1.75, color:T.text }}>{typeof x==="string"?x:(x.text||JSON.stringify(x))}</span>
+              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:13, padding:"14px 16px", borderRadius:16, background:"linear-gradient(160deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))", border:`1px solid ${T.line}` }}>
+                <span style={{ flexShrink:0, width:26, height:26, borderRadius:8, background:`${a}18`, color:a, display:"flex", alignItems:"center", justifyContent:"center", fontSize:F.label, fontWeight:800, marginTop:1 }}>{i+1}</span>
+                <span style={{ flex:1, fontSize:F.base-0.5, lineHeight:1.8, color:T.text }}>{typeof x==="string"?x:(x.text||JSON.stringify(x))}</span>
               </div>
             ))}
           </div>
@@ -2446,14 +2445,14 @@ function TabContent({ tab, a, T, F, isRTL }) {
 
     case "timeline":
       return (
-        <div style={{ position:"relative", paddingInlineStart:22 }}>
-          <div style={{ position:"absolute", insetInlineStart:6, top:8, bottom:8, width:2, background:`linear-gradient(180deg,${a},${a}22)`, borderRadius:2 }}/>
+        <div style={{ position:"relative", paddingInlineStart:24 }}>
+          <div style={{ position:"absolute", insetInlineStart:7, top:8, bottom:8, width:2, background:`linear-gradient(180deg,${a},${a}22)`, borderRadius:2 }}/>
           {(d.events||[]).map((e,i,arr) => (
-            <div key={i} style={{ position:"relative", marginBottom:i===arr.length-1?0:14 }}>
-              <div style={{ position:"absolute", insetInlineStart:-21, top:6, width:12, height:12, borderRadius:"50%", background:a, border:`3px solid ${T.cardBg||T.glassFill}`, boxShadow:`0 0 0 2px ${a}40` }}/>
-              <div style={{ background:T.pillFill, border:`1px solid ${T.line}`, borderRadius:12, padding:"10px 14px" }}>
-                <span style={{ display:"inline-block", color:a, fontWeight:800, fontSize:F.label, background:`${a}14`, padding:"2px 9px", borderRadius:999, marginBottom:5 }}>{e[0]}</span>
-                <div style={{ fontWeight:700, fontSize:F.base-0.5, margin:"2px 0", color:T.text }}>{e[1]}</div>
+            <div key={i} style={{ position:"relative", marginBottom:i===arr.length-1?0:16 }}>
+              <div style={{ position:"absolute", insetInlineStart:-22, top:7, width:14, height:14, borderRadius:"50%", background:a, border:`3px solid #070C1A`, boxShadow:`0 0 0 2px ${a}40` }}/>
+              <div style={{ background:"linear-gradient(160deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))", border:`1px solid ${T.line}`, borderRadius:16, padding:"13px 16px" }}>
+                <span style={{ display:"inline-block", color:a, fontWeight:700, fontSize:F.label, letterSpacing:0.5, marginBottom:6 }}>{e[0]}</span>
+                <div style={{ fontWeight:700, fontSize:F.base-0.5, marginBottom:e[2]?4:0, color:T.text }}>{e[1]}</div>
                 {e[2] && <div style={{ color:T.sub, fontSize:F.base-1.5, lineHeight:1.7 }}>{e[2]}</div>}
               </div>
             </div>
@@ -2463,11 +2462,21 @@ function TabContent({ tab, a, T, F, isRTL }) {
 
     case "compare":
       return (
-        <div style={{ overflowX:"auto", borderRadius:12, border:`1px solid ${T.line}` }}>
-          <table style={{ width:"100%", borderCollapse:"collapse", fontSize:F.base-1, minWidth:260 }}>
-            <thead><tr style={{ background:`${a}10` }}>{(d.cols||[]).map((c,i) => <th key={i} style={{ textAlign:"right", padding:"11px 12px", color:i===0?T.sub:a, fontWeight:800, fontSize:F.label }}>{c}</th>)}</tr></thead>
-            <tbody>{(d.rows||[]).map((row,ri) => <tr key={ri} style={{ background: ri%2?T.pillFill:"transparent" }}>{row.map((cell,ci) => <td key={ci} style={{ padding:"11px 12px", color:ci===0?T.text:T.sub, fontWeight:ci===0?700:500, borderTop:`1px solid ${T.line}` }}>{cell}</td>)}</tr>)}</tbody>
-          </table>
+        <div>
+          {(d.cols||[]).length > 0 && (
+            <div style={{ display:"grid", gridTemplateColumns:`1fr repeat(${(d.cols||[]).length-1},auto)`, gap:0, padding:"0 0 10px", borderBottom:`1px solid ${T.line}`, marginBottom:4 }}>
+              {(d.cols||[]).map((c,i) => (
+                <div key={i} style={{ padding:"0 8px", fontSize:F.label, fontWeight:700, color:i===0?T.faint:a, textAlign:i===0?"start":"center" }}>{c}</div>
+              ))}
+            </div>
+          )}
+          {(d.rows||[]).map((row,ri) => (
+            <div key={ri} style={{ display:"grid", gridTemplateColumns:`1fr repeat(${(row||[]).length-1},auto)`, alignItems:"center", padding:"13px 8px", borderRadius:12, marginTop:4, background:ri%2?"linear-gradient(90deg,rgba(255,255,255,0.018),transparent)":"transparent" }}>
+              {(row||[]).map((cell,ci) => (
+                <div key={ci} style={{ padding:"0 8px", fontSize:ci===0?F.base-0.5:F.base-1, color:ci===0?T.text:T.sub, fontWeight:ci===0?700:500, textAlign:ci===0?"start":"center" }}>{cell}</div>
+              ))}
+            </div>
+          ))}
         </div>
       );
 
@@ -2673,12 +2682,58 @@ function TabContent({ tab, a, T, F, isRTL }) {
 
     case "weather":
       const isDark = /^#[01]/i.test(T.pageBg || "");
-      const skyGrad = isDark
-        ? "linear-gradient(175deg, #0f2744 0%, #1a3a5c 50%, #0d1f35 100%)"
-        : "linear-gradient(175deg, #1a6bb5 0%, #2e86de 50%, #54a0e0 100%)";
+      const skyGrad = "linear-gradient(175deg, #0a1e3d 0%, #0f2d52 50%, #091828 100%)";
       const wName = pictoName(d.icon) || ((d.condition||"").includes("غيم") || (d.condition||"").includes("cloud") ? "cloud" : (d.condition||"").includes("مطر") || (d.condition||"").includes("rain") ? "rain" : "sun");
-      const fcText = isDark ? "rgba(255,255,255,0.75)" : T.sub;
-      const fcStrong = isDark ? "#fff" : T.text;
+      return (
+        <div style={{ margin:"-14px -20px -16px", overflow:"hidden", borderRadius:"0 0 16px 16px" }}>
+          <div style={{ background:skyGrad, padding:"32px 26px 26px", color:"#fff", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", top:-60, right:-60, width:220, height:220, borderRadius:"50%", background:"rgba(255,255,255,0.03)" }}/>
+            <div style={{ position:"absolute", bottom:-40, left:-30, width:160, height:160, borderRadius:"50%", background:"rgba(255,255,255,0.025)" }}/>
+            <div style={{ position:"relative" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <div>
+                  {d.city && <div style={{ fontSize:13, opacity:0.6, fontWeight:600, letterSpacing:1, textTransform:"uppercase", marginBottom:10 }}>{d.city}</div>}
+                  <div style={{ fontSize:72, fontWeight:700, lineHeight:1, letterSpacing:-3, fontVariantNumeric:"tabular-nums" }}>{d.temp}°</div>
+                  <div style={{ fontSize:18, fontWeight:600, marginTop:10, opacity:0.9 }}>{d.condition}</div>
+                  {d.feels_like && <div style={{ fontSize:13, opacity:0.55, marginTop:4 }}>يحس بـ {d.feels_like}°</div>}
+                  {(d.high||d.low) && <div style={{ fontSize:13, opacity:0.55, marginTop:3 }}>{d.high&&`↑${d.high}°`}{d.high&&d.low&&" · "}{d.low&&`↓${d.low}°`}</div>}
+                </div>
+                <Pictogram name={wName} size={64} color="rgba(255,255,255,0.9)" strokeWidth={1.2} />
+              </div>
+            </div>
+          </div>
+          {d.forecast && d.forecast.length > 0 && (
+            <div style={{ background:"rgba(255,255,255,0.04)", borderTop:"1px solid rgba(255,255,255,0.07)", padding:"16px 6px" }}>
+              <div style={{ display:"flex", justifyContent:"space-around" }}>
+                {d.forecast.map((f,i) => (
+                  <div key={i} style={{ textAlign:"center", flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:6 }}>
+                    <div style={{ fontSize:11, color:"rgba(255,255,255,0.5)", fontWeight:600 }}>{f.day}</div>
+                    <Pictogram name={pictoName(f.icon)||"sun"} size={20} color="rgba(255,255,255,0.8)" strokeWidth={1.6} />
+                    <div style={{ fontSize:15, fontWeight:700, color:"#fff" }}>{f.high}°</div>
+                    {f.low!=null && <div style={{ fontSize:12, color:"rgba(255,255,255,0.4)" }}>{f.low}°</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div style={{ background:"#070C1A", padding:"18px 20px" }}>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:11 }}>
+              {[
+                d.humidity!=null && { label:"الرطوبة", value:`${d.humidity}%`, icon:"humidity" },
+                d.wind!=null && { label:"الرياح", value:`${d.wind} كم/س`, icon:"wind" },
+                d.uv!=null && { label:"مؤشر UV", value:`${d.uv}`, icon:"sun" },
+                d.visibility!=null && { label:"الرؤية", value:`${d.visibility} كم`, icon:"location" },
+              ].filter(Boolean).map((item,i) => (
+                <div key={i} style={{ background:"linear-gradient(160deg,rgba(255,255,255,0.035),rgba(255,255,255,0.01))", borderRadius:16, padding:"15px 16px", border:`1px solid ${T.line}` }}>
+                  <div style={{ marginBottom:8 }}><Pictogram name={item.icon} size={16} color={T.faint} strokeWidth={1.6} /></div>
+                  <div style={{ fontSize:22, fontWeight:700, color:"#fff", fontVariantNumeric:"tabular-nums" }}>{item.value}</div>
+                  <div style={{ fontSize:11, color:T.faint, marginTop:4, fontWeight:500 }}>{item.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
       return (
         <div style={{ margin:"-14px -20px -16px", overflow:"hidden", borderRadius:"0 0 12px 12px" }}>
           {/* Hero الطقس */}
@@ -3553,18 +3608,24 @@ function TabContent({ tab, a, T, F, isRTL }) {
         const a1 = ang, a2 = ang + (s.value / total) * 360; ang = a2;
         const x1 = cx + R * Math.cos(a1 * Math.PI / 180), y1 = cy + R * Math.sin(a1 * Math.PI / 180);
         const x2 = cx + R * Math.cos(a2 * Math.PI / 180), y2 = cy + R * Math.sin(a2 * Math.PI / 180);
-        return `<path d="M${cx} ${cy} L${x1} ${y1} A${R} ${R} 0 ${(a2 - a1) > 180 ? 1 : 0} 1 ${x2} ${y2} Z" fill="${s.color}"/>`;
+        return `<path d="M${cx} ${cy} L${x1} ${y1} A${R} ${R} 0 ${(a2 - a1) > 180 ? 1 : 0} 1 ${x2} ${y2} Z" fill="${s.color}" opacity="0.9"/>`;
       }).join("");
       return (
         <div>
-          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 18, flexWrap: "wrap" }}>
-            <div style={{ position: "relative" }}>
-              <div dangerouslySetInnerHTML={{ __html: `<svg width="150" height="150" viewBox="0 0 150 150">${paths}${isDonut ? `<circle cx="75" cy="75" r="34" fill="${T.cardBg}"/>` : ""}</svg>` }} />
-              {isDonut && <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}><div style={{ fontSize: 22, fontWeight: 800, color: T.text }}>{Math.round((segs[0]?.value / total) * 100)}%</div><div style={{ fontSize: 10, color: T.sub }}>{segs[0]?.label}</div></div>}
+          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 16px", lineHeight:1.7 }}>{d.intro}</p>}
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:22, flexWrap:"wrap" }}>
+            <div style={{ position:"relative" }}>
+              <div dangerouslySetInnerHTML={{ __html: `<svg width="150" height="150" viewBox="0 0 150 150">${paths}${isDonut ? `<circle cx="75" cy="75" r="36" fill="#070C1A"/>` : ""}</svg>` }} />
+              {isDonut && <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}><div style={{ fontSize:22, fontWeight:800, color:T.text, fontVariantNumeric:"tabular-nums" }}>{Math.round((segs[0]?.value/total)*100)}%</div><div style={{ fontSize:10, color:T.sub, marginTop:2 }}>{segs[0]?.label}</div></div>}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              {segs.map((s, i) => <div key={i} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: F.label }}><span style={{ width: 11, height: 11, borderRadius: 3, background: s.color, flexShrink: 0 }} /><span style={{ color: T.sub }}>{s.label}</span><span style={{ color: T.text, fontWeight: 700 }}>{Math.round((s.value / total) * 100)}%</span></div>)}
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              {segs.map((s,i) => (
+                <div key={i} style={{ display:"flex", alignItems:"center", gap:10, fontSize:F.label }}>
+                  <span style={{ width:12, height:12, borderRadius:4, background:s.color, flexShrink:0 }}/>
+                  <span style={{ color:T.sub }}>{s.label}</span>
+                  <span style={{ color:T.text, fontWeight:700, marginInlineStart:"auto", paddingInlineStart:12, fontVariantNumeric:"tabular-nums" }}>{Math.round((s.value/total)*100)}%</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -3601,10 +3662,10 @@ function TabContent({ tab, a, T, F, isRTL }) {
       const gid = "ag" + a.replace("#", "");
       return (
         <div>
-          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
-          <div style={{ background: T.pillFill, border: `1px solid ${T.line}`, borderRadius: 13, padding: 14 }}>
-            <div dangerouslySetInnerHTML={{ __html: `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}" stop-opacity="0.45"/><stop offset="1" stop-color="${a}" stop-opacity="0"/></linearGradient></defs>${isArea ? `<polygon points="${pad},${H - pad} ${pts} ${W - pad},${H - pad}" fill="url(#${gid})"/>` : ""}<polyline points="${pts}" fill="none" stroke="${a}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${vals.map((v, i) => `<circle cx="${pad + i * step}" cy="${H - pad - ((v - min) / span) * (H - pad * 2)}" r="3.5" fill="${a}"/>`).join("")}</svg>` }} />
-            {labels.length > 0 && <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>{labels.map((l, i) => <span key={i} style={{ fontSize: F.label - 1, color: T.sub }}>{l}</span>)}</div>}
+          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 16px", lineHeight:1.7 }}>{d.intro}</p>}
+          <div style={{ background:"linear-gradient(160deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))", border:`1px solid ${T.line}`, borderRadius:18, padding:"18px 14px 14px" }}>
+            <div dangerouslySetInnerHTML={{ __html: `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}" stop-opacity="0.35"/><stop offset="1" stop-color="${a}" stop-opacity="0"/></linearGradient></defs>${isArea?`<polygon points="${pad},${H-pad} ${pts} ${W-pad},${H-pad}" fill="url(#${gid})"/>`:""}${vals.length>1?`<polyline points="${pts}" fill="none" stroke="${a}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`:""}${vals.map((v,i)=>`<circle cx="${pad+i*step}" cy="${H-pad-((v-min)/span)*(H-pad*2)}" r="4" fill="#070C1A" stroke="${a}" stroke-width="2"/>`).join("")}</svg>` }} />
+            {labels.length > 0 && <div style={{ display:"flex", justifyContent:"space-between", marginTop:10 }}>{labels.map((l,i) => <span key={i} style={{ fontSize:F.label-1, color:T.faint }}>{l}</span>)}</div>}
           </div>
         </div>
       );
@@ -3727,12 +3788,21 @@ function TabContent({ tab, a, T, F, isRTL }) {
       const rows = d.rows || [];
       return (
         <div>
-          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
-          <div style={{ overflowX: "auto", border: `1px solid ${T.line}`, borderRadius: 12 }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: F.label }}>
-              <thead><tr>{cols.map((c, i) => <th key={i} style={{ textAlign: "right", padding: "10px 12px", color: T.sub, fontWeight: 700, borderBottom: `1px solid ${T.line}`, background: T.pillFill, whiteSpace: "nowrap" }}>{c}</th>)}</tr></thead>
-              <tbody>{rows.map((r, i) => <tr key={i}>{(Array.isArray(r) ? r : Object.values(r)).map((cell, j) => <td key={j} style={{ padding: "10px 12px", color: j === 0 ? T.text : T.sub, fontWeight: j === 0 ? 700 : 500, borderBottom: i < rows.length - 1 ? `1px solid ${T.line}` : "none" }}>{cell}</td>)}</tr>)}</tbody>
-            </table>
+          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 16px", lineHeight:1.7 }}>{d.intro}</p>}
+          <div style={{ borderRadius:16, border:`1px solid ${T.line}`, overflow:"hidden" }}>
+            {cols.length > 0 && (
+              <div style={{ display:"grid", gridTemplateColumns:`repeat(${cols.length},1fr)`, background:"rgba(255,255,255,0.03)", borderBottom:`1px solid ${T.line}` }}>
+                {cols.map((c,i) => <div key={i} style={{ padding:"11px 14px", fontSize:F.label, color:T.faint, fontWeight:700 }}>{c}</div>)}
+              </div>
+            )}
+            {rows.map((r,i) => {
+              const cells = Array.isArray(r) ? r : Object.values(r);
+              return (
+                <div key={i} style={{ display:"grid", gridTemplateColumns:`repeat(${cells.length},1fr)`, borderBottom:i<rows.length-1?`1px solid ${T.line}`:"none", background:i%2?"rgba(255,255,255,0.015)":"transparent" }}>
+                  {cells.map((cell,j) => <div key={j} style={{ padding:"12px 14px", fontSize:F.label, color:j===0?T.text:T.sub, fontWeight:j===0?700:500 }}>{cell}</div>)}
+                </div>
+              );
+            })}
           </div>
         </div>
       );
