@@ -2258,7 +2258,7 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
       )}
 
       <div key={activeTab} className="tab-in">
-        <CardErrorBoundary><TabContent tab={active} a={a} T={TT} F={F} /></CardErrorBoundary>
+        <CardErrorBoundary><TabContent tab={active} a={a} T={TT} F={F} isRTL={isRTL} /></CardErrorBoundary>
       </div>
 
       {hasSources && showSources && (
@@ -2342,7 +2342,7 @@ const Si = {
   eye: (c) => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={c||"currentColor"} strokeWidth="1.8" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
 };
 
-function TabContent({ tab, a, T, F }) {
+function TabContent({ tab, a, T, F, isRTL }) {
   const d = tab.data || {};
   const ACCS = { sport:"#34c759", knowledge:"#0a84ff", history:"#bf5af2", food:"#ff9f0a", health:"#ff6b6b", weather:"#64d2ff", finance:"#30d158", tech:"#0a84ff", travel:"#ff9f0a" };
 
