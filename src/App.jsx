@@ -1284,6 +1284,7 @@ export default function App() {
                 ref={inputRef}
                 value={draft}
                 rows={1}
+                maxLength={2000}
                 onChange={(e) => { setDraft(e.target.value); e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 140) + "px"; }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
@@ -2028,6 +2029,7 @@ function MessageItem({ m, idx, T, t, F, isRTL, lang, isFav, toggleFav, copyCard,
               onChange={(e) => setEditDraft(e.target.value)}
               autoFocus
               rows={2}
+              maxLength={2000}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
