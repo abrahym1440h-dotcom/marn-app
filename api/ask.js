@@ -890,18 +890,76 @@ export default async function handler(req, res) {
     // كشف السؤال الرياضي مرة واحدة
     const IS_SPORTS_Q = /مبارا|مباريات|نتيجة|الدوري|كأس|هدّاف|هدف|يلعب| ضد |تشكيل|ترتيب|مونديال|كرة القدم|لاعب|نادي|دوري|بطولة|football|match|league|score/i.test(question);
 
+    // ===== نظام المصادر المخصّصة لكل مجال (مجاني + رسمي = أعلى دقّة ممكنة) =====
+    // كل مجال يُربط بأفضل مصادره الرسمية المجانية. يغطّي آلاف المواضيع عبر مجالات جوهرية.
+    const DOMAIN_SOURCES = [
+      // الرياضة
+      { rx: /مبارا|نتيجة|الدوري|كأس|هدف|تشكيل|ترتيب|مونديال|كرة|لاعب|نادي|بطولة|football|match|league|goal|fixture/i,
+        sites: ["fifa.com","espn.com","fotmob.com","sofascore.com","uefa.com","goal.com","kooora.com","yallakora.com"], suffix: "result goals scorers lineup stats" },
+      // الطقس
+      { rx: /طقس|حرار|درج.*حرار|أمطار|مطر|رياح|رطوبة|مناخ|weather|temperature|forecast|الجو/i,
+        sites: ["weather.com","accuweather.com","timeanddate.com","windy.com","arabiaweather.com"], suffix: "temperature forecast humidity wind today" },
+      // المال والأسهم والاقتصاد
+      { rx: /سهم|أسهم|بورصة|تداول|مؤشر|اقتصاد|عملة|دولار|ريال|فائدة|تضخم|stock|market|forex|economy|nasdaq|index/i,
+        sites: ["investing.com","tradingview.com","bloomberg.com","reuters.com","argaam.com","mubasher.info","yahoo.com"], suffix: "price market cap chart today" },
+      // العملات الرقمية
+      { rx: /بتكوين|بيتكوين|عملة رقمية|كريبتو|إيثيريوم|عملات مشفّرة|crypto|bitcoin|ethereum|btc|eth/i,
+        sites: ["coinmarketcap.com","coingecko.com","binance.com","tradingview.com"], suffix: "price market cap 24h" },
+      // الأخبار
+      { rx: /أخبار|خبر|عاجل|حدث|مستجدات|تطورات|news|breaking/i,
+        sites: ["aljazeera.net","spa.gov.sa","reuters.com","bbc.com","alarabiya.net","cnn.com","skynewsarabia.com"], suffix: "latest news today" },
+      // الصحة والطب
+      { rx: /مرض|أعراض|دواء|علاج|صحة|طبي|فيتامين|تغذية|سعرات|رجيم|تمرين|عضلات|لياقة|health|symptom|disease|medicine|nutrition|workout/i,
+        sites: ["who.int","mayoclinic.org","webmd.com","healthline.com","altibbi.com","nih.gov"], suffix: "symptoms causes treatment" },
+      // الأفلام والمسلسلات
+      { rx: /فيلم|مسلسل|أفلام|سينما|ممثل|مخرج|حلقة|موسم|movie|series|film|actor|season|imdb/i,
+        sites: ["imdb.com","rottentomatoes.com","themoviedb.org","metacritic.com","elcinema.com"], suffix: "rating cast review year" },
+      // السفر والوجهات
+      { rx: /سفر|سياحة|وجهة|فندق|رحلة|مطار|طيران|تأشيرة|متحف|معالم|travel|tourism|hotel|flight|visa|destination/i,
+        sites: ["tripadvisor.com","booking.com","lonelyplanet.com","wikitravel.org","skyscanner.net"], suffix: "guide attractions best" },
+      // الطبخ والوصفات
+      { rx: /وصفة|طبخ|أكلة|طبق|مكوّنات|حلى|معجنات|recipe|cook|dish|ingredient|food/i,
+        sites: ["allrecipes.com","foodnetwork.com","bbcgoodfood.com","cookpad.com","atyabtabkha.com"], suffix: "recipe ingredients steps" },
+      // التقنية والأجهزة
+      { rx: /جوال|هاتف|لابتوب|حاسوب|آيفون|أندرويد|معالج|كرت شاشة|جهاز|مواصفات|phone|laptop|iphone|android|gpu|cpu|spec|gadget/i,
+        sites: ["gsmarena.com","theverge.com","techradar.com","cnet.com","tomshardware.com"], suffix: "specs review price" },
+      // السيارات
+      { rx: /سيارة|سيارات|محرك|موديل|تويوتا|مرسيدس|بي ام|هوندا|car|engine|vehicle|toyota|mercedes|bmw/i,
+        sites: ["edmunds.com","caranddriver.com","motortrend.com","cars.com","autotrader.com"], suffix: "specs price review" },
+      // الدين الإسلامي
+      { rx: /حديث|آية|قرآن|تفسير|فقه|حلال|حرام|صلاة|زكاة|صيام|حج|عمرة|سنة|فتوى/i,
+        sites: ["islamqa.info","dorar.net","islamweb.net","binbaz.org.sa","alifta.gov.sa","quran.com"], suffix: "" },
+      // العلوم والمعرفة العامة
+      { rx: /ما هو|ما هي|تعريف|معنى|شرح|كيف يعمل|لماذا|علم|نظرية|تاريخ|جغرافيا|definition|what is|how does|science|history/i,
+        sites: ["wikipedia.org","britannica.com","nationalgeographic.com","sciencedirect.com"], suffix: "" },
+    ];
+    function pickDomainSources(q) {
+      for (const d of DOMAIN_SOURCES) { if (d.rx.test(q)) return d; }
+      return null;
+    }
+    const DOMAIN_MATCH = isFatwa ? null : pickDomainSources(question);
+
     // ===== كل مصادر البحث بالتوازي (لا تسلسل) ضمن ميزانية الوقت =====
     const tasks = [];
-    // 1) بيانات منظّمة من RapidAPI (الرياضة مُلغاة منها — لن تُستدعى لأسئلة الكرة)
-    if (!IS_SPORTS_Q) {
+    // قفل المصادر: إذا فيه مجال مطابق له مصادر رسمية، نمنع البحث العام و X غير الموثوق (يسبّب تخريفاً)
+    const LOCKED = !!DOMAIN_MATCH || IS_SPORTS_Q || isFatwa;
+
+    // 1) بيانات منظّمة من RapidAPI — فقط إذا ما فيه مجال مقفل بمصادر رسمية
+    if (!LOCKED) {
       tasks.push(withBudget(getStructuredData(question), 9000).then(d => ({ kind: "api", d })));
     }
+
     // 2) البحث الرئيسي
-    if (IS_SPORTS_Q) {
-      // الرياضة: مصادر غنية بالإحصائيات الحقيقية (استحواذ/تسديدات/هدّافين/تشكيلات)
-      // الرياضة: مصادر رسمية مضمونة فقط (FIFA الرسمي أدقّها للهدّافين والدقائق)
-      const SPORTS_SITES = ["fifa.com", "espn.com", "fotmob.com", "sofascore.com"];
+    if (DOMAIN_MATCH) {
+      // مجال له مصادر رسمية مثبّتة → نبحث داخلها فقط (لا مصدر عام)
+      const q = DOMAIN_MATCH.suffix ? `${searchQuery} ${DOMAIN_MATCH.suffix}` : searchQuery;
+      tasks.push(withBudget((sig)=>searchCascade(q, agentKeys, DOMAIN_MATCH.sites, sig), 18000).then(d => ({ kind: "main", d })));
+    } else if (IS_SPORTS_Q) {
+      // رياضة لم يمسكها تصنيف المجالات → مصادر رياضية رسمية حصراً
+      const SPORTS_SITES = ["fifa.com","espn.com","fotmob.com","sofascore.com","goal.com","kooora.com"];
       tasks.push(withBudget((sig)=>searchCascade(`${searchQuery} result goals scorers lineup stats`, agentKeys, SPORTS_SITES, sig), 18000).then(d => ({ kind: "main", d })));
+    } else if (isFatwa) {
+      tasks.push(withBudget((sig)=>searchCascade(searchQuery, agentKeys, FATWA_DOMAINS, sig), 18000).then(d => ({ kind: "main", d })));
     } else if (BROAD_NEWS) {
       const dateTag = new Intl.DateTimeFormat("ar", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date());
       const queries = [searchQuery, `أهم أخبار اليوم ${dateTag}`, `أخبار السعودية والعالم اليوم عاجل`];
@@ -913,16 +971,20 @@ export default async function handler(req, res) {
         }), 18000
       ).then(d => ({ kind: "main", d })));
     } else {
-      tasks.push(withBudget((sig)=>searchCascade(searchQuery, agentKeys, isFatwa ? FATWA_DOMAINS : null, sig), 18000).then(d => ({ kind: "main", d })));
+      // سؤال عام بلا مجال محدّد → بحث عام (الحالة الوحيدة المسموح فيها)
+      tasks.push(withBudget((sig)=>searchCascade(searchQuery, agentKeys, null, sig), 18000).then(d => ({ kind: "main", d })));
     }
-    // 3) X/تويتر
-    if (WANT_X) {
-      // الأسئلة الرياضية: ركّز X على حسابات موثوقة معروفة (عمرو @bt3 وسهم @1SMi_)
+
+    // 3) X/تويتر — فقط لغير المقفل، أو للرياضة من حسابات موثوقة معروفة حصراً
+    if (WANT_X && (!LOCKED || IS_SPORTS_Q)) {
       const TRUSTED_SPORTS = "(from:bt3 OR from:1SMi_)";
-      const xQuery = IS_SPORTS_Q
-        ? `${searchQuery} ${TRUSTED_SPORTS}`
-        : `${searchQuery} (site:x.com OR site:twitter.com)`;
-      tasks.push(withBudget((sig)=>searchCascade(xQuery, agentKeys, null, sig), 15000).then(d => ({ kind: "x", d, trusted: IS_SPORTS_Q })).catch(() => ({ kind: "x", d: null })));
+      if (IS_SPORTS_Q) {
+        const xQuery = `${searchQuery} ${TRUSTED_SPORTS}`;
+        tasks.push(withBudget((sig)=>searchCascade(xQuery, agentKeys, null, sig), 15000).then(d => ({ kind: "x", d, trusted: true })).catch(() => ({ kind: "x", d: null })));
+      } else if (!LOCKED) {
+        const xQuery = `${searchQuery} (site:x.com OR site:twitter.com)`;
+        tasks.push(withBudget((sig)=>searchCascade(xQuery, agentKeys, null, sig), 15000).then(d => ({ kind: "x", d, trusted: false })).catch(() => ({ kind: "x", d: null })));
+      }
     }
 
     const settled = await Promise.all(tasks);
