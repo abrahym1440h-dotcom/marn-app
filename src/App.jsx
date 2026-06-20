@@ -2232,8 +2232,8 @@ function BigCard({ card, T, t, F, searched, sources, onCopy, onRegenerate, isRTL
           <div style={{ minWidth: 0 }}>
             {hero.value && (() => {
               const v = String(hero.value);
-              const fs = v.length <= 4 ? F.h1 + 14 : v.length <= 10 ? F.h1 + 6 : F.h2 + 2;
-              return <div style={{ fontSize: fs, fontWeight: 800, lineHeight: 1.1, color: a, wordBreak: "break-word" }}>{v}</div>;
+              const fs = v.length <= 4 ? F.h1 + 18 : v.length <= 10 ? F.h1 + 8 : F.h2 + 2;
+              return <div style={{ fontSize: fs, fontWeight: 800, lineHeight: 1.05, letterSpacing: "-1px", color: a, wordBreak: "break-word", fontVariantNumeric: "tabular-nums" }}>{v}</div>;
             })()}
             {hero.label && <div style={{ fontSize: F.base, fontWeight: 600, color: TT.text, marginTop: 7 }}>{hero.label}</div>}
             {hero.sub && <div style={{ fontSize: F.base - 1, color: TT.sub, marginTop: 2 }}>{hero.sub}</div>}
@@ -2355,16 +2355,16 @@ function TabContent({ tab, a, T, F, isRTL }) {
     case "stats":
       return (
         <div>
-          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 14px", lineHeight:1.7 }}>{d.intro}</p>}
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(132px,1fr))", gap:10 }}>
+          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 16px", lineHeight:1.7 }}>{d.intro}</p>}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(140px,1fr))", gap:12 }}>
             {(d.items||[]).map((s,i) => {
               const v = String(s.value ?? "");
-              const fs = v.length <= 4 ? F.h2 : v.length <= 10 ? F.base+3 : F.base+0.5;
+              const fs = v.length <= 4 ? F.h1+6 : v.length <= 8 ? F.h2+2 : F.base+2;
               return (
-                <div key={i} style={{ background:T.pillFill, borderRadius:13, padding:"13px 14px", border:`1px solid ${T.line}` }}>
-                  <div style={{ fontSize:F.label, fontWeight:600, color:T.sub, marginBottom:6 }}>{s.label}</div>
-                  <div style={{ fontSize:fs, fontWeight:800, color:a, lineHeight:1.2, wordBreak:"break-word" }}>{v}</div>
-                  {s.hint && <div style={{ fontSize:F.label, color:T.faint, marginTop:5, lineHeight:1.5 }}>{s.hint}</div>}
+                <div key={i} style={{ background:"linear-gradient(160deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012))", borderRadius:18, padding:"18px 16px", border:`1px solid ${T.line}` }}>
+                  <div style={{ fontSize:fs, fontWeight:800, letterSpacing:"-0.5px", lineHeight:1, color:T.text, wordBreak:"break-word", fontVariantNumeric:"tabular-nums" }}>{v}</div>
+                  <div style={{ fontSize:F.label, fontWeight:500, color:T.sub, marginTop:7 }}>{s.label}</div>
+                  {s.hint && <div style={{ fontSize:F.label-0.5, color:T.faint, marginTop:4, lineHeight:1.5 }}>{s.hint}</div>}
                 </div>
               );
             })}
@@ -2473,14 +2473,14 @@ function TabContent({ tab, a, T, F, isRTL }) {
 
     case "facts":
       return (
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))", gap:9 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(155px,1fr))", gap:11 }}>
           {(d.items||[]).map((f,i) => (
-            <div key={i} style={{ display:"flex", alignItems:"center", gap:11, padding:"12px 13px", borderRadius:12, background:T.pillFill, border:`1px solid ${T.line}` }}>
-              <span style={{ flexShrink:0, width:34, height:34, borderRadius:10, background:`${a}12`, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <Pictogram name={pictoName(f.icon) || "info"} size={17} color={a} />
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:13, padding:"15px 15px", borderRadius:16, background:"linear-gradient(160deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))", border:`1px solid ${T.line}` }}>
+              <span style={{ flexShrink:0, width:38, height:38, borderRadius:12, background:`${a}14`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <Pictogram name={pictoName(f.icon) || "info"} size={18} color={a} />
               </span>
               <div style={{ flex:1, minWidth:0 }}>
-                {f.label && <div style={{ fontSize:F.label, color:T.sub, marginBottom:2 }}>{f.label}</div>}
+                {f.label && <div style={{ fontSize:F.label, color:T.faint, marginBottom:3, fontWeight:500 }}>{f.label}</div>}
                 <div style={{ fontSize:F.base-0.5, fontWeight:700, color:T.text, lineHeight:1.4, wordBreak:"break-word" }}>{f.value || f.text || ""}</div>
               </div>
             </div>
@@ -2496,14 +2496,14 @@ function TabContent({ tab, a, T, F, isRTL }) {
           {(d.group || /كأس العالم|world ?cup|مونديال/i.test(String(d.competition || d.league || ""))) ? (
             <div style={{ display:"flex", justifyContent:"center", paddingTop:4 }}><WorldCupLogo size={42} /></div>
           ) : null}
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 0 14px" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 0 14px", direction:"ltr" }}>
             <div style={{ textAlign:"center", flex:1 }}>
               <div style={{ margin:"0 auto 8px", display:"flex", justifyContent:"center" }}><TeamFlag name={d.team1} code={d.team1_code} big T={T} /></div>
               <div style={{ fontSize:F.base, fontWeight:700 }}>{d.team1}</div>
             </div>
             <div style={{ textAlign:"center", padding:"0 8px", minWidth:110 }}>
               {d.score1!=null && d.score2!=null ? (
-                <div style={{ fontSize:44, fontWeight:700, color:T.text, letterSpacing:3, lineHeight:1 }}>
+                <div style={{ fontSize:44, fontWeight:700, color:T.text, letterSpacing:3, lineHeight:1, direction:"ltr" }}>
                   {d.score1}<span style={{ color:T.line, fontWeight:300 }}>:</span>{d.score2}
                 </div>
               ) : (
