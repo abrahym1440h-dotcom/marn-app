@@ -2496,31 +2496,35 @@ function TabContent({ tab, a, T, F, isRTL }) {
           {(d.group || /كأس العالم|world ?cup|مونديال/i.test(String(d.competition || d.league || ""))) ? (
             <div style={{ display:"flex", justifyContent:"center", paddingTop:4 }}><WorldCupLogo size={42} /></div>
           ) : null}
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 0 14px", direction:"ltr" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 0 14px", direction: isRTL ? "rtl" : "ltr" }}>
             <div style={{ textAlign:"center", flex:1 }}>
               <div style={{ margin:"0 auto 8px", display:"flex", justifyContent:"center" }}><TeamFlag name={d.team1} code={d.team1_code} big T={T} /></div>
               <div style={{ fontSize:F.base, fontWeight:700 }}>{d.team1}</div>
+              {d.score1!=null && d.score2!=null && (
+                <div style={{ fontSize:40, fontWeight:800, color: d.score1>=d.score2 ? T.text : T.faint, lineHeight:1, marginTop:8, fontVariantNumeric:"tabular-nums" }}>{d.score1}</div>
+              )}
             </div>
-            <div style={{ textAlign:"center", padding:"0 8px", minWidth:110 }}>
+            <div style={{ textAlign:"center", padding:"0 10px", minWidth:80 }}>
               {d.score1!=null && d.score2!=null ? (
-                <div style={{ fontSize:44, fontWeight:700, color:T.text, letterSpacing:3, lineHeight:1, direction:"ltr" }}>
-                  {d.score1}<span style={{ color:T.line, fontWeight:300 }}>:</span>{d.score2}
-                </div>
+                <div style={{ fontSize:20, fontWeight:400, color:T.line, lineHeight:1 }}>:</div>
               ) : (
-                <div style={{ fontSize:22, fontWeight:700, color:a, letterSpacing:2, lineHeight:1 }}>
+                <div style={{ fontSize:20, fontWeight:700, color:a, letterSpacing:1, lineHeight:1 }}>
                   {d.time || "—"}
                 </div>
               )}
               {d.status && !/غير محدد|غير مؤكد|unknown|undefined/i.test(d.status) ? (
-                <div style={{ marginTop:6 }}>
+                <div style={{ marginTop:10 }}>
                   <span style={{ fontSize:11, color:T.sub, background:T.pillFill, padding:"3px 10px", borderRadius:20, border:`1px solid ${T.line}` }}>{d.status}</span>
                 </div>
               ) : null}
-              {d.date && <div style={{ fontSize:10, color:T.faint, marginTop:5 }}>{d.date}</div>}
+              {d.date && <div style={{ fontSize:10, color:T.faint, marginTop:6 }}>{d.date}</div>}
             </div>
             <div style={{ textAlign:"center", flex:1 }}>
               <div style={{ margin:"0 auto 8px", display:"flex", justifyContent:"center" }}><TeamFlag name={d.team2} code={d.team2_code} big T={T} /></div>
               <div style={{ fontSize:F.base, fontWeight:700, color:T.sub }}>{d.team2}</div>
+              {d.score1!=null && d.score2!=null && (
+                <div style={{ fontSize:40, fontWeight:800, color: d.score2>=d.score1 ? T.text : T.faint, lineHeight:1, marginTop:8, fontVariantNumeric:"tabular-nums" }}>{d.score2}</div>
+              )}
             </div>
           </div>
           {d.venue && <div style={{ textAlign:"center", fontSize:11, color:T.faint, paddingBottom:12, borderBottom:`1px solid ${T.line}`, marginBottom:12 }}>{d.venue}</div>}
