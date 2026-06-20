@@ -778,6 +778,7 @@ export default async function handler(req, res) {
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     question = body?.question;
+    if (typeof question === "string" && question.length > 2000) question = question.slice(0, 2000);
     history = Array.isArray(body?.history) ? body.history.slice(-8) : [];
     timeFormat = body?.timeFormat === "24" ? "24" : "12";
     var cachedKnowledge = typeof body?.cachedKnowledge === "string" ? body.cachedKnowledge.slice(0, 4000) : "";
