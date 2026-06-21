@@ -2393,34 +2393,29 @@ function TabContent({ tab, a, T, F, isRTL }) {
 
     case "matches": {
       const games = Array.isArray(d.games) ? d.games : [];
-      if (!games.length) return <p style={{ color:T.sub, fontSize:F.base-1, lineHeight:1.8 }}>{d.intro || (isRTL ? "لا توجد مباريات مؤكدة من المصادر." : "No confirmed matches.")}</p>;
+      if (!games.length) return <p style={{ color:T.sub, fontSize:F.base-1, lineHeight:1.8 }}>{d.intro||(isRTL?"لا توجد مباريات مؤكدة من المصادر.":"No confirmed matches.")}</p>;
       return (
         <div>
-          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 12px", lineHeight:1.7 }}>{d.intro}</p>}
+          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 14px", lineHeight:1.7 }}>{d.intro}</p>}
           <div style={{ display:"flex", flexDirection:"column" }}>
             {games.map((g,i) => (
-              <div key={i} style={{ padding:"12px 2px", borderBottom:i<games.length-1?`1px solid ${T.line}`:"none" }}>
-                <div style={{ display:"flex", alignItems:"center", gap:9 }}>
-                  <div style={{ flex:1, display:"flex", alignItems:"center", gap:8, justifyContent:"flex-end", minWidth:0 }}>
-                    <span style={{ fontSize:F.base-0.5, fontWeight:700, color:T.text, textAlign:"end", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{g.team1}</span>
+              <div key={i} style={{ padding:"14px 0", borderBottom:i<games.length-1?`1px solid ${T.line}`:"none" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <div style={{ flex:1, display:"flex", alignItems:"center", gap:9, justifyContent:"flex-end", minWidth:0 }}>
+                    <span style={{ fontSize:F.base-0.5, fontWeight:700, textAlign:"end", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{g.team1}</span>
                     <TeamFlag name={g.team1} code={g.team1_code} T={T} />
                   </div>
-                  <div style={{ flexShrink:0, minWidth:52, textAlign:"center" }}>
-                    {g.score ? <span style={{ fontWeight:800, fontSize:F.base+1, color:a }}>{g.score}</span>
+                  <div style={{ flexShrink:0, minWidth:60, textAlign:"center" }}>
+                    {g.score
+                      ? <span style={{ fontWeight:800, fontSize:F.base+2, color:a, fontVariantNumeric:"tabular-nums" }}>{g.score}</span>
                       : <span style={{ fontSize:F.label, color:T.sub, fontWeight:700 }}>{g.time||"—"}</span>}
                   </div>
-                  <div style={{ flex:1, display:"flex", alignItems:"center", gap:8, minWidth:0 }}>
+                  <div style={{ flex:1, display:"flex", alignItems:"center", gap:9, minWidth:0 }}>
                     <TeamFlag name={g.team2} code={g.team2_code} T={T} />
-                    <span style={{ fontSize:F.base-0.5, fontWeight:700, color:T.text, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{g.team2}</span>
+                    <span style={{ fontSize:F.base-0.5, fontWeight:700, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{g.team2}</span>
                   </div>
                 </div>
-                {(g.date || g.competition || g.status) && (
-                  <div style={{ display:"flex", justifyContent:"center", gap:8, marginTop:5, fontSize:F.label-0.5, color:T.faint, flexWrap:"wrap" }}>
-                    {g.date && <span>{g.date}</span>}
-                    {g.competition && <span>· {g.competition}</span>}
-                    {g.status && <span>· {g.status}</span>}
-                  </div>
-                )}
+                {(g.venue||g.tournament) && <div style={{ textAlign:"center", fontSize:F.label-1, color:T.faint, marginTop:5 }}>{g.tournament}{g.tournament&&g.venue?" · ":""}{g.venue}</div>}
               </div>
             ))}
           </div>
@@ -2656,22 +2651,33 @@ function TabContent({ tab, a, T, F, isRTL }) {
     case "player_profile":
       return (
         <div>
-          <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:14, padding:"12px", background:T.pillFill, borderRadius:12, border:`1px solid ${T.line}` }}>
-            <div style={{ width:54, height:54, borderRadius:15, background:`${a}18`, border:`2px solid ${a}30`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:26, fontWeight:800, color:a, flexShrink:0 }}>{(d.name||"?").charAt(0)}</div>
+          <div style={{ display:"flex", alignItems:"center", gap:16, marginBottom:20, padding:"16px", background:"linear-gradient(160deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))", borderRadius:20, border:`1px solid ${T.line}` }}>
+            <div style={{ width:58, height:58, borderRadius:18, background:`${a}18`, border:`2px solid ${a}30`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:28, fontWeight:800, color:a, flexShrink:0 }}>{(d.name||"?").charAt(0)}</div>
             <div>
-              <div style={{ fontSize:F.base+2, fontWeight:700 }}>{d.name}</div>
-              <div style={{ fontSize:F.base-1, color:T.sub, marginTop:2, display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}><span>{d.club}</span>{d.nationality ? <span style={{ display:"inline-flex", alignItems:"center", gap:5 }}><span>•</span><TeamFlag name={d.nationality} code={d.nat_code} inline T={T} /><span>{d.nationality}</span></span> : null}</div>
-              <div style={{ fontSize:F.label, color:a, fontWeight:600, marginTop:2 }}>{d.position}</div>
+              <div style={{ fontSize:F.base+3, fontWeight:800, letterSpacing:"-0.3px" }}>{d.name}</div>
+              <div style={{ fontSize:F.base-1, color:T.sub, marginTop:4, display:"flex", alignItems:"center", gap:7, flexWrap:"wrap" }}>
+                <span>{d.club}</span>
+                {d.nationality && <><span style={{ color:T.line }}>·</span><TeamFlag name={d.nationality} code={d.nat_code} inline T={T} /><span>{d.nationality}</span></>}
+              </div>
+              <div style={{ fontSize:F.label, color:a, fontWeight:700, marginTop:5, letterSpacing:0.3 }}>{d.position}</div>
             </div>
           </div>
-          {(d.stats||[]).map((s,i,arr) => (
-            <div key={i} style={{ marginBottom:i<arr.length-1?10:0 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
-                <span style={{ fontSize:F.base-1, color:T.sub }}>{s.label}</span>
-                <span style={{ fontSize:F.base, fontWeight:800, color:a }}>{s.value}</span>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:11, marginBottom:16 }}>
+            {(d.stats||[]).slice(0,4).map((s,i)=>(
+              <div key={i} style={{ background:"linear-gradient(160deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))", borderRadius:16, padding:"15px", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:26, fontWeight:800, color:a, fontVariantNumeric:"tabular-nums" }}>{s.value}</div>
+                <div style={{ fontSize:F.label-0.5, color:T.faint, marginTop:5 }}>{s.label}</div>
               </div>
-              <div style={{ height:4, background:T.line, borderRadius:2 }}>
-                <div style={{ height:"100%", width:`${Math.min(parseInt(s.value)||50,100)}%`, background:a, borderRadius:2 }}/>
+            ))}
+          </div>
+          {(d.stats||[]).slice(4).map((s,i,arr)=>(
+            <div key={i} style={{ marginBottom:i<arr.length-1?14:0 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:7 }}>
+                <span style={{ fontSize:F.base-1, color:T.sub }}>{s.label}</span>
+                <span style={{ fontSize:F.base-1, fontWeight:800, color:a, fontVariantNumeric:"tabular-nums" }}>{s.value}</span>
+              </div>
+              <div style={{ height:4, background:"rgba(255,255,255,0.06)", borderRadius:4 }}>
+                <div style={{ height:"100%", width:`${Math.min(parseInt(s.value)||50,100)}%`, background:`linear-gradient(90deg,${a},${a}88)`, borderRadius:4 }}/>
               </div>
             </div>
           ))}
@@ -2798,51 +2804,38 @@ function TabContent({ tab, a, T, F, isRTL }) {
       const lineColor_s = isUp_s ? "#30d158" : "#ff453a";
       const pts_s = d.chart_points && d.chart_points.length > 1 ? d.chart_points : [27,28,27.5,29,28,30,29,31,30,32,d.price||30];
       const maxP_s = Math.max(...pts_s), minP_s = Math.min(...pts_s);
-      const W_s=320, H_s=72;
+      const W_s=320, H_s=80;
       const pPath_s = pts_s.map((p,i)=>`${i===0?"M":"L"} ${(i/(pts_s.length-1))*W_s} ${H_s-((p-minP_s)/(maxP_s-minP_s||1))*H_s}`).join(" ");
       const aPath_s = pPath_s + ` L ${W_s} ${H_s} L 0 ${H_s} Z`;
       const gradId_s = "sg" + Math.random().toString(36).slice(2,6);
       return (
         <div>
-          {/* الرقم الرئيسي */}
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", padding:"4px 0 12px" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", padding:"4px 0 16px" }}>
             <div>
-              <div style={{ fontSize:12, color:T.faint, marginBottom:4 }}>{d.symbol} • {d.name}</div>
-              <div style={{ fontSize:44, fontWeight:700, color:T.text, lineHeight:1, letterSpacing:-1 }}>{d.price}</div>
-              <div style={{ display:"flex", alignItems:"center", gap:6, marginTop:6 }}>
-                <span style={{ fontSize:15, fontWeight:600, color:lineColor_s }}>
-                  {isUp_s?"+":""}{d.change} ({isUp_s?"+":""}{d.change_pct}%)
-                </span>
+              <div style={{ fontSize:11, color:T.faint, marginBottom:6, fontWeight:600, letterSpacing:1 }}>{d.symbol}{d.symbol&&d.name?" · ":""}{d.name}</div>
+              <div style={{ fontSize:50, fontWeight:700, color:T.text, lineHeight:1, letterSpacing:-2, fontVariantNumeric:"tabular-nums" }}>{d.price}</div>
+              <div style={{ display:"flex", alignItems:"center", gap:6, marginTop:8 }}>
+                <span style={{ fontSize:15, fontWeight:700, color:lineColor_s }}>{isUp_s?"+":""}{d.change} ({isUp_s?"+":""}{d.change_pct}%)</span>
                 <span style={{ fontSize:11, color:T.faint }}>اليوم</span>
               </div>
             </div>
-            <div style={{ background: isUp_s?"rgba(48,209,88,0.1)":"rgba(255,69,58,0.1)", borderRadius:10, padding:"8px 14px", textAlign:"center" }}>
-              <div style={{ fontSize:13, fontWeight:700, color:lineColor_s }}>{isUp_s?"▲":"▼"}</div>
-              <div style={{ fontSize:11, color:T.faint, marginTop:2 }}>{isUp_s?"صاعد":"هابط"}</div>
+            <div style={{ background:isUp_s?"rgba(48,209,88,0.1)":"rgba(255,69,58,0.1)", border:`1px solid ${isUp_s?"rgba(48,209,88,0.2)":"rgba(255,69,58,0.2)"}`, borderRadius:14, padding:"10px 16px", textAlign:"center" }}>
+              <div style={{ fontSize:18, fontWeight:700, color:lineColor_s }}>{isUp_s?"▲":"▼"}</div>
+              <div style={{ fontSize:11, color:T.faint, marginTop:3 }}>{isUp_s?"صاعد":"هابط"}</div>
             </div>
           </div>
-          {/* رسم بياني */}
-          <div style={{ margin:"0 -20px", background:T.pillFill, padding:"8px 0 4px" }}>
+          <div style={{ margin:"0 -20px", background:"rgba(255,255,255,0.02)", padding:"10px 0 6px", borderTop:`1px solid ${T.line}`, borderBottom:`1px solid ${T.line}` }}>
             <svg width="100%" height={H_s} viewBox={`0 0 ${W_s} ${H_s}`} preserveAspectRatio="none">
-              <defs>
-                <linearGradient id={gradId_s} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={lineColor_s} stopOpacity="0.2"/>
-                  <stop offset="100%" stopColor={lineColor_s} stopOpacity="0"/>
-                </linearGradient>
-              </defs>
+              <defs><linearGradient id={gradId_s} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={lineColor_s} stopOpacity="0.25"/><stop offset="100%" stopColor={lineColor_s} stopOpacity="0"/></linearGradient></defs>
               <path d={aPath_s} fill={`url(#${gradId_s})`}/>
-              <path d={pPath_s} fill="none" stroke={lineColor_s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d={pPath_s} fill="none" stroke={lineColor_s} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          {/* بيانات */}
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginTop:12 }}>
-            {[
-              ["أعلى", d.high], ["أدنى", d.low],
-              ["الحجم", d.volume], ["الإغلاق السابق", d.prev_close||d.low],
-            ].filter(([,v])=>v!=null).map(([l,v],i)=>(
-              <div key={i} style={{ background:T.pillFill, borderRadius:10, padding:"10px 12px", border:`1px solid ${T.line}` }}>
-                <div style={{ fontSize:11, color:T.faint }}>{l}</div>
-                <div style={{ fontSize:F.base, fontWeight:600, marginTop:2 }}>{v}</div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:11, marginTop:14 }}>
+            {[["أعلى",d.high],["أدنى",d.low],["الحجم",d.volume],["الإغلاق السابق",d.prev_close||d.low]].filter(([,v])=>v!=null).map(([l,v],i)=>(
+              <div key={i} style={{ background:"linear-gradient(160deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))", borderRadius:14, padding:"13px 15px", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:11, color:T.faint, fontWeight:500 }}>{l}</div>
+                <div style={{ fontSize:F.base+1, fontWeight:700, marginTop:4, fontVariantNumeric:"tabular-nums" }}>{v}</div>
               </div>
             ))}
           </div>
@@ -2851,26 +2844,29 @@ function TabContent({ tab, a, T, F, isRTL }) {
     }
     case "crypto":
       const cupCrypto = (d.change_pct||0) >= 0;
+      const cryptoColor = cupCrypto ? "#30d158" : "#ff453a";
       return (
         <div>
-          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:18, paddingBottom:16, borderBottom:`1px solid ${T.line}` }}>
             <div>
-              <div style={{ fontSize:F.base+1, fontWeight:700 }}>{d.name}</div>
-              <div style={{ fontSize:F.label, color:T.faint }}>{d.symbol}</div>
+              <div style={{ fontSize:F.base+2, fontWeight:800, letterSpacing:"-0.3px" }}>{d.name}</div>
+              <div style={{ fontSize:F.label, color:T.faint, marginTop:3, fontWeight:600, letterSpacing:1 }}>{d.symbol}</div>
             </div>
-            <div>
-              <div style={{ fontSize:F.h1+2, fontWeight:900 }}>${Number(d.price||0).toLocaleString()}</div>
-              <div style={{ fontSize:F.base-1, color:cupCrypto?"#34c759":"#ff453a", display:"flex", alignItems:"center", gap:4 }}>
+            <div style={{ textAlign:"left" }}>
+              <div style={{ fontSize:F.h1+4, fontWeight:800, letterSpacing:"-1px", lineHeight:1, fontVariantNumeric:"tabular-nums" }}>${Number(d.price||0).toLocaleString()}</div>
+              <div style={{ fontSize:F.base-0.5, color:cryptoColor, fontWeight:700, marginTop:6, display:"flex", alignItems:"center", gap:4 }}>
                 {cupCrypto?Si.up:Si.dn} {Math.abs(d.change_pct||0)}%
               </div>
             </div>
           </div>
-          {[["القيمة السوقية",d.market_cap],["حجم التداول",d.volume],["المعروض",d.supply]].filter(x=>x[1]).map(([l,v],i,arr)=>(
-            <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"9px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none", fontSize:F.base-1 }}>
-              <span style={{ color:T.sub }}>{l}</span>
-              <span style={{ fontWeight:600 }}>{v}</span>
-            </div>
-          ))}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10 }}>
+            {[["القيمة السوقية",d.market_cap],["حجم التداول",d.volume],["المعروض",d.supply]].filter(x=>x[1]).map(([l,v],i)=>(
+              <div key={i} style={{ background:"linear-gradient(160deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))", borderRadius:14, padding:"13px 12px", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.label-0.5, color:T.faint, marginBottom:6 }}>{l}</div>
+                <div style={{ fontSize:F.base-0.5, fontWeight:700, color:T.text }}>{v}</div>
+              </div>
+            ))}
+          </div>
         </div>
       );
 
@@ -2879,56 +2875,59 @@ function TabContent({ tab, a, T, F, isRTL }) {
     case "symptoms":
       return (
         <div>
-          {d.severity && <div style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"4px 10px", borderRadius:20, marginBottom:12, background:"rgba(255,149,0,0.1)", color:"#ff9500", fontSize:F.label, fontWeight:600 }}>
+          {d.severity && <div style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"6px 14px", borderRadius:20, marginBottom:16, background:"rgba(255,149,0,0.1)", border:"1px solid rgba(255,149,0,0.25)", color:"#ff9500", fontSize:F.label, fontWeight:700 }}>
             {Si.shield("#ff9500")} {d.severity}
           </div>}
-          {d.symptoms?.length>0 && (
-            <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:12 }}>
-              {d.symptoms.map((s,i) => <ITag key={i} text={s} color="#ff6b6b"/>)}
-            </div>
-          )}
-          {d.causes?.length>0 && (
-            <div style={{ background:T.pillFill, borderRadius:10, padding:"10px 12px", marginBottom:12, border:`1px solid ${T.line}` }}>
-              <div style={{ fontSize:F.label, color:T.faint, marginBottom:8, fontWeight:600 }}>الأسباب المحتملة</div>
-              {d.causes.map((c,i,arr) => (
-                <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"5px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none", fontSize:F.base-1 }}>
-                  <span style={{ color:T.sub }}>{c}</span>
-                </div>
-              ))}
-            </div>
-          )}
-          {d.remedies?.length>0 && d.remedies.map((r,i,arr)=>(
-            <div key={i} style={{ display:"flex", gap:10, padding:"10px 0", borderBottom:i===arr.length-1?"none":`1px solid ${T.line}` }}>
-              <div style={{ flexShrink:0, width:24, height:24, borderRadius:7, background:"rgba(255,107,107,0.1)", color:"#ff6b6b", display:"flex", alignItems:"center", justifyContent:"center", fontSize:F.label-1, fontWeight:700 }}>{i+1}</div>
-              <div>
-                <div style={{ fontWeight:600, fontSize:F.base-0.5 }}>{r.t}</div>
-                {r.d && <div style={{ color:T.sub, fontSize:F.base-2, lineHeight:1.5 }}>{r.d}</div>}
+          {d.symptoms?.length>0 && <div style={{ display:"flex", flexWrap:"wrap", gap:7, marginBottom:16 }}>
+            {d.symptoms.map((s,i)=><span key={i} style={{ fontSize:F.label, color:"#ff6b6b", background:"rgba(255,107,107,0.1)", border:"1px solid rgba(255,107,107,0.2)", padding:"5px 12px", borderRadius:20, fontWeight:600 }}>{s}</span>)}
+          </div>}
+          {d.causes?.length>0 && <div style={{ background:"linear-gradient(160deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))", borderRadius:16, padding:"14px 16px", marginBottom:14, border:`1px solid ${T.line}` }}>
+            <div style={{ fontSize:F.label-0.5, color:T.faint, marginBottom:10, fontWeight:700, letterSpacing:1 }}>الأسباب المحتملة</div>
+            {d.causes.map((c,i,arr)=><div key={i} style={{ padding:"9px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none", fontSize:F.base-0.5, color:T.sub }}>{c}</div>)}
+          </div>}
+        </div>
+      );
+
+    case "news":
+      return (
+        <div>
+          {d.counts && <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
+            {d.counts.map((c,i)=>(
+              <div key={i} style={{ background:"linear-gradient(160deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))", borderRadius:16, padding:"16px", textAlign:"center", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.h1+4, fontWeight:900, color:c.color||a, fontVariantNumeric:"tabular-nums" }}>{c.value}</div>
+                <div style={{ fontSize:F.label-1, color:T.faint, marginTop:4 }}>{c.label}</div>
+              </div>
+            ))}
+          </div>}
+          {d.items && d.items.map((item,i,arr)=>(
+            <div key={i} style={{ display:"flex", gap:12, padding:"13px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
+              <div style={{ width:8, height:8, borderRadius:"50%", background:item.hot?"#ff453a":T.line, flexShrink:0, marginTop:6 }}/>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:F.base-0.5, fontWeight:item.hot?700:500, color:item.hot?T.text:T.sub, lineHeight:1.5 }}>{item.title}</div>
+                {item.time && <div style={{ fontSize:F.label-1, color:T.faint, marginTop:4 }}>{item.time}</div>}
               </div>
             </div>
           ))}
-          {d.warning && <div style={{ display:"flex", gap:8, padding:"10px 12px", background:"rgba(255,69,58,0.08)", borderRadius:9, marginTop:10, fontSize:F.base-2, color:"#ff453a", alignItems:"flex-start" }}>
-            {Si.shield("#ff453a")}<span>{d.warning}</span>
-          </div>}
         </div>
       );
 
     case "nutrition":
       return (
         <div>
-          {d.food && <div style={{ fontSize:F.base+1, fontWeight:700, marginBottom:4 }}>{d.food}</div>}
-          {d.per100g && <div style={{ fontSize:F.label-1, color:T.faint, marginBottom:12 }}>لكل 100 جرام</div>}
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:12 }}>
+          {d.food && <div style={{ fontSize:F.base+2, fontWeight:800, marginBottom:5, letterSpacing:"-0.3px" }}>{d.food}</div>}
+          {d.per100g && <div style={{ fontSize:F.label-0.5, color:T.faint, marginBottom:16, fontWeight:600, letterSpacing:1 }}>لكل 100 جرام</div>}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:9, marginBottom:16 }}>
             {[["سعرات",d.calories,"#ff9f0a"],["بروتين",`${d.protein}g`,"#0a84ff"],["كارب",`${d.carbs}g`,"#ff9f0a"],["دهون",`${d.fat}g`,"#bf5af2"]].map(([l,v,c],i)=>(
-              <div key={i} style={{ textAlign:"center", padding:"10px 6px", background:T.pillFill, borderRadius:9, border:`1px solid ${T.line}` }}>
-                <div style={{ fontSize:F.base, fontWeight:700, color:c }}>{v}</div>
-                <div style={{ fontSize:F.label-2, color:T.faint, marginTop:2 }}>{l}</div>
+              <div key={i} style={{ textAlign:"center", padding:"13px 6px", background:"linear-gradient(160deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))", borderRadius:14, border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.base+1, fontWeight:800, color:c, fontVariantNumeric:"tabular-nums" }}>{v}</div>
+                <div style={{ fontSize:F.label-2, color:T.faint, marginTop:5 }}>{l}</div>
               </div>
             ))}
           </div>
           {d.vitamins?.length>0 && d.vitamins.map((v,i,arr)=>(
-            <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none", fontSize:F.base-1 }}>
-              <span style={{ color:T.sub }}>{v.name}</span>
-              <span style={{ fontWeight:600 }}>{v.amount}</span>
+            <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"11px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
+              <span style={{ color:T.sub, fontSize:F.base-0.5 }}>{v.name}</span>
+              <span style={{ fontWeight:700, fontSize:F.base-0.5, fontVariantNumeric:"tabular-nums" }}>{v.amount}</span>
             </div>
           ))}
         </div>
@@ -2939,29 +2938,29 @@ function TabContent({ tab, a, T, F, isRTL }) {
     case "recipe":
       return (
         <div>
-          <div style={{ display:"flex", gap:8, marginBottom:14 }}>
+          <div style={{ display:"flex", gap:10, marginBottom:18 }}>
             {[["وقت",d.time,"#ff9f0a"],["أشخاص",d.servings&&`${d.servings}`,"#0a84ff"],["صعوبة",d.difficulty,"#bf5af2"]].filter(x=>x[1]).map(([l,v,c],i)=>(
-              <div key={i} style={{ flex:1, textAlign:"center", padding:"8px", background:T.pillFill, borderRadius:9, border:`1px solid ${T.line}` }}>
-                <div style={{ fontSize:F.base, fontWeight:700, color:c }}>{v}</div>
-                <div style={{ fontSize:F.label-1, color:T.faint, marginTop:2 }}>{l}</div>
+              <div key={i} style={{ flex:1, textAlign:"center", padding:"14px 8px", background:"linear-gradient(160deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))", borderRadius:16, border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.base+2, fontWeight:800, color:c, fontVariantNumeric:"tabular-nums" }}>{v}</div>
+                <div style={{ fontSize:F.label-1, color:T.faint, marginTop:5 }}>{l}</div>
               </div>
             ))}
           </div>
           {d.ingredients?.length>0 && (
-            <div style={{ marginBottom:12 }}>
-              <div style={{ fontSize:F.label, color:T.faint, marginBottom:8, fontWeight:600 }}>المقادير</div>
+            <div style={{ marginBottom:16 }}>
+              <div style={{ fontSize:F.label-0.5, color:T.faint, marginBottom:10, fontWeight:700, letterSpacing:1, textTransform:"uppercase" }}>المقادير</div>
               {d.ingredients.map((ing,i,arr)=>(
-                <div key={i} style={{ display:"flex", gap:8, padding:"7px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none", fontSize:F.base-1 }}>
-                  <span style={{ color:a, fontWeight:600, minWidth:55 }}>{ing.amount}</span>
-                  <span style={{ color:T.sub }}>{ing.item}</span>
+                <div key={i} style={{ display:"flex", gap:12, padding:"11px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
+                  <span style={{ color:a, fontWeight:700, minWidth:60, fontSize:F.base-0.5 }}>{ing.amount}</span>
+                  <span style={{ color:T.text, fontSize:F.base-0.5 }}>{ing.item}</span>
                 </div>
               ))}
             </div>
           )}
           {d.steps?.length>0 && d.steps.map((s,i,arr)=>(
-            <div key={i} style={{ display:"flex", gap:10, padding:"10px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
-              <div style={{ flexShrink:0, width:22, height:22, borderRadius:6, background:`${a}18`, color:a, display:"flex", alignItems:"center", justifyContent:"center", fontSize:F.label-1, fontWeight:700 }}>{i+1}</div>
-              <div style={{ fontSize:F.base-1, lineHeight:1.6, color:T.sub }}>{s}</div>
+            <div key={i} style={{ display:"flex", gap:13, padding:"13px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
+              <div style={{ flexShrink:0, width:26, height:26, borderRadius:8, background:`${a}18`, color:a, display:"flex", alignItems:"center", justifyContent:"center", fontSize:F.label, fontWeight:800 }}>{i+1}</div>
+              <div style={{ fontSize:F.base-0.5, lineHeight:1.75, color:T.sub }}>{s}</div>
             </div>
           ))}
         </div>
@@ -3015,50 +3014,43 @@ function TabContent({ tab, a, T, F, isRTL }) {
     case "destination":
       return (
         <div>
-          {(d.country || d.city) ? (
-            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:13 }}>
-              <TeamFlag name={d.country} code={d.country_code} big T={T} />
-              <div>
-                {d.country ? <div style={{ fontSize:F.base+1, fontWeight:800, color:T.text }}>{d.country}</div> : null}
-                {d.city ? <div style={{ fontSize:F.label, color:T.sub }}>{d.city}</div> : null}
-              </div>
-            </div>
-          ) : null}
-          <div style={{ display:"flex", gap:7, flexWrap:"wrap", marginBottom:14 }}>
-            {d.currency && <ITag text={d.currency} color="#ff9f0a"/>}
-            {d.language && <ITag text={d.language} color="#bf5af2"/>}
-            {d.best_time && <ITag text={d.best_time} color="#0a84ff"/>}
+          {(d.country||d.city) && <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16, padding:"15px 16px", background:"linear-gradient(160deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))", borderRadius:18, border:`1px solid ${T.line}` }}>
+            <TeamFlag name={d.country} code={d.country_code} big T={T} />
+            <div>{d.country && <div style={{ fontSize:F.base+3, fontWeight:800 }}>{d.country}</div>}{d.city && <div style={{ fontSize:F.label, color:T.sub, marginTop:3 }}>{d.city}</div>}</div>
+          </div>}
+          <div style={{ display:"flex", gap:7, flexWrap:"wrap", marginBottom:16 }}>
+            {[d.currency&&[d.currency,"#ff9f0a"],d.language&&[d.language,"#bf5af2"],d.best_time&&[d.best_time,"#0a84ff"]].filter(Boolean).map(([v,c],i)=>(
+              <span key={i} style={{ fontSize:F.label, color:c, background:`${c}18`, border:`1px solid ${c}30`, padding:"5px 12px", borderRadius:20, fontWeight:600 }}>{v}</span>
+            ))}
           </div>
-          {d.attractions?.length>0 && (
-            <div style={{ marginBottom:12 }}>
-              <div style={{ fontSize:F.label, color:T.faint, marginBottom:8, fontWeight:600 }}>أبرز المعالم</div>
-              {d.attractions.map((att,i,arr)=>(
-                <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
-                  <div style={{ display:"flex" }}>{Si.pin(a)}</div>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontSize:F.base-0.5, fontWeight:500 }}>{att.name}</div>
-                    <div style={{ fontSize:F.label-1, color:T.sub }}>{att.type}</div>
-                  </div>
-                  {att.rating && <div style={{ display:"flex", alignItems:"center", gap:2 }}>{Si.star(true,"#ffd60a")}<span style={{ fontSize:F.label, color:"#ffd60a", fontWeight:700 }}>{att.rating}</span></div>}
+          {d.attractions?.length>0 && <div>
+            <div style={{ fontSize:F.label-0.5, color:T.faint, marginBottom:10, fontWeight:700, letterSpacing:1 }}>أبرز المعالم</div>
+            {d.attractions.map((att,i,arr)=>(
+              <div key={i} style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
+                <div style={{ display:"flex" }}>{Si.pin(a)}</div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:F.base-0.5, fontWeight:600 }}>{att.name}</div>
+                  {att.type && <div style={{ fontSize:F.label-1, color:T.sub, marginTop:2 }}>{att.type}</div>}
                 </div>
-              ))}
-            </div>
-          )}
-          {d.tips?.length>0 && d.tips.map((t,i)=>(
-            <div key={i} style={{ display:"flex", gap:8, padding:"7px 0", fontSize:F.base-1 }}>
+                {att.rating && <div style={{ display:"flex", alignItems:"center", gap:3 }}>{Si.star(true,"#ffd60a")}<span style={{ fontSize:F.label, color:"#ffd60a", fontWeight:700 }}>{att.rating}</span></div>}
+              </div>
+            ))}
+          </div>}
+          {d.tips?.length>0 && <div style={{ marginTop:14 }}>{d.tips.map((t,i)=>(
+            <div key={i} style={{ display:"flex", gap:10, padding:"10px 0", fontSize:F.base-1, borderTop:i>0?`1px solid ${T.line}`:"none" }}>
               {Si.zap(a)}<span style={{ color:T.sub }}>{t}</span>
             </div>
-          ))}
+          ))}</div>}
         </div>
       );
 
     case "flight":
       return (
         <div>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"18px 0 14px", borderBottom:`1px solid ${T.line}` }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"20px 0 16px", borderBottom:`1px solid ${T.line}` }}>
             <div style={{ textAlign:"center" }}>
-              <div style={{ fontSize:F.h1+4, fontWeight:900 }}>{d.from?.split(" ")[0]}</div>
-              <div style={{ fontSize:F.label, color:T.faint }}>{d.from}</div>
+              <div style={{ fontSize:F.h1+4, fontWeight:900, letterSpacing:-1, fontVariantNumeric:"tabular-nums" }}>{d.from?.split(" ")[0]}</div>
+              <div style={{ fontSize:F.label, color:T.faint, marginTop:4 }}>{d.from}</div>
             </div>
             <div style={{ flex:1, textAlign:"center", padding:"0 10px" }}>
               <div style={{ fontSize:F.label-1, color:T.faint, marginBottom:4 }}>{d.duration}</div>
@@ -3115,27 +3107,27 @@ function TabContent({ tab, a, T, F, isRTL }) {
     case "job":
       return (
         <div>
-          {d.tags && <div style={{ display:"flex", gap:7, flexWrap:"wrap", marginBottom:14 }}>{d.tags.map((t,i)=><ITag key={i} text={t} color={a}/>)}</div>}
-          {d.skills?.length>0 && (
-            <div style={{ background:T.pillFill, borderRadius:12, padding:"12px 14px", marginBottom:12, border:`1px solid ${T.line}` }}>
-              <div style={{ fontSize:F.label, color:T.faint, marginBottom:10, fontWeight:600 }}>المهارات المطلوبة</div>
-              {d.skills.map((s,i,arr)=>(
-                <div key={i} style={{ marginBottom:i<arr.length-1?10:0 }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
-                    <span style={{ fontSize:F.base-1, color:T.sub }}>{s.name}</span>
-                    <span style={{ fontSize:F.base-1, fontWeight:700, color:a }}>{s.pct}%</span>
-                  </div>
-                  <div style={{ height:4, background:T.line, borderRadius:2 }}>
-                    <div style={{ height:"100%", width:`${s.pct}%`, background:a, borderRadius:2 }}/>
-                  </div>
+          {d.tags && <div style={{ display:"flex", gap:7, flexWrap:"wrap", marginBottom:16 }}>
+            {d.tags.map((t,i)=><span key={i} style={{ fontSize:F.label, color:a, background:`${a}14`, border:`1px solid ${a}30`, padding:"5px 12px", borderRadius:20, fontWeight:600 }}>{t}</span>)}
+          </div>}
+          {d.skills?.length>0 && <div style={{ background:"linear-gradient(160deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))", borderRadius:16, padding:"15px 16px", marginBottom:16, border:`1px solid ${T.line}` }}>
+            <div style={{ fontSize:F.label-0.5, color:T.faint, marginBottom:12, fontWeight:700, letterSpacing:1 }}>المهارات المطلوبة</div>
+            {d.skills.map((s,i,arr)=>(
+              <div key={i} style={{ marginBottom:i<arr.length-1?14:0 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:7 }}>
+                  <span style={{ fontSize:F.base-1, color:T.sub }}>{s.name}</span>
+                  <span style={{ fontSize:F.base-1, fontWeight:800, color:a, fontVariantNumeric:"tabular-nums" }}>{s.pct}%</span>
                 </div>
-              ))}
-            </div>
-          )}
+                <div style={{ height:4, background:"rgba(255,255,255,0.06)", borderRadius:4 }}>
+                  <div style={{ height:"100%", width:`${s.pct}%`, background:`linear-gradient(90deg,${a},${a}88)`, borderRadius:4 }}/>
+                </div>
+              </div>
+            ))}
+          </div>}
           {d.stats && d.stats.map((s,i,arr)=>(
-            <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none", fontSize:F.base-1 }}>
-              <span style={{ color:T.sub }}>{s.label}</span>
-              <span style={{ fontWeight:700, color:s.color||a }}>{s.value}</span>
+            <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"13px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
+              <span style={{ color:T.sub, fontSize:F.base-0.5 }}>{s.label}</span>
+              <span style={{ fontWeight:800, color:s.color||a, fontSize:F.base-0.5 }}>{s.value}</span>
             </div>
           ))}
         </div>
@@ -3168,21 +3160,21 @@ function TabContent({ tab, a, T, F, isRTL }) {
     case "book_review":
       return (
         <div>
-          {d.genres && <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:12 }}>{d.genres.map((g,i)=><ITag key={i} text={g} color={a}/>)}</div>}
-          {d.rating && <div style={{ display:"flex", gap:2, alignItems:"center", marginBottom:12 }}>
+          {d.genres && <div style={{ display:"flex", gap:7, flexWrap:"wrap", marginBottom:16 }}>{d.genres.map((g,i)=><span key={i} style={{ fontSize:F.label, color:a, background:`${a}14`, border:`1px solid ${a}30`, padding:"5px 12px", borderRadius:20, fontWeight:600 }}>{g}</span>)}</div>}
+          {d.rating && <div style={{ display:"flex", gap:3, alignItems:"center", marginBottom:16 }}>
             {[1,2,3,4,5].map(i=><span key={i}>{Si.star(i<=Math.round(d.rating),"#ffd60a")}</span>)}
-            <span style={{ fontSize:F.base-1, color:"#ffd60a", fontWeight:700, marginRight:6 }}>{d.rating}/5</span>
+            <span style={{ fontSize:F.base, color:"#ffd60a", fontWeight:800, marginRight:8, fontVariantNumeric:"tabular-nums" }}>{d.rating}/5</span>
             {d.reviews && <span style={{ fontSize:F.label-1, color:T.faint }}>من {d.reviews} تقييم</span>}
           </div>}
           {d.aspects && d.aspects.map((asp,i)=>(
-            <div key={i} style={{ marginBottom:10 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
-                <span style={{ fontSize:F.base-0.5, fontWeight:600 }}>{asp.label}</span>
-                <span style={{ fontSize:F.base-1, fontWeight:700, color:a }}>{asp.v}%</span>
+            <div key={i} style={{ marginBottom:14 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:7 }}>
+                <span style={{ fontSize:F.base-0.5, fontWeight:600, color:T.text }}>{asp.label}</span>
+                <span style={{ fontSize:F.base-1, fontWeight:800, color:a, fontVariantNumeric:"tabular-nums" }}>{asp.v}%</span>
               </div>
-              {asp.hint && <div style={{ fontSize:F.label-1, color:T.faint, marginBottom:4 }}>{asp.hint}</div>}
-              <div style={{ height:4, background:T.line, borderRadius:2 }}>
-                <div style={{ height:"100%", width:`${asp.v}%`, background:a, borderRadius:2 }}/>
+              {asp.hint && <div style={{ fontSize:F.label-1, color:T.faint, marginBottom:5 }}>{asp.hint}</div>}
+              <div style={{ height:4, background:"rgba(255,255,255,0.06)", borderRadius:4 }}>
+                <div style={{ height:"100%", width:`${asp.v}%`, background:`linear-gradient(90deg,${a},${a}88)`, borderRadius:4 }}/>
               </div>
             </div>
           ))}
@@ -3192,23 +3184,23 @@ function TabContent({ tab, a, T, F, isRTL }) {
     case "movie_review":
       return (
         <div>
-          {d.tags && <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:12 }}>{d.tags.map((t,i)=><ITag key={i} text={t} color={a}/>)}</div>}
-          {d.stats && <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:12 }}>
+          {d.tags && <div style={{ display:"flex", gap:7, flexWrap:"wrap", marginBottom:16 }}>{d.tags.map((t,i)=><span key={i} style={{ fontSize:F.label-0.5, color:a, background:`${a}14`, border:`1px solid ${a}30`, padding:"4px 11px", borderRadius:20, fontWeight:600 }}>{t}</span>)}</div>}
+          {d.stats && <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:16 }}>
             {d.stats.map((s,i)=>(
-              <div key={i} style={{ background:T.pillFill, borderRadius:10, padding:"10px 8px", textAlign:"center", border:`1px solid ${T.line}` }}>
-                <div style={{ fontSize:F.base, fontWeight:800, color:a }}>{s.value}</div>
-                <div style={{ fontSize:F.label-1, color:T.faint, marginTop:2 }}>{s.label}</div>
+              <div key={i} style={{ background:"linear-gradient(160deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))", borderRadius:16, padding:"14px 10px", textAlign:"center", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.base+2, fontWeight:800, color:a, fontVariantNumeric:"tabular-nums" }}>{s.value}</div>
+                <div style={{ fontSize:F.label-1, color:T.faint, marginTop:4 }}>{s.label}</div>
               </div>
             ))}
           </div>}
           {d.aspects && d.aspects.map((asp,i)=>(
-            <div key={i} style={{ marginBottom:i<d.aspects.length-1?10:0 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
-                <span style={{ fontSize:F.base-1, color:T.sub }}>{asp.label}</span>
-                <span style={{ fontSize:F.base-1, fontWeight:700, color:a }}>{asp.v}%</span>
+            <div key={i} style={{ marginBottom:i<d.aspects.length-1?14:0 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:7 }}>
+                <span style={{ fontSize:F.base-1, color:T.sub, fontWeight:500 }}>{asp.label}</span>
+                <span style={{ fontSize:F.base-1, fontWeight:700, color:a, fontVariantNumeric:"tabular-nums" }}>{asp.v}%</span>
               </div>
-              <div style={{ height:3, background:T.line, borderRadius:2 }}>
-                <div style={{ height:"100%", width:`${asp.v}%`, background:a, borderRadius:2 }}/>
+              <div style={{ height:4, background:"rgba(255,255,255,0.06)", borderRadius:4 }}>
+                <div style={{ height:"100%", width:`${asp.v}%`, background:`linear-gradient(90deg,${a},${a}88)`, borderRadius:4 }}/>
               </div>
             </div>
           ))}
@@ -3218,27 +3210,27 @@ function TabContent({ tab, a, T, F, isRTL }) {
     case "restaurant":
       return (
         <div>
-          {d.rating && <div style={{ display:"flex", justifyContent:"space-between", marginBottom:12 }}>
-            <div style={{ display:"flex", gap:2, alignItems:"center" }}>
+          {d.rating && <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, padding:"14px 16px", background:"linear-gradient(160deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))", borderRadius:16, border:`1px solid ${T.line}` }}>
+            <div style={{ display:"flex", gap:3, alignItems:"center" }}>
               {[1,2,3,4,5].map(i=><span key={i}>{Si.star(i<=Math.round(d.rating),"#ffd60a")}</span>)}
-              <span style={{ fontSize:F.base-1, color:"#ffd60a", fontWeight:700, marginRight:6 }}>{d.rating}</span>
+              <span style={{ fontSize:F.base, color:"#ffd60a", fontWeight:800, marginRight:8, fontVariantNumeric:"tabular-nums" }}>{d.rating}</span>
             </div>
-            {d.open && <ITag text="مفتوح الآن" color="#34c759"/>}
+            {d.open && <span style={{ fontSize:F.label, color:"#34c759", fontWeight:700, background:"rgba(52,199,89,0.12)", padding:"4px 11px", borderRadius:20 }}>مفتوح الآن</span>}
           </div>}
-          {d.stats && <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:12 }}>
+          {d.stats && <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:16 }}>
             {d.stats.map((s,i)=>(
-              <div key={i} style={{ background:T.pillFill, borderRadius:10, padding:"10px 6px", textAlign:"center", border:`1px solid ${T.line}` }}>
-                <div style={{ fontSize:F.base-1, fontWeight:700, color:a }}>{s.value}</div>
-                <div style={{ fontSize:F.label-2, color:T.faint, marginTop:2 }}>{s.label}</div>
+              <div key={i} style={{ background:"linear-gradient(160deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))", borderRadius:14, padding:"13px 8px", textAlign:"center", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.base+1, fontWeight:800, color:a }}>{s.value}</div>
+                <div style={{ fontSize:F.label-1, color:T.faint, marginTop:4 }}>{s.label}</div>
               </div>
             ))}
           </div>}
           {d.menu && d.menu.map((item,i,arr)=>(
-            <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:12, padding:"13px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
               <div style={{ width:8, height:8, borderRadius:"50%", background:item.popular?"#34c759":T.line, flexShrink:0 }}/>
-              <span style={{ flex:1, fontSize:F.base-0.5, fontWeight:item.popular?600:400, color:item.popular?T.text:T.sub }}>{item.name}</span>
-              {item.popular && <ITag text="الأكثر طلباً" color="#34c759"/>}
-              <span style={{ fontSize:F.base-0.5, fontWeight:700, color:a }}>{item.price}</span>
+              <span style={{ flex:1, fontSize:F.base-0.5, fontWeight:item.popular?700:400, color:item.popular?T.text:T.sub }}>{item.name}</span>
+              {item.popular && <span style={{ fontSize:F.label-1, color:"#34c759", fontWeight:700, background:"rgba(52,199,89,0.1)", padding:"3px 9px", borderRadius:14 }}>الأكثر طلباً</span>}
+              <span style={{ fontSize:F.base-0.5, fontWeight:800, color:a }}>{item.price}</span>
             </div>
           ))}
         </div>
@@ -3247,25 +3239,25 @@ function TabContent({ tab, a, T, F, isRTL }) {
     case "workout":
       return (
         <div>
-          {d.summary && <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:12 }}>
+          {d.summary && <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:18 }}>
             {d.summary.map((s,i)=>(
-              <div key={i} style={{ background:T.pillFill, borderRadius:10, padding:"10px 8px", textAlign:"center", border:`1px solid ${T.line}` }}>
-                <div style={{ fontSize:F.base, fontWeight:700, color:s.color||a }}>{s.value}</div>
-                <div style={{ fontSize:F.label-1, color:T.faint, marginTop:2 }}>{s.label}</div>
+              <div key={i} style={{ background:"linear-gradient(160deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))", borderRadius:16, padding:"14px 8px", textAlign:"center", border:`1px solid ${T.line}` }}>
+                <div style={{ fontSize:F.base+3, fontWeight:800, color:s.color||a, fontVariantNumeric:"tabular-nums" }}>{s.value}</div>
+                <div style={{ fontSize:F.label-1, color:T.faint, marginTop:5 }}>{s.label}</div>
               </div>
             ))}
           </div>}
           {d.exercises && d.exercises.map((ex,i,arr)=>(
-            <div key={i} style={{ padding:"10px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
-              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-                <span style={{ fontSize:F.base-0.5, fontWeight:600 }}>{ex.name}</span>
-                <div style={{ display:"flex", gap:8 }}>
-                  <span style={{ fontSize:F.label-1, color:T.faint }}>{ex.sets}x{ex.reps}</span>
-                  <span style={{ fontSize:F.label-1, fontWeight:600, color:"#34c759" }}>{ex.weight}</span>
+            <div key={i} style={{ padding:"14px 0", borderBottom:i<arr.length-1?`1px solid ${T.line}`:"none" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                <span style={{ fontSize:F.base-0.5, fontWeight:700 }}>{ex.name}</span>
+                <div style={{ display:"flex", gap:10 }}>
+                  <span style={{ fontSize:F.label, color:T.sub, fontWeight:600 }}>{ex.sets}x{ex.reps}</span>
+                  <span style={{ fontSize:F.label, fontWeight:800, color:"#34c759" }}>{ex.weight}</span>
                 </div>
               </div>
-              <div style={{ height:4, background:T.line, borderRadius:2 }}>
-                <div style={{ height:"100%", width:`${ex.pct||70}%`, background:a, borderRadius:2 }}/>
+              <div style={{ height:4, background:"rgba(255,255,255,0.06)", borderRadius:4 }}>
+                <div style={{ height:"100%", width:`${Math.min((parseInt(ex.reps)||8)/15*100,100)}%`, background:`linear-gradient(90deg,#34c759,#34c75988)`, borderRadius:4 }}/>
               </div>
             </div>
           ))}
@@ -3637,12 +3629,17 @@ function TabContent({ tab, a, T, F, isRTL }) {
       const max = Math.max(...rows.map(r => r.value), 1);
       return (
         <div>
-          {d.intro && <p style={{ color: T.sub, fontSize: F.base - 1, margin: "0 0 14px", lineHeight: 1.7 }}>{d.intro}</p>}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {d.intro && <p style={{ color:T.sub, fontSize:F.base-1, margin:"0 0 16px", lineHeight:1.7 }}>{d.intro}</p>}
+          <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
             {rows.map((r, i) => (
               <div key={i}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}><span style={{ fontSize: F.label, color: T.text, fontWeight: 600 }}>{r.label}</span><span style={{ fontSize: F.label, color: r.color, fontWeight: 700 }}>{r.value}{d.unit || ""}</span></div>
-                <div style={{ height: 13, background: T.pillFill, borderRadius: 999, overflow: "hidden" }}><div style={{ width: `${(r.value / max) * 100}%`, height: "100%", borderRadius: 999, background: `linear-gradient(90deg, ${r.color}, ${r.color}99)` }} /></div>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+                  <span style={{ fontSize:F.label, color:T.text, fontWeight:600 }}>{r.label}</span>
+                  <span style={{ fontSize:F.label, color:r.color, fontWeight:700, fontVariantNumeric:"tabular-nums" }}>{r.value}{d.unit||""}</span>
+                </div>
+                <div style={{ height:8, background:"rgba(255,255,255,0.06)", borderRadius:999, overflow:"hidden" }}>
+                  <div style={{ width:`${(r.value/max)*100}%`, height:"100%", borderRadius:999, background:`linear-gradient(90deg,${r.color},${r.color}88)` }}/>
+                </div>
               </div>
             ))}
           </div>
